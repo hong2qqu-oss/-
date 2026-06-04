@@ -1,712 +1,1014 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MacroLens — 경제지표 대시보드</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>寃쎌젣?덉씠??쨌 誘쇳솉</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg-primary:   #131722;
-      --bg-secondary: #1e222d;
-      --bg-hover:     #2a2e39;
-      --border:       #2a2e39;
-      --text-primary: #d1d4dc;
-      --text-muted:   #787b86;
-      --text-dim:     #4c525e;
-      --accent:       #2196f3;
-      --accent-hover: #1976d2;
-      --green:        #26a69a;
-      --red:          #ef5350;
+      --bg: #0d1117;
+      --sidebar-bg: #161b22;
+      --panel-bg: #1c2128;
+      --border: #30363d;
+      --text: #e6edf3;
+      --text-muted: #8b949e;
+      --accent: #58a6ff;
+      --accent-hover: #79b8ff;
+      --active-bg: #1f3a5f;
+      --category-color: #7ee787;
+      --red: #f85149;
+      --yellow: #e3b341;
+      --sidebar-width: 240px;
     }
 
-    html, body {
-      height: 100%;
-      background: var(--bg-primary);
-      color: var(--text-primary);
-      font-family: -apple-system, BlinkMacSystemFont, 'Trebuchet MS', Roboto, sans-serif;
-      font-size: 13px;
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display: flex;
+      height: 100vh;
       overflow: hidden;
     }
 
-    /* ── LAYOUT ───────────────────────────── */
-    .app { display: flex; flex-direction: column; height: 100vh; }
-
-    /* ── HEADER ───────────────────────────── */
-    .header {
-      height: 48px;
-      background: var(--bg-secondary);
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      padding: 0 16px;
-      flex-shrink: 0;
-    }
-    .logo {
-      font-size: 15px;
-      font-weight: 800;
-      letter-spacing: 1px;
-      color: var(--accent);
-      white-space: nowrap;
-    }
-    .logo span { color: var(--text-primary); }
-    .hdiv { width: 1px; height: 22px; background: var(--border); }
-    .api-row { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
-    .api-label { color: var(--text-muted); font-size: 11px; white-space: nowrap; }
-    .api-input {
-      background: var(--bg-primary);
-      border: 1px solid var(--border);
-      color: var(--text-primary);
-      padding: 4px 10px;
-      border-radius: 4px;
-      font-size: 12px;
-      width: 300px;
-      transition: border-color .2s;
-    }
-    .api-input:focus { outline: none; border-color: var(--accent); }
-    .api-input::placeholder { color: var(--text-dim); }
-    .btn {
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      padding: 4px 12px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 12px;
-      font-weight: 600;
-      white-space: nowrap;
-      transition: background .15s;
-    }
-    .btn:hover { background: var(--accent-hover); }
-    .btn:disabled { background: var(--text-dim); cursor: not-allowed; }
-    .api-link { color: var(--accent); font-size: 11px; text-decoration: none; white-space: nowrap; }
-    .api-link:hover { text-decoration: underline; }
-    .last-upd { margin-left: auto; color: var(--text-muted); font-size: 11px; white-space: nowrap; }
-
-    /* ── BODY ─────────────────────────────── */
-    .body { display: flex; flex: 1; overflow: hidden; }
-
-    /* ── SIDEBAR ──────────────────────────── */
-    .sidebar {
-      width: 228px;
-      background: var(--bg-secondary);
+    /* ?? SIDEBAR ?? */
+    #sidebar {
+      width: var(--sidebar-width);
+      background: var(--sidebar-bg);
       border-right: 1px solid var(--border);
-      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
       flex-shrink: 0;
     }
-    .sidebar::-webkit-scrollbar { width: 4px; }
-    .sidebar::-webkit-scrollbar-thumb { background: var(--bg-hover); border-radius: 2px; }
 
-    .sb-cat {
-      padding: 11px 12px 3px;
-      font-size: 10px;
+    #sidebar-header {
+      padding: 16px 14px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    #sidebar-header h1 {
+      font-size: 14px;
       font-weight: 700;
-      color: var(--text-dim);
+      color: var(--accent);
+      letter-spacing: 0.5px;
+    }
+
+    #sidebar-header p {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    #sidebar-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 0;
+    }
+
+    #sidebar-scroll::-webkit-scrollbar { width: 4px; }
+    #sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
+    #sidebar-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .category-label {
+      padding: 10px 14px 4px;
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--category-color);
+      letter-spacing: 1px;
       text-transform: uppercase;
-      letter-spacing: .8px;
     }
-    .sb-item {
-      padding: 6px 12px;
+
+    .indicator-item {
+      padding: 7px 14px;
       cursor: pointer;
-      border-left: 3px solid transparent;
-      transition: background .12s;
+      transition: background 0.15s;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
-    .sb-item:hover { background: var(--bg-hover); }
-    .sb-item.active { background: rgba(33,150,243,.1); border-left-color: var(--accent); }
-    .sb-row { display: flex; justify-content: space-between; align-items: baseline; }
-    .sb-name { font-size: 12px; color: var(--text-primary); font-weight: 500; }
-    .sb-val  { font-size: 11px; font-weight: 700; color: var(--text-muted); }
-    .sb-meta { font-size: 10px; color: var(--text-dim); font-family: 'Courier New', monospace; margin-top: 1px; }
 
-    /* ── CHART PANEL ──────────────────────── */
-    .chart-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .indicator-item:hover { background: rgba(88,166,255,0.06); }
+    .indicator-item.active { background: var(--active-bg); }
 
-    .toolbar {
-      height: 44px;
-      background: var(--bg-secondary);
+    .indicator-item .name {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .indicator-item .meta {
+      font-size: 9px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .indicator-item .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--border);
+      flex-shrink: 0;
+      margin-left: 8px;
+      transition: background 0.3s;
+    }
+
+    .indicator-item .status-dot.loaded { background: var(--category-color); }
+    .indicator-item .status-dot.loading { background: var(--yellow); }
+    .indicator-item .status-dot.error { background: var(--red); }
+
+    /* ?? MAIN ?? */
+    #main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    #topbar {
+      padding: 14px 24px;
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 0 16px;
+      justify-content: space-between;
+      background: var(--sidebar-bg);
       flex-shrink: 0;
     }
-    .tb-info { min-width: 0; }
-    .tb-title   { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .tb-sub     { font-size: 10px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .tdiv { width: 1px; height: 20px; background: var(--border); flex-shrink: 0; }
 
-    .range-group { display: flex; gap: 2px; flex-shrink: 0; }
-    .rbtn {
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
-      padding: 3px 8px;
-      border-radius: 3px;
-      cursor: pointer;
-      font-size: 11px;
+    #chart-title {
+      font-size: 15px;
       font-weight: 600;
-      transition: all .12s;
+      color: var(--text);
     }
-    .rbtn:hover { background: var(--bg-hover); color: var(--text-primary); }
-    .rbtn.on { background: var(--accent); color: #fff; }
 
-    .ma-group { display: flex; gap: 3px; margin-left: auto; flex-shrink: 0; }
-    .matog {
-      padding: 3px 7px;
-      border-radius: 3px;
-      cursor: pointer;
+    #chart-subtitle {
       font-size: 11px;
-      font-weight: 700;
-      border: 1px solid transparent;
-      opacity: .35;
-      transition: opacity .12s, background .12s;
+      color: var(--text-muted);
+      margin-top: 2px;
     }
-    .matog.on { opacity: 1; }
-    .ma3  { border-color:#ff9800; color:#ff9800; }  .ma3.on  { background:rgba(255,152,0,.12); }
-    .ma6  { border-color:#f44336; color:#f44336; }  .ma6.on  { background:rgba(244,67,54,.12); }
-    .ma12 { border-color:#9c27b0; color:#9c27b0; }  .ma12.on { background:rgba(156,39,176,.12); }
-    .ma24 { border-color:#2196f3; color:#2196f3; }  .ma24.on { background:rgba(33,150,243,.12); }
-    .ma60 { border-color:#4caf50; color:#4caf50; }  .ma60.on { background:rgba(76,175,80,.12); }
 
-    /* ── CANVAS WRAP ──────────────────────── */
-    .canvas-wrap {
+    #controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .range-btn {
+      background: var(--panel-bg);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .range-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .range-btn.active { background: var(--accent); border-color: var(--accent); color: #0d1117; font-weight: 600; }
+
+    #chart-area {
       flex: 1;
-      position: relative;
-      padding: 14px 16px 8px;
+      padding: 20px 24px;
       overflow: hidden;
+      position: relative;
     }
-    #mainChart { width: 100% !important; height: 100% !important; }
 
-    /* ── OVERLAY ──────────────────────────── */
-    .overlay {
+    #chart-wrapper {
+      width: 100%;
+      height: 100%;
+      background: var(--panel-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      position: relative;
+    }
+
+    #myChart { width: 100% !important; height: 100% !important; }
+
+    #loading-overlay {
       position: absolute;
       inset: 0;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      background: var(--bg-primary);
-      gap: 14px;
-      z-index: 20;
+      background: rgba(28,33,40,0.85);
+      border-radius: 10px;
+      font-size: 13px;
+      color: var(--text-muted);
+      gap: 10px;
+      z-index: 10;
     }
-    .overlay.hidden { display: none; }
+
     .spinner {
-      width: 30px; height: 30px;
-      border: 3px solid var(--bg-hover);
+      width: 20px; height: 20px;
+      border: 2px solid var(--border);
       border-top-color: var(--accent);
       border-radius: 50%;
-      animation: spin .8s linear infinite;
+      animation: spin 0.8s linear infinite;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .ov-msg  { color: var(--text-muted); font-size: 13px; text-align: center; max-width: 480px; line-height: 1.7; }
-    .ov-err  { color: var(--red); }
-    .ov-link { color: var(--accent); text-decoration: none; }
-    .ov-link:hover { text-decoration: underline; }
 
-    /* ── STATS BAR ────────────────────────── */
-    .stats-bar {
-      height: 46px;
-      background: var(--bg-secondary);
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #legend-area {
+      padding: 10px 24px 14px;
       border-top: 1px solid var(--border);
       display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
       align-items: center;
-      gap: 28px;
-      padding: 0 18px;
       flex-shrink: 0;
+      background: var(--sidebar-bg);
     }
-    .stat { display: flex; flex-direction: column; gap: 1px; }
-    .stat-lbl { font-size: 9px; color: var(--text-dim); text-transform: uppercase; letter-spacing: .5px; }
-    .stat-val { font-size: 13px; font-weight: 700; }
-    .pos { color: var(--green); }
-    .neg { color: var(--red); }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .legend-color {
+      width: 20px;
+      height: 2px;
+      border-radius: 1px;
+    }
+
+    #latest-value {
+      margin-left: auto;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    #latest-value span {
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--accent);
+    }
+
+    #error-msg {
+      position: absolute;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 8px;
+      background: rgba(28,33,40,0.85);
+      border-radius: 10px;
+      z-index: 10;
+    }
+
+    #error-msg .err-icon { font-size: 32px; }
+    #error-msg .err-text { font-size: 13px; color: var(--text-muted); }
+    #error-msg .err-detail { font-size: 11px; color: var(--red); max-width: 400px; text-align: center; }
+
+    /* API Key?ㅼ젙 紐⑤떖 */
+    #api-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #api-modal.show { display: flex; }
+
+    #api-box {
+      background: var(--panel-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px 32px;
+      width: 420px;
+    }
+
+    #api-box h2 { font-size: 16px; margin-bottom: 6px; }
+    #api-box p { font-size: 12px; color: var(--text-muted); margin-bottom: 16px; }
+
+    #api-box input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 12px;
+      color: var(--text);
+      font-size: 13px;
+      font-family: monospace;
+      margin-bottom: 12px;
+    }
+
+    #api-box button {
+      width: 100%;
+      background: var(--accent);
+      border: none;
+      border-radius: 6px;
+      padding: 9px;
+      color: #0d1117;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .api-setting-btn {
+      background: var(--panel-bg);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .api-setting-btn:hover { color: var(--text); }
+
+    #country-tabs {
+      display: flex;
+      gap: 4px;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .country-btn {
+      flex: 1;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 5px 4px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .country-btn.active {
+      background: var(--active-bg);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .country-btn.disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .country-btn:not(.disabled):hover {
+      border-color: var(--accent);
+      color: var(--accent-hover);
+    }
+
+    #stat-boxes {
+      display: none;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .stat-box {
+      background: var(--panel-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 5px 14px;
+      text-align: center;
+      min-width: 90px;
+    }
+
+    .stat-box-label {
+      font-size: 9px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .stat-box-val {
+      font-size: 15px;
+      font-weight: 700;
+      margin-top: 1px;
+    }
+
+    .stat-pos { color: #7ee787; }
+    .stat-neg { color: #f85149; }
+    .stat-neutral { color: var(--text-muted); }
+
+    .stat-box {
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .stat-box:hover { border-color: var(--accent); }
+    .stat-box.active {
+      border-color: var(--accent);
+      background: var(--active-bg);
+    }
+    .stat-box.active .stat-box-label { color: var(--accent); }
+
+    #yrange-bar {
+      display: none;
+      gap: 6px;
+      align-items: center;
+      margin-left: auto;
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+    .yrange-input {
+      width: 64px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 3px 7px;
+      color: var(--text);
+      font-size: 11px;
+      text-align: center;
+    }
+    .yrange-input:focus { outline: none; border-color: var(--accent); }
+    #reset-zoom-btn {
+      background: var(--panel-bg);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 3px 9px;
+      border-radius: 5px;
+      font-size: 10px;
+      cursor: pointer;
+    }
+    #reset-zoom-btn:hover { border-color: var(--accent); color: var(--accent); }
   </style>
 </head>
 <body>
-<div class="app">
 
-  <!-- HEADER -->
-  <div class="header">
-    <div class="logo">MACRO<span>LENS</span></div>
-    <div class="hdiv"></div>
-    <div class="api-row">
-      <span class="api-label">FRED API Key</span>
-      <input id="apiInput" type="password" class="api-input"
-             placeholder="API Key 입력 (fred.stlouisfed.org 무료 발급)" />
-      <button class="btn" onclick="saveKey()">저장</button>
-      <a class="api-link" href="https://fredaccount.stlouisfed.org/apikey" target="_blank">키 발급 →</a>
+<!-- Sidebar -->
+<nav id="sidebar">
+  <div id="sidebar-header">
+    <h1>寃쎌젣?덉씠??쨌 誘쇳솉</h1>
+    <p id="last-updated">?곗씠??濡쒕뵫 ??/p>
+  </div>
+  <div id="country-tabs">
+    <button class="country-btn active" data-country="US">?눣?눡 US</button>
+    <button class="country-btn disabled" data-country="KR" title="以鍮?以?>?눖?눟 KR</button>
+    <button class="country-btn disabled" data-country="JP" title="以鍮?以?>?눓?눝 JP</button>
+    <button class="country-btn disabled" data-country="EU" title="以鍮?以?>?눎?눣 EU</button>
+  </div>
+  <div id="sidebar-scroll" id="indicator-list"></div>
+</nav>
+
+<!-- Main -->
+<main id="main">
+  <div id="topbar">
+    <div>
+      <div id="chart-title">吏?쒕? ?좏깮?섏꽭??/div>
+      <div id="chart-subtitle">??/div>
     </div>
-    <span class="last-upd" id="lastUpd">—</span>
+    <div id="stat-boxes">
+      <div class="stat-box">
+        <div class="stat-box-label">YoY</div>
+        <div class="stat-box-val stat-neutral" id="stat-yoy-val">??/div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">MoM</div>
+        <div class="stat-box-val stat-neutral" id="stat-mom-val">??/div>
+      </div>
+    </div>
+    <div id="controls">
+      <button class="range-btn" data-years="5">5Y</button>
+      <button class="range-btn active" data-years="10">10Y</button>
+      <button class="range-btn" data-years="20">20Y</button>
+      <button class="range-btn" data-years="0">All</button>
+      <button class="api-setting-btn" id="api-btn">??API Key</button>
+    </div>
   </div>
 
-  <div class="body">
-
-    <!-- SIDEBAR -->
-    <div class="sidebar" id="sidebar"></div>
-
-    <!-- CHART PANEL -->
-    <div class="chart-panel">
-
-      <!-- TOOLBAR -->
-      <div class="toolbar">
-        <div class="tb-info">
-          <div class="tb-title" id="tbTitle">지표를 선택하세요</div>
-          <div class="tb-sub"  id="tbSub">← 왼쪽 목록에서 클릭</div>
-        </div>
-        <div class="tdiv"></div>
-        <div class="range-group">
-          <button class="rbtn"    onclick="setRange(12)">1Y</button>
-          <button class="rbtn"    onclick="setRange(36)">3Y</button>
-          <button class="rbtn on" onclick="setRange(60)">5Y</button>
-          <button class="rbtn"    onclick="setRange(120)">10Y</button>
-          <button class="rbtn"    onclick="setRange(0)">MAX</button>
-        </div>
-        <div class="ma-group">
-          <button id="mb3"  class="matog ma3  on" onclick="toggleMA(3)">MA3</button>
-          <button id="mb6"  class="matog ma6  on" onclick="toggleMA(6)">MA6</button>
-          <button id="mb12" class="matog ma12 on" onclick="toggleMA(12)">MA12</button>
-          <button id="mb24" class="matog ma24"    onclick="toggleMA(24)">MA24</button>
-          <button id="mb60" class="matog ma60"    onclick="toggleMA(60)">MA60</button>
-        </div>
+  <div id="chart-area">
+    <div id="chart-wrapper">
+      <canvas id="myChart"></canvas>
+      <div id="loading-overlay"><div class="spinner"></div> ?곗씠??遺덈윭?ㅻ뒗 以?..</div>
+      <div id="error-msg">
+        <div class="err-icon">??/div>
+        <div class="err-text">?곗씠?곕? 遺덈윭?????놁뒿?덈떎</div>
+        <div class="err-detail" id="err-detail-text"></div>
       </div>
+    </div>
+  </div>
 
-      <!-- CANVAS -->
-      <div class="canvas-wrap">
-        <canvas id="mainChart"></canvas>
-        <div class="overlay" id="overlay">
-          <div class="ov-msg">
-            <strong style="color:var(--accent);font-size:14px;">FRED API Key가 필요합니다</strong><br><br>
-            위 입력창에 API Key를 입력하면 미국 연준 FRED 데이터베이스에서<br>
-            경제지표를 자동으로 불러옵니다.<br><br>
-            👉 <a class="ov-link" href="https://fredaccount.stlouisfed.org/apikey" target="_blank">fred.stlouisfed.org</a>에서
-            무료로 발급받을 수 있습니다 (약 1분 소요)
-          </div>
-        </div>
-      </div>
+  <div id="legend-area">
+    <div class="legend-item"><div class="legend-color" style="background:#58a6ff"></div> Raw</div>
+    <div class="legend-item"><div class="legend-color" style="background:#ff7b72;opacity:0.9"></div> MA3</div>
+    <div class="legend-item"><div class="legend-color" style="background:#ffa657;opacity:0.9"></div> MA6</div>
+    <div class="legend-item"><div class="legend-color" style="background:#7ee787;opacity:0.9"></div> MA12</div>
+    <div class="legend-item"><div class="legend-color" style="background:#d2a8ff;opacity:0.9"></div> MA24</div>
+    <div class="legend-item"><div class="legend-color" style="background:#e3b341;opacity:0.9"></div> MA60</div>
+    <button id="reset-zoom-btn">??Reset</button>
+    <div id="yrange-bar">
+      Y異? <input class="yrange-input" id="ymin-input" placeholder="Min" />
+      ~ <input class="yrange-input" id="ymax-input" placeholder="Max" />
+    </div>
+    <div id="latest-value">理쒖떊媛? <span id="latest-val-num">??/span></div>
+  </div>
+</main>
 
-      <!-- STATS -->
-      <div class="stats-bar">
-        <div class="stat"><span class="stat-lbl">최신값</span><span class="stat-val" id="sLatest">—</span></div>
-        <div class="stat"><span class="stat-lbl">전월 대비</span><span class="stat-val" id="sMoM">—</span></div>
-        <div class="stat"><span class="stat-lbl">전년 대비</span><span class="stat-val" id="sYoY">—</span></div>
-        <div class="stat"><span class="stat-lbl">5년 평균</span><span class="stat-val" id="sAvg">—</span></div>
-        <div class="stat"><span class="stat-lbl">5년 최고</span><span class="stat-val" id="sMax">—</span></div>
-        <div class="stat"><span class="stat-lbl">5년 최저</span><span class="stat-val" id="sMin">—</span></div>
-      </div>
-
-    </div><!-- /chart-panel -->
-  </div><!-- /body -->
-</div><!-- /app -->
+<!-- API Key 紐⑤떖 -->
+<div id="api-modal">
+  <div id="api-box">
+    <h2>FRED API Key ?ㅼ젙</h2>
+    <p>St. Louis Fed FRED API ?ㅻ? ?낅젰?섏꽭??<br>
+       <a href="https://fred.stlouisfed.org/docs/api/api_key.html" target="_blank" style="color:var(--accent)">諛쒓툒 留곹겕 (臾대즺)</a>
+    </p>
+    <input type="text" id="api-key-input" placeholder="?? 5b4992d3d01f61fd0f0be3ade5328568" />
+    <button id="save-api-btn">???/button>
+  </div>
+</div>
 
 <script>
-// ================================================================
-// 경제지표 목록  ← 나중에 여기에 지표 추가
-// ================================================================
+// ??? INDICATORS CONFIG ???????????????????????????????????????????????????????
 const INDICATORS = [
-  {
-    cat: '물가 / Inflation',
-    items: [
-      { id:'CPIAUCSL',         name:'CPI (전체)',            unit:'Index', freq:'m', desc:'소비자물가지수 전체 (Bureau of Labor Statistics)' },
-      { id:'CPILFESL',         name:'Core CPI',              unit:'Index', freq:'m', desc:'근원 소비자물가지수 — 식품·에너지 제외' },
-      { id:'PCEPI',            name:'PCE 물가지수',          unit:'Index', freq:'m', desc:'개인소비지출 물가지수 (BEA)' },
-      { id:'PCEPILFE',         name:'Core PCE',              unit:'Index', freq:'m', desc:'근원 PCE — 연준 선호 인플레이션 지표' },
-    ]
-  },
-  {
-    cat: '고용 / Employment',
-    items: [
-      { id:'UNRATE',   name:'실업률',          unit:'%',  freq:'m', desc:'미국 실업률 (Bureau of Labor Statistics)' },
-      { id:'PAYEMS',   name:'비농업 고용',      unit:'K',  freq:'m', desc:'비농업 부문 고용자수 (천명)' },
-      { id:'CIVPART',  name:'경제활동참가율',   unit:'%',  freq:'m', desc:'노동력 참가율 (Labor Force Participation Rate)' },
-      { id:'JTSJOL',   name:'구인건수 (JOLTS)', unit:'K',  freq:'m', desc:'구인·이직 조사 구인 건수 (천건)' },
-    ]
-  },
-  {
-    cat: '성장 / Growth',
-    items: [
-      { id:'GDPC1',              name:'실질 GDP',     unit:'B$', freq:'q', desc:'실질 GDP — 2017년 불변가격 (BEA)' },
-      { id:'A191RL1Q225SBEA',    name:'GDP 성장률',   unit:'%',  freq:'q', desc:'전분기 대비 GDP 성장률 (연율)' },
-    ]
-  },
-  {
-    cat: '금리 / Interest Rates',
-    items: [
-      { id:'FEDFUNDS',  name:'기준금리 (FFR)',      unit:'%',   freq:'m', desc:'미 연준 기준금리 (Fed Funds Rate)' },
-      { id:'DGS10',     name:'10년물 국채',         unit:'%',   freq:'d', desc:'미국 10년 만기 국채 수익률' },
-      { id:'DGS2',      name:'2년물 국채',          unit:'%',   freq:'d', desc:'미국 2년 만기 국채 수익률' },
-      { id:'T10Y2Y',    name:'장단기 스프레드',     unit:'%p',  freq:'d', desc:'10년-2년 스프레드 — 경기침체 선행지표' },
-    ]
-  },
-  {
-    cat: '주택 / Housing',
-    items: [
-      { id:'HOUST',     name:'주택착공건수',              unit:'K',    freq:'m', desc:'신규 주택 착공 건수 (천 호, Census Bureau)' },
-      { id:'CSUSHPISA', name:'케이스-실러 주택가격',      unit:'Index',freq:'m', desc:'S&P/케이스-실러 20대 도시 주택가격지수' },
-      { id:'MORTGAGE30US',name:'30년 모기지 금리',        unit:'%',    freq:'w', desc:'30년 고정 모기지 평균 금리 (Freddie Mac)' },
-    ]
-  },
-  {
-    cat: '소비 / Consumer',
-    items: [
-      { id:'RSXFS',    name:'소매판매 (근원)',          unit:'M$',   freq:'m', desc:'근원 소매판매 — 자동차 제외 (Census Bureau)' },
-      { id:'UMCSENT',  name:'미시간 소비자심리',        unit:'Index',freq:'m', desc:'미시간 대학 소비자심리지수' },
-      { id:'PCE',      name:'개인소비지출 (PCE)',       unit:'B$',   freq:'m', desc:'개인소비지출 총액 (BEA)' },
-    ]
-  },
-  {
-    cat: '통화 / Money Supply',
-    items: [
-      { id:'M2SL',     name:'M2 통화량',   unit:'B$', freq:'m', desc:'M2 통화 공급량 (연준)' },
-      { id:'BOGMBASE', name:'본원통화',    unit:'M$', freq:'m', desc:'연준 본원통화 (Monetary Base)' },
-    ]
-  },
-  {
-    cat: '국제 / International',
-    items: [
-      { id:'DTWEXBGS', name:'달러 인덱스 (무역가중)',  unit:'Index',freq:'d', desc:'무역가중 달러 지수 (Broad, 연준)' },
-      { id:'BAMLH0A0HYM2', name:'하이일드 스프레드', unit:'%p', freq:'d', desc:'미국 하이일드 채권 옵션조정 스프레드 (ICE BofA)' },
-    ]
-  },
+  // 臾쇨?
+  { id:'CPIAUCSL',           name:'CPI (?꾩껜)',            unit:'% YoY',  category:'臾쇨? / INFLATION', transform:'yoy' },
+  { id:'PPIACO',             name:'PPI (?꾩껜)',            unit:'% YoY',  category:'臾쇨? / INFLATION', transform:'yoy' },
+  { id:'WPSFD4131',          name:'Core PPI',              unit:'% YoY',  category:'臾쇨? / INFLATION', transform:'yoy' },
+  { id:'CPILFESL',           name:'Core CPI',              unit:'% YoY',  category:'臾쇨? / INFLATION', transform:'yoy' },
+  { id:'PCEPI',              name:'PCE 臾쇨?吏??,           unit:'% YoY',  category:'臾쇨? / INFLATION', transform:'yoy' },
+  { id:'PCEPILFE',           name:'Core PCE',              unit:'% YoY',  category:'臾쇨? / INFLATION', transform:'yoy' },
+
+  // 怨좎슜
+  { id:'UNRATE',             name:'?ㅼ뾽瑜?,                unit:'%',      category:'怨좎슜 / EMPLOYMENT' },
+  { id:'PAYEMS',             name:'鍮꾨냽??怨좎슜',            unit:'K',      category:'怨좎슜 / EMPLOYMENT' },
+  { id:'CIVPART',            name:'寃쎌젣?쒕룞李멸???,          unit:'%',      category:'怨좎슜 / EMPLOYMENT' },
+  { id:'ICSA',               name:'?좉퇋 ?ㅼ뾽?섎떦 泥?뎄',      unit:'K',      category:'怨좎슜 / EMPLOYMENT' },
+  { id:'CCSA',               name:'?곗냽 ?ㅼ뾽?섎떦 泥?뎄',      unit:'K',      category:'怨좎슜 / EMPLOYMENT' },
+  { id:'JTSJOL',             name:'JOLTS 援ъ씤嫄댁닔',         unit:'K',      category:'怨좎슜 / EMPLOYMENT' },
+  { id:'JTSHIL',             name:'JOLTS 怨좎슜嫄댁닔',         unit:'K',      category:'怨좎슜 / EMPLOYMENT' },
+  { id:'JTSLDL',             name:'JOLTS ?닿퀬嫄댁닔',         unit:'K',      category:'怨좎슜 / EMPLOYMENT' },
+  { id:'JTSQUL',             name:'JOLTS ?댁쭅嫄댁닔',         unit:'K',      category:'怨좎슜 / EMPLOYMENT' },
+
+  // ?깆옣
+  { id:'GDPC1',              name:'?ㅼ쭏 GDP',              unit:'B$',     category:'?깆옣 / GROWTH' },
+  { id:'A191RL1Q225SBEA',    name:'GDP ?깆옣瑜?,            unit:'%',      category:'?깆옣 / GROWTH' },
+
+  // PMI  (NAPM=ISM?쒖“??2019?꾧퉴吏留??쒓났, NMFBAI=ISM鍮꾩젣議곗뾽 泥닿컧吏??
+  { id:'NAPM',               name:'ISM PMI ?쒖“??,         unit:'Index',  category:'PMI' },
+  { id:'NMFBAI',             name:'ISM PMI ?쒕퉬?ㅼ뾽(泥닿컧)',  unit:'Index',  category:'PMI' },
+
+  // 湲덈━
+  { id:'FEDFUNDS',           name:'湲곗?湲덈━ (FFR)',          unit:'%',      category:'湲덈━ / INTEREST RATES' },
+  { id:'DGS10',              name:'10?꾨Ъ 援?콈',             unit:'%',      category:'湲덈━ / INTEREST RATES', noStats:true },
+  { id:'DGS2',               name:'2?꾨Ъ 援?콈',              unit:'%',      category:'湲덈━ / INTEREST RATES', noStats:true },
+  { id:'T10Y2Y',             name:'?λ떒湲??ㅽ봽?덈뱶',          unit:'%p',     category:'湲덈━ / INTEREST RATES' },
+
+  // 二쇳깮
+  { id:'HOUST',              name:'二쇳깮李⑷났嫄댁닔',            unit:'K',      category:'二쇳깮 / HOUSING' },
+  { id:'CSUSHPISA',          name:'耳?댁뒪-?ㅻ윭 二쇳깮媛寃?,    unit:'Index',  category:'二쇳깮 / HOUSING' },
+  { id:'MORTGAGE30US',       name:'30??紐④린吏 湲덈━',        unit:'%',      category:'二쇳깮 / HOUSING' },
+
+  // ?뚮퉬
+  { id:'RSAFS',              name:'?뚮ℓ?먮ℓ',               unit:'% YoY',  category:'?뚮퉬 / CONSUMER', transform:'yoy' },
+  { id:'UMCSENT',            name:'誘몄떆媛??뚮퉬?먯떖由?,        unit:'Index',  category:'?뚮퉬 / CONSUMER' },
+  { id:'PCE',                name:'媛쒖씤?뚮퉬吏異?(PCE)',      unit:'% YoY',  category:'?뚮퉬 / CONSUMER', transform:'yoy' },
+
+  // ?듯솕
+  { id:'M2SL',               name:'M2 ?듯솕??,              unit:'B$',     category:'?듯솕 / MONEY SUPPLY' },
+  { id:'BOGMBASE',           name:'蹂몄썝?듯솕',               unit:'M$',     category:'?듯솕 / MONEY SUPPLY' },
+
+  // 援?젣
+  { id:'DTWEXBGS',           name:'?щ윭 ?몃뜳??(臾댁뿭媛以?',   unit:'Index',  category:'援?젣 / INTERNATIONAL' },
+  { id:'BAMLH0A0HYM2',       name:'?섏씠?쇰뱶 ?ㅽ봽?덈뱶',       unit:'%p',     category:'援?젣 / INTERNATIONAL' },
 ];
 
-// MA 설정
-const MA_PERIODS = [3, 6, 12, 24, 60];
-const MA_COLOR = {
-  3:  '#ff9800',
-  6:  '#f44336',
-  12: '#9c27b0',
-  24: '#2196f3',
-  60: '#4caf50',
-};
+// ??? STATE ???????????????????????????????????????????????????????????????????
+const API_KEY_STORAGE = 'fred_api_key';
+let apiKey = localStorage.getItem(API_KEY_STORAGE) || '';
+let currentIndicator = null;
+let currentYears = 10;
+let currentMode = 'raw'; // 'raw' | 'yoy' | 'mom'
+let currentRawData = null;
+let chart = null;
+let cache = {};
 
-// ================================================================
-// STATE
-// ================================================================
-let apiKey      = localStorage.getItem('fredKey') || '';
-let currentId   = null;
-let cache       = {};           // { seriesId: [{date,value}] }
-let rangeMonths = 60;
-let maOn        = { 3:true, 6:true, 12:true, 24:false, 60:false };
-let chart       = null;
+// ??? DOM REFS ?????????????????????????????????????????????????????????????????
+const sidebarScroll = document.getElementById('sidebar-scroll');
+const chartTitle    = document.getElementById('chart-title');
+const chartSubtitle = document.getElementById('chart-subtitle');
+const loadingEl     = document.getElementById('loading-overlay');
+const errorEl       = document.getElementById('error-msg');
+const errDetailEl   = document.getElementById('err-detail-text');
+const latestValEl   = document.getElementById('latest-val-num');
+const lastUpdatedEl = document.getElementById('last-updated');
+const apiModal      = document.getElementById('api-modal');
+const apiKeyInput   = document.getElementById('api-key-input');
 
-// ================================================================
-// BOOT
-// ================================================================
-document.addEventListener('DOMContentLoaded', () => {
-  if (apiKey) {
-    document.getElementById('apiInput').value = apiKey;
-    document.getElementById('overlay').classList.add('hidden');
-  }
-  buildSidebar();
-  initChart();
-});
-
-// ================================================================
-// API KEY
-// ================================================================
-function saveKey() {
-  const v = document.getElementById('apiInput').value.trim();
-  if (!v) return;
-  apiKey = v;
-  localStorage.setItem('fredKey', v);
-  document.getElementById('overlay').classList.add('hidden');
-  if (currentId) load(currentId);
-}
-
-// ================================================================
-// SIDEBAR
-// ================================================================
+// ??? SIDEBAR BUILD ????????????????????????????????????????????????????????????
 function buildSidebar() {
-  const sb = document.getElementById('sidebar');
-  sb.innerHTML = '';
-  INDICATORS.forEach(group => {
-    const cat = document.createElement('div');
-    cat.className = 'sb-cat';
-    cat.textContent = group.cat;
-    sb.appendChild(cat);
-    group.items.forEach(item => {
+  sidebarScroll.innerHTML = '';
+  const categories = [...new Set(INDICATORS.map(i => i.category))];
+  categories.forEach(cat => {
+    const label = document.createElement('div');
+    label.className = 'category-label';
+    label.textContent = cat;
+    sidebarScroll.appendChild(label);
+
+    INDICATORS.filter(i => i.category === cat).forEach(ind => {
       const el = document.createElement('div');
-      el.className = 'sb-item';
-      el.id = 'si-' + item.id;
+      el.className = 'indicator-item';
+      el.dataset.id = ind.id;
       el.innerHTML = `
-        <div class="sb-row">
-          <span class="sb-name">${item.name}</span>
-          <span class="sb-val" id="sv-${item.id}">—</span>
+        <div>
+          <div class="name">${ind.name}</div>
+          <div class="meta">${ind.id} 쨌 ${ind.unit}</div>
         </div>
-        <div class="sb-meta">${item.id} · ${item.unit}</div>`;
-      el.addEventListener('click', () => select(item.id));
-      sb.appendChild(el);
+        <div class="status-dot" id="dot-${ind.id}"></div>
+      `;
+      el.addEventListener('click', () => selectIndicator(ind));
+      sidebarScroll.appendChild(el);
     });
   });
 }
 
-function select(id) {
-  document.querySelectorAll('.sb-item').forEach(e => e.classList.remove('active'));
-  document.getElementById('si-' + id)?.classList.add('active');
-  currentId = id;
-  load(id);
+// ??? TRANSFORMS ??????????????????????????????????????????????????????????????
+function calcMoM(data) {
+  return data.map((pt, i) => {
+    if (i === 0) return { x: pt.x, y: null };
+    const prev = data[i - 1];
+    if (!prev || prev.y === null || prev.y === 0) return { x: pt.x, y: null };
+    return { x: pt.x, y: +((pt.y - prev.y) / Math.abs(prev.y) * 100).toFixed(2) };
+  }).filter(pt => pt.y !== null);
 }
 
-function getMeta(id) {
-  for (const g of INDICATORS)
-    for (const it of g.items)
-      if (it.id === id) return it;
-  return null;
+function applyTransform(raw, mode) {
+  if (mode === 'yoy') return calcYoY(raw);
+  if (mode === 'mom') return calcMoM(raw);
+  return raw;
 }
 
-// ================================================================
-// FRED FETCH  (localhost 서버로 열면 CORS 문제 없음)
-// ================================================================
-async function fredFetch(seriesId) {
-  const url = `https://api.stlouisfed.org/fred/series/observations`
-            + `?series_id=${seriesId}&api_key=${apiKey}&file_type=json&sort_order=asc`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const json = await res.json();
-  if (json.error_message) throw new Error(json.error_message);
-  return json;
+function defaultMode(ind) {
+  return ind.transform === 'yoy' ? 'yoy' : 'raw';
 }
 
-// ================================================================
-// LOAD INDICATOR
-// ================================================================
-async function load(id) {
-  if (!apiKey) { document.getElementById('overlay').classList.remove('hidden'); return; }
-  const meta = getMeta(id);
-  if (!meta) return;
+// ??? YOY TRANSFORM ???????????????????????????????????????????????????????????
+function calcYoY(data) {
+  return data.map(pt => {
+    const d = new Date(pt.x);
+    const prevYear = d.getFullYear() - 1;
+    const prevMonth = d.getMonth();
+    const prev = data.find(p => {
+      const pd = new Date(p.x);
+      return pd.getFullYear() === prevYear && pd.getMonth() === prevMonth;
+    });
+    if (!prev) return { x: pt.x, y: null };
+    return { x: pt.x, y: +((pt.y - prev.y) / prev.y * 100).toFixed(2) };
+  }).filter(pt => pt.y !== null);
+}
 
-  document.getElementById('tbTitle').textContent = meta.name;
-  document.getElementById('tbSub').textContent   = meta.desc + '  ·  FRED: ' + id;
-  showSpinner('데이터 불러오는 중...');
+// ??? STATS (YoY / MoM) ???????????????????????????????????????????????????????
+function calcStats(rawData, ind) {
+  if (!rawData || rawData.length < 2) return null;
+  const latest = rawData[rawData.length - 1];
 
-  try {
-    if (!cache[id]) {
-      const json = await fredFetch(id);
-      cache[id] = json.observations
-        .filter(o => o.value !== '.' && o.value !== '')
-        .map(o => ({ date: o.date, value: parseFloat(o.value) }));
-    }
-
-    const data = cache[id];
-    if (!data.length) throw new Error('데이터 없음');
-
-    // Update sidebar latest value
-    const latest = data[data.length - 1];
-    const sv = document.getElementById('sv-' + id);
-    if (sv) { sv.textContent = fmtVal(latest.value, meta.unit); sv.style.color = 'var(--text-primary)'; }
-
-    document.getElementById('lastUpd').textContent = '최신: ' + latest.date;
-    renderChart(data, meta);
-    renderStats(data);
-    hideOverlay();
-  } catch (e) {
-    showErr('로드 실패: ' + e.message);
-    console.error(e);
+  if (ind.transform === 'yoy') {
+    const yoyData = calcYoY(rawData);
+    if (yoyData.length < 2) return null;
+    const last = yoyData[yoyData.length - 1];
+    const prev = yoyData[yoyData.length - 2];
+    return {
+      yoy: { val: last.y, suffix: '%', label: 'YoY' },
+      mom: { val: +(last.y - prev.y).toFixed(2), suffix: 'pp', label: 'MoM ?' },
+    };
   }
+
+  // Raw stats: find prev month & prev year
+  const latestDate = new Date(latest.x);
+  const prevMonthDate = new Date(latestDate);
+  prevMonthDate.setMonth(prevMonthDate.getMonth() - 1);
+  const prevMonthStr = prevMonthDate.toISOString().slice(0, 7);
+  const prevYearDate = new Date(latestDate);
+  prevYearDate.setFullYear(prevYearDate.getFullYear() - 1);
+  const prevYearStr = prevYearDate.toISOString().slice(0, 7);
+
+  const prevMonth = [...rawData].reverse().find(p => p.x.slice(0, 7) === prevMonthStr)
+    || [...rawData].reverse().find(p => p.x.slice(0, 7) <= prevMonthStr);
+  const prevYear  = [...rawData].reverse().find(p => p.x.slice(0, 7) === prevYearStr)
+    || [...rawData].reverse().find(p => p.x.slice(0, 7) <= prevYearStr);
+
+  const pct = (a, b) => b ? +((a - b) / Math.abs(b) * 100).toFixed(2) : null;
+  return {
+    yoy: prevYear  ? { val: pct(latest.y, prevYear.y),  suffix: '%', label: 'YoY' } : null,
+    mom: prevMonth ? { val: pct(latest.y, prevMonth.y), suffix: '%', label: 'MoM' } : null,
+  };
 }
 
-// ================================================================
-// VALUE FORMAT
-// ================================================================
-function fmtVal(v, unit) {
-  if (unit === '%' || unit === '%p') return v.toFixed(2) + '%';
-  if (unit === 'Index')  return v.toFixed(1);
-  if (unit === 'B$')     return (v >= 1000 ? (v/1000).toFixed(1) + 'T' : v.toFixed(0) + 'B');
-  if (unit === 'M$')     return (v >= 1000 ? (v/1000).toFixed(1) + 'B' : v.toFixed(0) + 'M');
-  if (unit === 'K')      return v.toLocaleString();
-  return v.toFixed(3);
+function renderStatBoxes(stats, ind) {
+  const el = document.getElementById('stat-boxes');
+  if (!stats || ind.noStats) { el.style.display = 'none'; return; }
+
+  const fmt = (s) => {
+    if (!s || s.val === null) return { text: '??, cls: 'stat-neutral' };
+    const sign = s.val > 0 ? '+' : '';
+    return { text: `${sign}${s.val}${s.suffix}`, cls: s.val > 0 ? 'stat-pos' : (s.val < 0 ? 'stat-neg' : 'stat-neutral') };
+  };
+
+  const yoyLabel = ind.transform === 'yoy' ? 'YoY ??Chart' : 'YoY ??Chart';
+  const momLabel = ind.transform === 'yoy' ? 'MoM ? ??Chart' : 'MoM ??Chart';
+  document.querySelector('.stat-box:nth-child(1) .stat-box-label').textContent = yoyLabel;
+  document.querySelector('.stat-box:nth-child(2) .stat-box-label').textContent = momLabel;
+
+  const yoyFmt = fmt(stats.yoy);
+  const momFmt = fmt(stats.mom);
+  const yoyEl = document.getElementById('stat-yoy-val');
+  const momEl = document.getElementById('stat-mom-val');
+  yoyEl.textContent = yoyFmt.text;
+  yoyEl.className = `stat-box-val ${yoyFmt.cls}`;
+  momEl.textContent = momFmt.text;
+  momEl.className = `stat-box-val ${momFmt.cls}`;
+
+  // Highlight active mode
+  document.querySelectorAll('.stat-box').forEach(b => b.classList.remove('active'));
+  if (currentMode === 'yoy') document.querySelector('.stat-box:nth-child(1)').classList.add('active');
+  if (currentMode === 'mom') document.querySelector('.stat-box:nth-child(2)').classList.add('active');
+
+  el.style.display = 'flex';
 }
 
-function fmtDiff(v) {
-  if (v == null || isNaN(v)) return { text: '—', cls: '' };
-  const s = v >= 0 ? '+' : '';
-  return { text: s + v.toFixed(3), cls: v > 0 ? 'pos' : v < 0 ? 'neg' : '' };
+function switchMode(newMode) {
+  if (!currentIndicator || !currentRawData) return;
+  currentMode = (currentMode === newMode) ? defaultMode(currentIndicator) : newMode;
+  const unitSuffix = currentMode === 'yoy' ? '% YoY' : currentMode === 'mom' ? '% MoM' : currentIndicator.unit;
+  const displayInd = { ...currentIndicator, unit: unitSuffix };
+  renderChart(applyTransform(currentRawData, currentMode), displayInd);
+  renderStatBoxes(calcStats(currentRawData, currentIndicator), currentIndicator);
+  latestValEl.textContent = (() => {
+    const d = applyTransform(currentRawData, currentMode);
+    const last = d[d.length - 1];
+    return last ? `${last.y.toLocaleString()} ${unitSuffix} (${last.x})` : '??;
+  })();
 }
 
-// ================================================================
-// OVERLAY
-// ================================================================
-function showSpinner(msg) {
-  const o = document.getElementById('overlay');
-  o.innerHTML = `<div class="spinner"></div><div class="ov-msg">${msg}</div>`;
-  o.classList.remove('hidden');
-}
-function showErr(msg) {
-  const o = document.getElementById('overlay');
-  o.innerHTML = `<div class="ov-msg ov-err">⚠ ${msg}</div>`;
-  o.classList.remove('hidden');
-}
-function hideOverlay() {
-  document.getElementById('overlay').classList.add('hidden');
-}
-
-// ================================================================
-// MOVING AVERAGE
-// ================================================================
-function calcMA(vals, p) {
-  return vals.map((_, i) => {
-    if (i < p - 1) return null;
-    let s = 0;
-    for (let j = i - p + 1; j <= i; j++) s += vals[j];
-    return s / p;
+// ??? MOVING AVERAGE ???????????????????????????????????????????????????????????
+function calcMA(data, period) {
+  return data.map((pt, i) => {
+    if (i < period - 1) return { x: pt.x, y: null };
+    let sum = 0;
+    for (let j = i - period + 1; j <= i; j++) sum += data[j].y;
+    return { x: pt.x, y: +(sum / period).toFixed(4) };
   });
 }
 
-// ================================================================
-// CHART INIT
-// ================================================================
-function initChart() {
-  const ctx = document.getElementById('mainChart').getContext('2d');
-  chart = new Chart(ctx, {
+// ??? FETCH ????????????????????????????????????????????????????????????????????
+async function fetchFRED(seriesId) {
+  if (!apiKey) {
+    throw new Error('API ?ㅺ? ?놁뒿?덈떎. ?곗륫 ?곷떒 ??API Key 踰꾪듉?먯꽌 ?낅젰?섏꽭??');
+  }
+  if (cache[seriesId]) return cache[seriesId];
+
+  const fredUrl = `https://api.stlouisfed.org/fred/series/observations?series_id=${seriesId}&api_key=${apiKey}&file_type=json&sort_order=asc`;
+  const url = `https://corsproxy.io/?${encodeURIComponent(fredUrl)}`;
+  let res;
+  try {
+    res = await fetch(url);
+  } catch (netErr) {
+    throw new Error('?ㅽ듃?뚰겕 ?ㅻ쪟: ?곗씠?곕? 遺덈윭?????놁뒿?덈떎.\n???명꽣???곌껐???뺤씤?섏꽭??n???좎떆 ???ㅼ떆 ?쒕룄?섏꽭??);
+  }
+  if (!res.ok) {
+    throw new Error(`FRED ?쒕쾭 ?ㅻ쪟 (HTTP ${res.status}): ?좎떆 ???ㅼ떆 ?쒕룄?섏꽭??`);
+  }
+  const json = await res.json();
+  if (json.error_message) throw new Error(`FRED API ?ㅻ쪟: ${json.error_message}`);
+
+  const points = json.observations
+    .filter(o => o.value !== '.' && o.value !== '')
+    .map(o => ({ x: o.date, y: parseFloat(o.value) }));
+
+  cache[seriesId] = points;
+  return points;
+}
+
+// ??? CHART ????????????????????????????????????????????????????????????????????
+function filterByYears(data, years) {
+  if (!years) return data;
+  const cutoff = new Date();
+  cutoff.setFullYear(cutoff.getFullYear() - years);
+  const cutStr = cutoff.toISOString().slice(0,10);
+  return data.filter(p => p.x >= cutStr);
+}
+
+function renderChart(allData, ind) {
+  const data = filterByYears(allData, currentYears);
+  const ma3  = filterByYears(calcMA(allData, 3),  currentYears);
+  const ma6  = filterByYears(calcMA(allData, 6),  currentYears);
+  const ma12 = filterByYears(calcMA(allData, 12), currentYears);
+  const ma24 = filterByYears(calcMA(allData, 24), currentYears);
+  const ma60 = filterByYears(calcMA(allData, 60), currentYears);
+
+  const makeLineDS = (label, pts, color, width) => ({
     type: 'line',
-    data: { labels: [], datasets: [] },
+    label,
+    data: pts,
+    borderColor: color,
+    borderWidth: width,
+    pointRadius: 0,
+    tension: 0.3,
+    spanGaps: false,
+  });
+
+  const datasets = [
+    {
+      type: 'bar',
+      label: 'Raw',
+      data,
+      backgroundColor: 'rgba(88,166,255,0.35)',
+      borderColor: 'rgba(88,166,255,0.6)',
+      borderWidth: 0,
+      maxBarThickness: 12,
+      barPercentage: 0.9,
+    },
+    makeLineDS('MA3',  ma3,  '#ff7b72', 1.5),
+    makeLineDS('MA6',  ma6,  '#ffa657', 1.5),
+    makeLineDS('MA12', ma12, '#7ee787', 2),
+    makeLineDS('MA24', ma24, '#d2a8ff', 2),
+    makeLineDS('MA60', ma60, '#e3b341', 2.5),
+  ];
+
+  if (chart) chart.destroy();
+
+  const ctx = document.getElementById('myChart').getContext('2d');
+  chart = new Chart(ctx, {
+    type: 'bar',
+    data: { datasets },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      animation: { duration: 300 },
+      animation: false,
       interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend: {
-          display: true,
-          labels: {
-            color: '#787b86',
-            font: { size: 11 },
-            boxWidth: 16,
-            padding: 14,
-            filter: item => item.text !== '__raw__'
-          }
-        },
+        legend: { display: false },
         tooltip: {
-          backgroundColor: '#1e222d',
-          borderColor: '#2a2e39',
+          backgroundColor: '#1c2128',
+          borderColor: '#30363d',
           borderWidth: 1,
-          titleColor: '#d1d4dc',
-          bodyColor: '#d1d4dc',
-          padding: 10,
+          titleColor: '#e6edf3',
+          bodyColor: '#8b949e',
           callbacks: {
             label: ctx => {
-              if (ctx.parsed.y == null) return null;
-              return ` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(3)}`;
+              if (ctx.parsed.y === null) return null;
+              return `${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString()} ${ind.unit}`;
             }
           }
         }
       },
       scales: {
         x: {
-          ticks: { color:'#787b86', font:{ size:10 }, maxTicksLimit:14, maxRotation:0 },
-          grid:  { color:'rgba(42,46,57,.6)' }
+          type: 'time',
+          time: { tooltipFormat: 'yyyy-MM-dd' },
+          grid: { color: 'rgba(48,54,61,0.5)' },
+          ticks: { color: '#8b949e', maxTicksLimit: 10, font: { size: 10 } }
         },
         y: {
-          ticks: { color:'#787b86', font:{ size:10 } },
-          grid:  { color:'rgba(42,46,57,.6)' }
+          min: getYMin(),
+          max: getYMax(),
+          grid: { color: 'rgba(48,54,61,0.5)' },
+          ticks: { color: '#8b949e', font: { size: 10 }, callback: v => v.toLocaleString() }
+        }
+      },
+      plugins: {
+        zoom: {
+          zoom: { wheel: { enabled: true, speed: 0.08 }, pinch: { enabled: true }, mode: 'x' },
+          pan:  { enabled: true, mode: 'x' },
         }
       }
     }
   });
-}
 
-// ================================================================
-// CHART RENDER
-// ================================================================
-function renderChart(raw, meta) {
-  // Range filter
-  let data = raw;
-  if (rangeMonths > 0) {
-    const cut = new Date();
-    cut.setMonth(cut.getMonth() - rangeMonths);
-    data = raw.filter(d => new Date(d.date) >= cut);
+  // Latest value
+  const last = data[data.length - 1];
+  if (last) {
+    latestValEl.textContent = `${last.y.toLocaleString()} ${ind.unit} (${last.x})`;
   }
-
-  const labels = data.map(d => d.date);
-  const vals   = data.map(d => d.value);
-  const ds     = [];
-
-  // Raw line
-  ds.push({
-    label: meta.name,
-    data: vals,
-    borderColor: '#26a69a',
-    backgroundColor: 'rgba(38,166,154,.04)',
-    borderWidth: 1.8,
-    pointRadius: 0,
-    pointHoverRadius: 3,
-    tension: 0.1,
-    fill: false,
-    order: 99,
-  });
-
-  // MA lines
-  MA_PERIODS.forEach((p, i) => {
-    if (!maOn[p]) return;
-    ds.push({
-      label: `MA${p}`,
-      data: calcMA(vals, p),
-      borderColor: MA_COLOR[p],
-      backgroundColor: 'transparent',
-      borderWidth: 1.5,
-      pointRadius: 0,
-      pointHoverRadius: 0,
-      tension: 0.1,
-      fill: false,
-      spanGaps: false,
-      order: i,
-    });
-  });
-
-  chart.data.labels   = labels;
-  chart.data.datasets = ds;
-  chart.update('none');
 }
 
-// ================================================================
-// STATS
-// ================================================================
-function renderStats(raw) {
-  const n   = raw.length;
-  if (!n) return;
+// ??? SELECT INDICATOR ?????????????????????????????????????????????????????????
+async function selectIndicator(ind) {
+  currentIndicator = ind;
 
-  const lat  = raw[n-1].value;
-  const prev = n > 1  ? raw[n-2].value  : null;
-  const yr   = n > 12 ? raw[n-13].value : null;
+  // Sidebar active
+  document.querySelectorAll('.indicator-item').forEach(el => el.classList.remove('active'));
+  const activeEl = document.querySelector(`.indicator-item[data-id="${ind.id}"]`);
+  if (activeEl) activeEl.classList.add('active');
 
-  const cut5 = new Date(); cut5.setFullYear(cut5.getFullYear() - 5);
-  const v5   = raw.filter(d => new Date(d.date) >= cut5).map(d => d.value);
-  const avg5 = v5.length ? v5.reduce((a,b)=>a+b,0)/v5.length : null;
-  const max5 = v5.length ? Math.max(...v5) : null;
-  const min5 = v5.length ? Math.min(...v5) : null;
+  // Header
+  chartTitle.textContent = ind.name;
+  chartSubtitle.textContent = `${ind.id} 쨌 ${ind.unit} 쨌 Source: FRED`;
 
-  document.getElementById('sLatest').textContent = lat.toFixed(3);
+  // Show loading
+  loadingEl.style.display = 'flex';
+  errorEl.style.display = 'none';
 
-  const mom = fmtDiff(prev != null ? lat - prev : null);
-  const yoy = fmtDiff(yr   != null ? lat - yr   : null);
-  const mEl = document.getElementById('sMoM');
-  const yEl = document.getElementById('sYoY');
-  mEl.textContent = mom.text; mEl.className = 'stat-val ' + mom.cls;
-  yEl.textContent = yoy.text; yEl.className = 'stat-val ' + yoy.cls;
+  const dot = document.getElementById(`dot-${ind.id}`);
+  if (dot) { dot.className = 'status-dot loading'; }
 
-  document.getElementById('sAvg').textContent = avg5 != null ? avg5.toFixed(2) : '—';
-  document.getElementById('sMax').textContent = max5 != null ? max5.toFixed(2) : '—';
-  document.getElementById('sMin').textContent = min5 != null ? min5.toFixed(2) : '—';
+  try {
+    const raw = await fetchFRED(ind.id);
+    currentRawData = raw;
+    currentMode = defaultMode(ind);
+    const data = applyTransform(raw, currentMode);
+    renderChart(data, ind);
+    renderStatBoxes(calcStats(raw, ind), ind);
+    // Reset y-range inputs on new indicator
+    document.getElementById('ymin-input').value = '';
+    document.getElementById('ymax-input').value = '';
+    showYRangeBar();
+    loadingEl.style.display = 'none';
+    if (dot) dot.className = 'status-dot loaded';
+    lastUpdatedEl.textContent = `?낅뜲?댄듃: ${new Date().toLocaleTimeString('ko-KR')}`;
+  } catch (err) {
+    loadingEl.style.display = 'none';
+    errorEl.style.display = 'flex';
+    errDetailEl.textContent = err.message;
+    if (dot) dot.className = 'status-dot error';
+    console.error(err);
+  }
 }
 
-// ================================================================
-// CONTROLS
-// ================================================================
-function setRange(m) {
-  rangeMonths = m;
-  const labels = { 12:'1Y', 36:'3Y', 60:'5Y', 120:'10Y', 0:'MAX' };
-  document.querySelectorAll('.rbtn').forEach(b => {
-    b.classList.toggle('on', b.textContent === (labels[m] || ''));
+// ??? RANGE BUTTONS ????????????????????????????????????????????????????????????
+document.querySelectorAll('.range-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.range-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentYears = parseInt(btn.dataset.years);
+    if (currentIndicator && currentRawData) {
+      renderChart(applyTransform(currentRawData, currentMode), currentIndicator);
+    }
   });
-  if (currentId && cache[currentId]) renderChart(cache[currentId], getMeta(currentId));
+});
+
+// ??? STAT BOX CLICK (mode toggle) ????????????????????????????????????????????
+document.querySelector('.stat-box:nth-child(1)').addEventListener('click', () => switchMode('yoy'));
+document.querySelector('.stat-box:nth-child(2)').addEventListener('click', () => switchMode('mom'));
+
+// ??? RESET ZOOM ??????????????????????????????????????????????????????????????
+document.getElementById('reset-zoom-btn').addEventListener('click', () => {
+  if (chart) chart.resetZoom();
+});
+
+// ??? Y AXIS RANGE ?????????????????????????????????????????????????????????????
+function getYMin() {
+  const v = parseFloat(document.getElementById('ymin-input')?.value);
+  return isNaN(v) ? undefined : v;
+}
+function getYMax() {
+  const v = parseFloat(document.getElementById('ymax-input')?.value);
+  return isNaN(v) ? undefined : v;
 }
 
-function toggleMA(p) {
-  maOn[p] = !maOn[p];
-  document.getElementById('mb' + p).classList.toggle('on', maOn[p]);
-  if (currentId && cache[currentId]) renderChart(cache[currentId], getMeta(currentId));
+['ymin-input', 'ymax-input'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => {
+    if (chart) {
+      chart.options.scales.y.min = getYMin();
+      chart.options.scales.y.max = getYMax();
+      chart.update();
+    }
+  });
+});
+
+document.getElementById('ymin-input').addEventListener('focus', () => {
+  document.getElementById('yrange-bar').style.display = 'flex';
+});
+
+// Y range bar show when chart loaded
+function showYRangeBar() {
+  document.getElementById('yrange-bar').style.display = 'flex';
+}
+
+// ??? API KEY MODAL ????????????????????????????????????????????????????????????
+document.getElementById('api-btn').addEventListener('click', () => {
+  apiKeyInput.value = apiKey;
+  apiModal.classList.add('show');
+});
+
+document.getElementById('save-api-btn').addEventListener('click', () => {
+  const val = apiKeyInput.value.trim();
+  if (val) {
+    apiKey = val;
+    localStorage.setItem(API_KEY_STORAGE, val);
+    cache = {};
+    apiModal.classList.remove('show');
+    selectIndicator(currentIndicator || INDICATORS[0]);
+  }
+});
+
+apiModal.addEventListener('click', e => {
+  if (e.target === apiModal) apiModal.classList.remove('show');
+});
+
+// ??? INIT ?????????????????????????????????????????????????????????????????????
+buildSidebar();
+loadingEl.style.display = 'none';
+
+if (!apiKey) {
+  apiModal.classList.add('show');
+} else {
+  // Auto-load first indicator
+  selectIndicator(INDICATORS[0]);
 }
 </script>
 </body>
