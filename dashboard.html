@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>寃쎌젣?덉씠??쨌 誘쇳솉</title>
+  <title>경제레이더 · 민홍</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
@@ -36,7 +36,7 @@
       overflow: hidden;
     }
 
-    /* ?? SIDEBAR ?? */
+    /* ── SIDEBAR ── */
     #sidebar {
       width: var(--sidebar-width);
       background: var(--sidebar-bg);
@@ -122,7 +122,7 @@
     .indicator-item .status-dot.loading { background: var(--yellow); }
     .indicator-item .status-dot.error { background: var(--red); }
 
-    /* ?? MAIN ?? */
+    /* ── MAIN ── */
     #main {
       flex: 1;
       display: flex;
@@ -269,7 +269,7 @@
     #error-msg .err-text { font-size: 13px; color: var(--text-muted); }
     #error-msg .err-detail { font-size: 11px; color: var(--red); max-width: 400px; text-align: center; }
 
-    /* API Key?ㅼ젙 紐⑤떖 */
+    /* API Key설정 모달 */
     #api-modal {
       display: none;
       position: fixed;
@@ -444,14 +444,14 @@
 <!-- Sidebar -->
 <nav id="sidebar">
   <div id="sidebar-header">
-    <h1>寃쎌젣?덉씠??쨌 誘쇳솉</h1>
-    <p id="last-updated">?곗씠??濡쒕뵫 ??/p>
+    <h1>경제레이더 · 민홍</h1>
+    <p id="last-updated">데이터 로딩 전</p>
   </div>
   <div id="country-tabs">
-    <button class="country-btn active" data-country="US">?눣?눡 US</button>
-    <button class="country-btn disabled" data-country="KR" title="以鍮?以?>?눖?눟 KR</button>
-    <button class="country-btn disabled" data-country="JP" title="以鍮?以?>?눓?눝 JP</button>
-    <button class="country-btn disabled" data-country="EU" title="以鍮?以?>?눎?눣 EU</button>
+    <button class="country-btn active" data-country="US">🇺🇸 US</button>
+    <button class="country-btn disabled" data-country="KR" title="준비 중">🇰🇷 KR</button>
+    <button class="country-btn disabled" data-country="JP" title="준비 중">🇯🇵 JP</button>
+    <button class="country-btn disabled" data-country="EU" title="준비 중">🇪🇺 EU</button>
   </div>
   <div id="sidebar-scroll" id="indicator-list"></div>
 </nav>
@@ -460,17 +460,17 @@
 <main id="main">
   <div id="topbar">
     <div>
-      <div id="chart-title">吏?쒕? ?좏깮?섏꽭??/div>
-      <div id="chart-subtitle">??/div>
+      <div id="chart-title">지표를 선택하세요</div>
+      <div id="chart-subtitle">—</div>
     </div>
     <div id="stat-boxes">
       <div class="stat-box">
         <div class="stat-box-label">YoY</div>
-        <div class="stat-box-val stat-neutral" id="stat-yoy-val">??/div>
+        <div class="stat-box-val stat-neutral" id="stat-yoy-val">—</div>
       </div>
       <div class="stat-box">
         <div class="stat-box-label">MoM</div>
-        <div class="stat-box-val stat-neutral" id="stat-mom-val">??/div>
+        <div class="stat-box-val stat-neutral" id="stat-mom-val">—</div>
       </div>
     </div>
     <div id="controls">
@@ -478,17 +478,17 @@
       <button class="range-btn active" data-years="10">10Y</button>
       <button class="range-btn" data-years="20">20Y</button>
       <button class="range-btn" data-years="0">All</button>
-      <button class="api-setting-btn" id="api-btn">??API Key</button>
+      <button class="api-setting-btn" id="api-btn">⚙ API Key</button>
     </div>
   </div>
 
   <div id="chart-area">
     <div id="chart-wrapper">
       <canvas id="myChart"></canvas>
-      <div id="loading-overlay"><div class="spinner"></div> ?곗씠??遺덈윭?ㅻ뒗 以?..</div>
+      <div id="loading-overlay"><div class="spinner"></div> 데이터 불러오는 중...</div>
       <div id="error-msg">
-        <div class="err-icon">??/div>
-        <div class="err-text">?곗씠?곕? 遺덈윭?????놁뒿?덈떎</div>
+        <div class="err-icon">⚠</div>
+        <div class="err-text">데이터를 불러올 수 없습니다</div>
         <div class="err-detail" id="err-detail-text"></div>
       </div>
     </div>
@@ -501,83 +501,83 @@
     <div class="legend-item"><div class="legend-color" style="background:#7ee787;opacity:0.9"></div> MA12</div>
     <div class="legend-item"><div class="legend-color" style="background:#d2a8ff;opacity:0.9"></div> MA24</div>
     <div class="legend-item"><div class="legend-color" style="background:#e3b341;opacity:0.9"></div> MA60</div>
-    <button id="reset-zoom-btn">??Reset</button>
+    <button id="reset-zoom-btn">↺ Reset</button>
     <div id="yrange-bar">
-      Y異? <input class="yrange-input" id="ymin-input" placeholder="Min" />
+      Y축: <input class="yrange-input" id="ymin-input" placeholder="Min" />
       ~ <input class="yrange-input" id="ymax-input" placeholder="Max" />
     </div>
-    <div id="latest-value">理쒖떊媛? <span id="latest-val-num">??/span></div>
+    <div id="latest-value">최신값: <span id="latest-val-num">—</span></div>
   </div>
 </main>
 
-<!-- API Key 紐⑤떖 -->
+<!-- API Key 모달 -->
 <div id="api-modal">
   <div id="api-box">
-    <h2>FRED API Key ?ㅼ젙</h2>
-    <p>St. Louis Fed FRED API ?ㅻ? ?낅젰?섏꽭??<br>
-       <a href="https://fred.stlouisfed.org/docs/api/api_key.html" target="_blank" style="color:var(--accent)">諛쒓툒 留곹겕 (臾대즺)</a>
+    <h2>FRED API Key 설정</h2>
+    <p>St. Louis Fed FRED API 키를 입력하세요.<br>
+       <a href="https://fred.stlouisfed.org/docs/api/api_key.html" target="_blank" style="color:var(--accent)">발급 링크 (무료)</a>
     </p>
-    <input type="text" id="api-key-input" placeholder="?? 5b4992d3d01f61fd0f0be3ade5328568" />
-    <button id="save-api-btn">???/button>
+    <input type="text" id="api-key-input" placeholder="예: 5b4992d3d01f61fd0f0be3ade5328568" />
+    <button id="save-api-btn">저장</button>
   </div>
 </div>
 
 <script>
-// ??? INDICATORS CONFIG ???????????????????????????????????????????????????????
+// ─── INDICATORS CONFIG ───────────────────────────────────────────────────────
 const INDICATORS = [
-  // 臾쇨?
-  { id:'CPIAUCSL',           name:'CPI (?꾩껜)',            unit:'% YoY',  category:'臾쇨? / INFLATION', transform:'yoy' },
-  { id:'PPIACO',             name:'PPI (?꾩껜)',            unit:'% YoY',  category:'臾쇨? / INFLATION', transform:'yoy' },
-  { id:'WPSFD4131',          name:'Core PPI',              unit:'% YoY',  category:'臾쇨? / INFLATION', transform:'yoy' },
-  { id:'CPILFESL',           name:'Core CPI',              unit:'% YoY',  category:'臾쇨? / INFLATION', transform:'yoy' },
-  { id:'PCEPI',              name:'PCE 臾쇨?吏??,           unit:'% YoY',  category:'臾쇨? / INFLATION', transform:'yoy' },
-  { id:'PCEPILFE',           name:'Core PCE',              unit:'% YoY',  category:'臾쇨? / INFLATION', transform:'yoy' },
+  // 물가
+  { id:'CPIAUCSL',           name:'CPI (전체)',            unit:'% YoY',  category:'물가 / INFLATION', transform:'yoy' },
+  { id:'PPIACO',             name:'PPI (전체)',            unit:'% YoY',  category:'물가 / INFLATION', transform:'yoy' },
+  { id:'WPSFD4131',          name:'Core PPI',              unit:'% YoY',  category:'물가 / INFLATION', transform:'yoy' },
+  { id:'CPILFESL',           name:'Core CPI',              unit:'% YoY',  category:'물가 / INFLATION', transform:'yoy' },
+  { id:'PCEPI',              name:'PCE 물가지수',           unit:'% YoY',  category:'물가 / INFLATION', transform:'yoy' },
+  { id:'PCEPILFE',           name:'Core PCE',              unit:'% YoY',  category:'물가 / INFLATION', transform:'yoy' },
 
-  // 怨좎슜
-  { id:'UNRATE',             name:'?ㅼ뾽瑜?,                unit:'%',      category:'怨좎슜 / EMPLOYMENT' },
-  { id:'PAYEMS',             name:'鍮꾨냽??怨좎슜',            unit:'K',      category:'怨좎슜 / EMPLOYMENT' },
-  { id:'CIVPART',            name:'寃쎌젣?쒕룞李멸???,          unit:'%',      category:'怨좎슜 / EMPLOYMENT' },
-  { id:'ICSA',               name:'?좉퇋 ?ㅼ뾽?섎떦 泥?뎄',      unit:'K',      category:'怨좎슜 / EMPLOYMENT' },
-  { id:'CCSA',               name:'?곗냽 ?ㅼ뾽?섎떦 泥?뎄',      unit:'K',      category:'怨좎슜 / EMPLOYMENT' },
-  { id:'JTSJOL',             name:'JOLTS 援ъ씤嫄댁닔',         unit:'K',      category:'怨좎슜 / EMPLOYMENT' },
-  { id:'JTSHIL',             name:'JOLTS 怨좎슜嫄댁닔',         unit:'K',      category:'怨좎슜 / EMPLOYMENT' },
-  { id:'JTSLDL',             name:'JOLTS ?닿퀬嫄댁닔',         unit:'K',      category:'怨좎슜 / EMPLOYMENT' },
-  { id:'JTSQUL',             name:'JOLTS ?댁쭅嫄댁닔',         unit:'K',      category:'怨좎슜 / EMPLOYMENT' },
+  // 고용
+  { id:'UNRATE',             name:'실업률',                unit:'%',      category:'고용 / EMPLOYMENT' },
+  { id:'PAYEMS',             name:'비농업 고용',            unit:'K',      category:'고용 / EMPLOYMENT' },
+  { id:'CIVPART',            name:'경제활동참가율',          unit:'%',      category:'고용 / EMPLOYMENT' },
+  { id:'ICSA',               name:'신규 실업수당 청구',      unit:'K',      category:'고용 / EMPLOYMENT' },
+  { id:'CCSA',               name:'연속 실업수당 청구',      unit:'K',      category:'고용 / EMPLOYMENT' },
+  { id:'JTSJOL',             name:'JOLTS 구인건수',         unit:'K',      category:'고용 / EMPLOYMENT' },
+  { id:'JTSHIL',             name:'JOLTS 고용건수',         unit:'K',      category:'고용 / EMPLOYMENT' },
+  { id:'JTSLDL',             name:'JOLTS 해고건수',         unit:'K',      category:'고용 / EMPLOYMENT' },
+  { id:'JTSQUL',             name:'JOLTS 퇴직건수',         unit:'K',      category:'고용 / EMPLOYMENT' },
 
-  // ?깆옣
-  { id:'GDPC1',              name:'?ㅼ쭏 GDP',              unit:'B$',     category:'?깆옣 / GROWTH' },
-  { id:'A191RL1Q225SBEA',    name:'GDP ?깆옣瑜?,            unit:'%',      category:'?깆옣 / GROWTH' },
+  // 성장
+  { id:'GDPC1',              name:'실질 GDP',              unit:'B$',     category:'성장 / GROWTH' },
+  { id:'A191RL1Q225SBEA',    name:'GDP 성장률',            unit:'%',      category:'성장 / GROWTH' },
 
-  // PMI  (NAPM=ISM?쒖“??2019?꾧퉴吏留??쒓났, NMFBAI=ISM鍮꾩젣議곗뾽 泥닿컧吏??
-  { id:'NAPM',               name:'ISM PMI ?쒖“??,         unit:'Index',  category:'PMI' },
-  { id:'NMFBAI',             name:'ISM PMI ?쒕퉬?ㅼ뾽(泥닿컧)',  unit:'Index',  category:'PMI' },
+  // PMI  (NAPM=ISM제조업 2019년까지만 제공, NMFBAI=ISM비제조업 체감지수)
+  { id:'NAPM',               name:'ISM PMI 제조업',         unit:'Index',  category:'PMI' },
+  { id:'NMFBAI',             name:'ISM PMI 서비스업(체감)',  unit:'Index',  category:'PMI' },
 
-  // 湲덈━
-  { id:'FEDFUNDS',           name:'湲곗?湲덈━ (FFR)',          unit:'%',      category:'湲덈━ / INTEREST RATES' },
-  { id:'DGS10',              name:'10?꾨Ъ 援?콈',             unit:'%',      category:'湲덈━ / INTEREST RATES', noStats:true },
-  { id:'DGS2',               name:'2?꾨Ъ 援?콈',              unit:'%',      category:'湲덈━ / INTEREST RATES', noStats:true },
-  { id:'T10Y2Y',             name:'?λ떒湲??ㅽ봽?덈뱶',          unit:'%p',     category:'湲덈━ / INTEREST RATES' },
+  // 금리
+  { id:'FEDFUNDS',           name:'기준금리 (FFR)',          unit:'%',      category:'금리 / INTEREST RATES' },
+  { id:'DGS10',              name:'10년물 국채',             unit:'%',      category:'금리 / INTEREST RATES', noStats:true },
+  { id:'DGS2',               name:'2년물 국채',              unit:'%',      category:'금리 / INTEREST RATES', noStats:true },
+  { id:'T10Y2Y',             name:'장단기 스프레드',          unit:'%p',     category:'금리 / INTEREST RATES' },
 
-  // 二쇳깮
-  { id:'HOUST',              name:'二쇳깮李⑷났嫄댁닔',            unit:'K',      category:'二쇳깮 / HOUSING' },
-  { id:'CSUSHPISA',          name:'耳?댁뒪-?ㅻ윭 二쇳깮媛寃?,    unit:'Index',  category:'二쇳깮 / HOUSING' },
-  { id:'MORTGAGE30US',       name:'30??紐④린吏 湲덈━',        unit:'%',      category:'二쇳깮 / HOUSING' },
+  // 주택
+  { id:'HOUST',              name:'주택착공건수',            unit:'K',      category:'주택 / HOUSING' },
+  { id:'CSUSHPISA',          name:'케이스-실러 주택가격',    unit:'Index',  category:'주택 / HOUSING' },
+  { id:'MORTGAGE30US',       name:'30년 모기지 금리',        unit:'%',      category:'주택 / HOUSING' },
 
-  // ?뚮퉬
-  { id:'RSAFS',              name:'?뚮ℓ?먮ℓ',               unit:'% YoY',  category:'?뚮퉬 / CONSUMER', transform:'yoy' },
-  { id:'UMCSENT',            name:'誘몄떆媛??뚮퉬?먯떖由?,        unit:'Index',  category:'?뚮퉬 / CONSUMER' },
-  { id:'PCE',                name:'媛쒖씤?뚮퉬吏異?(PCE)',      unit:'% YoY',  category:'?뚮퉬 / CONSUMER', transform:'yoy' },
+  // 소비
+  { id:'RSAFS',              name:'소매판매',               unit:'% YoY',  category:'소비 / CONSUMER', transform:'yoy' },
+  { id:'UMCSENT',            name:'미시간 소비자심리',        unit:'Index',  category:'소비 / CONSUMER' },
+  { id:'PCE',                name:'개인소비지출 (PCE)',      unit:'% YoY',  category:'소비 / CONSUMER', transform:'yoy' },
 
-  // ?듯솕
-  { id:'M2SL',               name:'M2 ?듯솕??,              unit:'B$',     category:'?듯솕 / MONEY SUPPLY' },
-  { id:'BOGMBASE',           name:'蹂몄썝?듯솕',               unit:'M$',     category:'?듯솕 / MONEY SUPPLY' },
+  // 통화
+  { id:'M2SL',               name:'M2 통화량',              unit:'B$',     category:'통화 / MONEY SUPPLY' },
+  { id:'BOGMBASE',           name:'본원통화',               unit:'M$',     category:'통화 / MONEY SUPPLY' },
 
-  // 援?젣
-  { id:'DTWEXBGS',           name:'?щ윭 ?몃뜳??(臾댁뿭媛以?',   unit:'Index',  category:'援?젣 / INTERNATIONAL' },
-  { id:'BAMLH0A0HYM2',       name:'?섏씠?쇰뱶 ?ㅽ봽?덈뱶',       unit:'%p',     category:'援?젣 / INTERNATIONAL' },
+  // 국제
+  { id:'DTWEXBGS',           name:'달러 인덱스 (무역가중)',   unit:'Index',  category:'국제 / INTERNATIONAL' },
+  { id:'BAMLH0A0HYM2',       name:'하이일드 스프레드',       unit:'%p',     category:'국제 / INTERNATIONAL' },
 ];
 
-// ??? STATE ???????????????????????????????????????????????????????????????????
+// ─── STATE ───────────────────────────────────────────────────────────────────
 const API_KEY_STORAGE = 'fred_api_key';
 let apiKey = localStorage.getItem(API_KEY_STORAGE) || '';
 let currentIndicator = null;
@@ -587,7 +587,7 @@ let currentRawData = null;
 let chart = null;
 let cache = {};
 
-// ??? DOM REFS ?????????????????????????????????????????????????????????????????
+// ─── DOM REFS ─────────────────────────────────────────────────────────────────
 const sidebarScroll = document.getElementById('sidebar-scroll');
 const chartTitle    = document.getElementById('chart-title');
 const chartSubtitle = document.getElementById('chart-subtitle');
@@ -599,7 +599,7 @@ const lastUpdatedEl = document.getElementById('last-updated');
 const apiModal      = document.getElementById('api-modal');
 const apiKeyInput   = document.getElementById('api-key-input');
 
-// ??? SIDEBAR BUILD ????????????????????????????????????????????????????????????
+// ─── SIDEBAR BUILD ────────────────────────────────────────────────────────────
 function buildSidebar() {
   sidebarScroll.innerHTML = '';
   const categories = [...new Set(INDICATORS.map(i => i.category))];
@@ -616,7 +616,7 @@ function buildSidebar() {
       el.innerHTML = `
         <div>
           <div class="name">${ind.name}</div>
-          <div class="meta">${ind.id} 쨌 ${ind.unit}</div>
+          <div class="meta">${ind.id} · ${ind.unit}</div>
         </div>
         <div class="status-dot" id="dot-${ind.id}"></div>
       `;
@@ -626,7 +626,7 @@ function buildSidebar() {
   });
 }
 
-// ??? TRANSFORMS ??????????????????????????????????????????????????????????????
+// ─── TRANSFORMS ──────────────────────────────────────────────────────────────
 function calcMoM(data) {
   return data.map((pt, i) => {
     if (i === 0) return { x: pt.x, y: null };
@@ -646,7 +646,7 @@ function defaultMode(ind) {
   return ind.transform === 'yoy' ? 'yoy' : 'raw';
 }
 
-// ??? YOY TRANSFORM ???????????????????????????????????????????????????????????
+// ─── YOY TRANSFORM ───────────────────────────────────────────────────────────
 function calcYoY(data) {
   return data.map(pt => {
     const d = new Date(pt.x);
@@ -661,7 +661,7 @@ function calcYoY(data) {
   }).filter(pt => pt.y !== null);
 }
 
-// ??? STATS (YoY / MoM) ???????????????????????????????????????????????????????
+// ─── STATS (YoY / MoM) ───────────────────────────────────────────────────────
 function calcStats(rawData, ind) {
   if (!rawData || rawData.length < 2) return null;
   const latest = rawData[rawData.length - 1];
@@ -673,7 +673,7 @@ function calcStats(rawData, ind) {
     const prev = yoyData[yoyData.length - 2];
     return {
       yoy: { val: last.y, suffix: '%', label: 'YoY' },
-      mom: { val: +(last.y - prev.y).toFixed(2), suffix: 'pp', label: 'MoM ?' },
+      mom: { val: +(last.y - prev.y).toFixed(2), suffix: 'pp', label: 'MoM Δ' },
     };
   }
 
@@ -703,13 +703,13 @@ function renderStatBoxes(stats, ind) {
   if (!stats || ind.noStats) { el.style.display = 'none'; return; }
 
   const fmt = (s) => {
-    if (!s || s.val === null) return { text: '??, cls: 'stat-neutral' };
+    if (!s || s.val === null) return { text: '—', cls: 'stat-neutral' };
     const sign = s.val > 0 ? '+' : '';
     return { text: `${sign}${s.val}${s.suffix}`, cls: s.val > 0 ? 'stat-pos' : (s.val < 0 ? 'stat-neg' : 'stat-neutral') };
   };
 
-  const yoyLabel = ind.transform === 'yoy' ? 'YoY ??Chart' : 'YoY ??Chart';
-  const momLabel = ind.transform === 'yoy' ? 'MoM ? ??Chart' : 'MoM ??Chart';
+  const yoyLabel = ind.transform === 'yoy' ? 'YoY ▸ Chart' : 'YoY ▸ Chart';
+  const momLabel = ind.transform === 'yoy' ? 'MoM Δ ▸ Chart' : 'MoM ▸ Chart';
   document.querySelector('.stat-box:nth-child(1) .stat-box-label').textContent = yoyLabel;
   document.querySelector('.stat-box:nth-child(2) .stat-box-label').textContent = momLabel;
 
@@ -740,11 +740,11 @@ function switchMode(newMode) {
   latestValEl.textContent = (() => {
     const d = applyTransform(currentRawData, currentMode);
     const last = d[d.length - 1];
-    return last ? `${last.y.toLocaleString()} ${unitSuffix} (${last.x})` : '??;
+    return last ? `${last.y.toLocaleString()} ${unitSuffix} (${last.x})` : '—';
   })();
 }
 
-// ??? MOVING AVERAGE ???????????????????????????????????????????????????????????
+// ─── MOVING AVERAGE ───────────────────────────────────────────────────────────
 function calcMA(data, period) {
   return data.map((pt, i) => {
     if (i < period - 1) return { x: pt.x, y: null };
@@ -754,10 +754,10 @@ function calcMA(data, period) {
   });
 }
 
-// ??? FETCH ????????????????????????????????????????????????????????????????????
+// ─── FETCH ────────────────────────────────────────────────────────────────────
 async function fetchFRED(seriesId) {
   if (!apiKey) {
-    throw new Error('API ?ㅺ? ?놁뒿?덈떎. ?곗륫 ?곷떒 ??API Key 踰꾪듉?먯꽌 ?낅젰?섏꽭??');
+    throw new Error('API 키가 없습니다. 우측 상단 ⚙ API Key 버튼에서 입력하세요.');
   }
   if (cache[seriesId]) return cache[seriesId];
 
@@ -767,13 +767,13 @@ async function fetchFRED(seriesId) {
   try {
     res = await fetch(url);
   } catch (netErr) {
-    throw new Error('?ㅽ듃?뚰겕 ?ㅻ쪟: ?곗씠?곕? 遺덈윭?????놁뒿?덈떎.\n???명꽣???곌껐???뺤씤?섏꽭??n???좎떆 ???ㅼ떆 ?쒕룄?섏꽭??);
+    throw new Error('네트워크 오류: 데이터를 불러올 수 없습니다.\n• 인터넷 연결을 확인하세요\n• 잠시 후 다시 시도하세요');
   }
   if (!res.ok) {
-    throw new Error(`FRED ?쒕쾭 ?ㅻ쪟 (HTTP ${res.status}): ?좎떆 ???ㅼ떆 ?쒕룄?섏꽭??`);
+    throw new Error(`FRED 서버 오류 (HTTP ${res.status}): 잠시 후 다시 시도하세요.`);
   }
   const json = await res.json();
-  if (json.error_message) throw new Error(`FRED API ?ㅻ쪟: ${json.error_message}`);
+  if (json.error_message) throw new Error(`FRED API 오류: ${json.error_message}`);
 
   const points = json.observations
     .filter(o => o.value !== '.' && o.value !== '')
@@ -783,7 +783,7 @@ async function fetchFRED(seriesId) {
   return points;
 }
 
-// ??? CHART ????????????????????????????????????????????????????????????????????
+// ─── CHART ────────────────────────────────────────────────────────────────────
 function filterByYears(data, years) {
   if (!years) return data;
   const cutoff = new Date();
@@ -886,7 +886,7 @@ function renderChart(allData, ind) {
   }
 }
 
-// ??? SELECT INDICATOR ?????????????????????????????????????????????????????????
+// ─── SELECT INDICATOR ─────────────────────────────────────────────────────────
 async function selectIndicator(ind) {
   currentIndicator = ind;
 
@@ -897,7 +897,7 @@ async function selectIndicator(ind) {
 
   // Header
   chartTitle.textContent = ind.name;
-  chartSubtitle.textContent = `${ind.id} 쨌 ${ind.unit} 쨌 Source: FRED`;
+  chartSubtitle.textContent = `${ind.id} · ${ind.unit} · Source: FRED`;
 
   // Show loading
   loadingEl.style.display = 'flex';
@@ -919,7 +919,7 @@ async function selectIndicator(ind) {
     showYRangeBar();
     loadingEl.style.display = 'none';
     if (dot) dot.className = 'status-dot loaded';
-    lastUpdatedEl.textContent = `?낅뜲?댄듃: ${new Date().toLocaleTimeString('ko-KR')}`;
+    lastUpdatedEl.textContent = `업데이트: ${new Date().toLocaleTimeString('ko-KR')}`;
   } catch (err) {
     loadingEl.style.display = 'none';
     errorEl.style.display = 'flex';
@@ -929,7 +929,7 @@ async function selectIndicator(ind) {
   }
 }
 
-// ??? RANGE BUTTONS ????????????????????????????????????????????????????????????
+// ─── RANGE BUTTONS ────────────────────────────────────────────────────────────
 document.querySelectorAll('.range-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.range-btn').forEach(b => b.classList.remove('active'));
@@ -941,16 +941,16 @@ document.querySelectorAll('.range-btn').forEach(btn => {
   });
 });
 
-// ??? STAT BOX CLICK (mode toggle) ????????????????????????????????????????????
+// ─── STAT BOX CLICK (mode toggle) ────────────────────────────────────────────
 document.querySelector('.stat-box:nth-child(1)').addEventListener('click', () => switchMode('yoy'));
 document.querySelector('.stat-box:nth-child(2)').addEventListener('click', () => switchMode('mom'));
 
-// ??? RESET ZOOM ??????????????????????????????????????????????????????????????
+// ─── RESET ZOOM ──────────────────────────────────────────────────────────────
 document.getElementById('reset-zoom-btn').addEventListener('click', () => {
   if (chart) chart.resetZoom();
 });
 
-// ??? Y AXIS RANGE ?????????????????????????????????????????????????????????????
+// ─── Y AXIS RANGE ─────────────────────────────────────────────────────────────
 function getYMin() {
   const v = parseFloat(document.getElementById('ymin-input')?.value);
   return isNaN(v) ? undefined : v;
@@ -979,7 +979,7 @@ function showYRangeBar() {
   document.getElementById('yrange-bar').style.display = 'flex';
 }
 
-// ??? API KEY MODAL ????????????????????????????????????????????????????????????
+// ─── API KEY MODAL ────────────────────────────────────────────────────────────
 document.getElementById('api-btn').addEventListener('click', () => {
   apiKeyInput.value = apiKey;
   apiModal.classList.add('show');
@@ -1000,7 +1000,7 @@ apiModal.addEventListener('click', e => {
   if (e.target === apiModal) apiModal.classList.remove('show');
 });
 
-// ??? INIT ?????????????????????????????????????????????????????????????????????
+// ─── INIT ─────────────────────────────────────────────────────────────────────
 buildSidebar();
 loadingEl.style.display = 'none';
 
