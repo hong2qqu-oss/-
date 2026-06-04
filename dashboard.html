@@ -513,12 +513,18 @@
 <!-- API Key 모달 -->
 <div id="api-modal">
   <div id="api-box">
-    <h2>FRED API Key 설정</h2>
-    <p>St. Louis Fed FRED API 키를 입력하세요.<br>
-       <a href="https://fred.stlouisfed.org/docs/api/api_key.html" target="_blank" style="color:var(--accent)">발급 링크 (무료)</a>
+    <h2>API Key 설정</h2>
+    <p style="margin-bottom:10px">
+      <b style="color:var(--accent)">FRED</b> — 경제지표 전반<br>
+      <a href="https://fred.stlouisfed.org/docs/api/api_key.html" target="_blank" style="color:var(--text-muted);font-size:11px">발급 링크 (무료)</a>
     </p>
-    <input type="text" id="api-key-input" placeholder="예: 5b4992d3d01f61fd0f0be3ade5328568" />
-    <button id="save-api-btn">저장</button>
+    <input type="text" id="api-key-input" placeholder="FRED API Key" />
+    <p style="margin:10px 0 6px">
+      <b style="color:#ffa657">Alpha Vantage</b> — ISM PMI 전용<br>
+      <a href="https://www.alphavantage.co/support/#api-key" target="_blank" style="color:var(--text-muted);font-size:11px">발급 링크 (무료, 하루 25회)</a>
+    </p>
+    <input type="text" id="av-key-input" placeholder="Alpha Vantage API Key (선택)" />
+    <button id="save-api-btn" style="margin-top:14px">저장</button>
   </div>
 </div>
 
@@ -548,15 +554,16 @@ const INDICATORS = [
   // 성장
   { id:'GDPC1',              name:'실질 GDP',                unit:'% YoY',  category:'성장 / GROWTH', transform:'yoy' },
 
-  // PMI  (FRED: 2019년까지만 제공)
-  { id:'NAPM',               name:'ISM PMI 제조업',           unit:'Index',  category:'PMI' },
-  { id:'NMFBAI',             name:'ISM PMI 서비스업(체감)',    unit:'Index',  category:'PMI' },
+  // PMI  (ISM: Alpha Vantage API, 필라델피아: FRED)
+  { id:'ISM_PMI',     name:'ISM PMI 제조업',          unit:'Index', category:'PMI', source:'av', avFunc:'ISM_PMI' },
+  { id:'ISM_NON_PMI', name:'ISM PMI 서비스업',         unit:'Index', category:'PMI', source:'av', avFunc:'ISM_NON_PMI' },
+  { id:'MFGPHLX',    name:'필라델피아 제조업 서베이',   unit:'Index', category:'PMI' },
 
-  // 금리 & 스프레드
+  // 금리 & 스프레드  (T10Y2Y, BAMLH0A0HYM2: 일간→월간 집계)
   { id:'FEDFUNDS',           name:'기준금리 (FFR)',            unit:'%',      category:'금리 & 스프레드' },
   { id:'MORTGAGE30US',       name:'30년 모기지 금리',          unit:'%',      category:'금리 & 스프레드' },
-  { id:'T10Y2Y',             name:'장단기 스프레드 (10Y-2Y)',  unit:'%p',     category:'금리 & 스프레드' },
-  { id:'BAMLH0A0HYM2',       name:'하이일드 스프레드',         unit:'%p',     category:'금리 & 스프레드' },
+  { id:'T10Y2Y',             name:'장단기 스프레드 (10Y-2Y)',  unit:'%p',     category:'금리 & 스프레드', freq:'m' },
+  { id:'BAMLH0A0HYM2',       name:'하이일드 스프레드',         unit:'%p',     category:'금리 & 스프레드', freq:'m' },
 
   // 주택
   { id:'HOUST',              name:'주택착공건수',              unit:'K',      category:'주택 / HOUSING' },
@@ -576,7 +583,9 @@ const INDICATORS = [
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
 const API_KEY_STORAGE = 'fred_api_key';
+const AV_KEY_STORAGE  = 'av_api_key';
 let apiKey = localStorage.getItem(API_KEY_STORAGE) || '';
+let avKey  = localStorage.getItem(AV_KEY_STORAGE)  || '';
 let currentIndicator = null;
 let currentYears = 10;
 let currentMode = 'raw'; // 'raw' | 'yoy' | 'mom'
@@ -752,13 +761,15 @@ function calcMA(data, period) {
 }
 
 // ─── FETCH ────────────────────────────────────────────────────────────────────
-async function fetchFRED(seriesId) {
+async function fetchFRED(seriesId, freq) {
   if (!apiKey) {
     throw new Error('API 키가 없습니다. 우측 상단 ⚙ API Key 버튼에서 입력하세요.');
   }
-  if (cache[seriesId]) return cache[seriesId];
+  const cacheKey = `${seriesId}_${freq||''}`;
+  if (cache[cacheKey]) return cache[cacheKey];
 
-  const fredUrl = `https://api.stlouisfed.org/fred/series/observations?series_id=${seriesId}&api_key=${apiKey}&file_type=json&sort_order=asc`;
+  const freqParam = freq ? `&frequency=${freq}&aggregation_method=avg` : '';
+  const fredUrl = `https://api.stlouisfed.org/fred/series/observations?series_id=${seriesId}&api_key=${apiKey}&file_type=json&sort_order=asc${freqParam}`;
   const url = `https://corsproxy.io/?${encodeURIComponent(fredUrl)}`;
   let res;
   try {
@@ -776,7 +787,32 @@ async function fetchFRED(seriesId) {
     .filter(o => o.value !== '.' && o.value !== '')
     .map(o => ({ x: o.date, y: parseFloat(o.value) }));
 
-  cache[seriesId] = points;
+  cache[cacheKey] = points;
+  return points;
+}
+
+// ─── FETCH: ALPHA VANTAGE ────────────────────────────────────────────────────
+async function fetchAV(func) {
+  if (!avKey) throw new Error('Alpha Vantage API 키가 없습니다.\n⚙ API Key 버튼에서 입력하세요.\n발급: alphavantage.co/support/#api-key (무료)');
+  const cacheKey = `av_${func}`;
+  if (cache[cacheKey]) return cache[cacheKey];
+
+  const url = `https://www.alphavantage.co/query?function=${func}&apikey=${avKey}`;
+  let res;
+  try { res = await fetch(url); }
+  catch (e) { throw new Error('네트워크 오류: Alpha Vantage에 연결할 수 없습니다.'); }
+  if (!res.ok) throw new Error(`Alpha Vantage 서버 오류 (HTTP ${res.status})`);
+  const json = await res.json();
+  if (json['Information']) throw new Error(`Alpha Vantage: ${json['Information']}`);
+  if (json['Note']) throw new Error(`Alpha Vantage 요청 한도 초과: ${json['Note']}`);
+  if (!json.data) throw new Error('Alpha Vantage: 데이터 없음 (API 키 확인)');
+
+  const points = json.data
+    .filter(d => d.value !== '.' && d.value !== '')
+    .map(d => ({ x: d.date, y: parseFloat(d.value) }))
+    .sort((a, b) => a.x.localeCompare(b.x));
+
+  cache[cacheKey] = points;
   return points;
 }
 
@@ -904,7 +940,7 @@ async function selectIndicator(ind) {
   if (dot) { dot.className = 'status-dot loading'; }
 
   try {
-    const raw = await fetchFRED(ind.id);
+    const raw = ind.source === 'av' ? await fetchAV(ind.avFunc) : await fetchFRED(ind.id, ind.freq);
     currentRawData = raw;
     currentMode = defaultMode(ind);
     const data = applyTransform(raw, currentMode);
@@ -979,14 +1015,22 @@ function showYRangeBar() {
 // ─── API KEY MODAL ────────────────────────────────────────────────────────────
 document.getElementById('api-btn').addEventListener('click', () => {
   apiKeyInput.value = apiKey;
+  document.getElementById('av-key-input').value = avKey;
   apiModal.classList.add('show');
 });
 
 document.getElementById('save-api-btn').addEventListener('click', () => {
-  const val = apiKeyInput.value.trim();
+  const val   = apiKeyInput.value.trim();
+  const avVal = document.getElementById('av-key-input').value.trim();
   if (val) {
     apiKey = val;
     localStorage.setItem(API_KEY_STORAGE, val);
+  }
+  if (avVal) {
+    avKey = avVal;
+    localStorage.setItem(AV_KEY_STORAGE, avVal);
+  }
+  if (val || avVal) {
     cache = {};
     apiModal.classList.remove('show');
     selectIndicator(currentIndicator || INDICATORS[0]);
