@@ -1347,8 +1347,14 @@ const CHART_DS_LABELS = ['Raw', 'MA3', 'MA6', 'MA12', 'MA24', 'MA60'];
     document.getElementById('pc-width').value = width || 2;
     document.getElementById('pc-width-val').textContent = width || 2;
     const rect = e.target.getBoundingClientRect();
-    picker.style.left = Math.min(rect.left, window.innerWidth - 180) + 'px';
-    picker.style.top = (rect.bottom + 6) + 'px';
+    const PH = 140, PW = 180; // 피커 예상 크기
+    const left = Math.max(4, Math.min(rect.left, window.innerWidth - PW - 8));
+    // 클릭 지점이 화면 중간 아래면 위로, 아니면 아래로
+    const top = (rect.top > window.innerHeight * 0.5)
+      ? rect.top - PH - 8
+      : rect.bottom + 8;
+    picker.style.left = left + 'px';
+    picker.style.top = Math.max(4, top) + 'px';
     picker.style.display = 'block';
     e.stopPropagation();
   }
