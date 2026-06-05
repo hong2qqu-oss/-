@@ -574,6 +574,9 @@ const INDICATORS = [
 
   // 국제
   { id:'DTWEXBGS',    name:'달러 인덱스 (무역가중)',   unit:'Index', category:'국제 / INTERNATIONAL' },
+
+  // 기타 고빈도 지표
+  { id:'TSA_CHECKPOINT', name:'TSA 공항 검색대 (일간)', unit:'명',  category:'기타 / OTHER', source:'tsa' },
 ];
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
@@ -753,6 +756,70 @@ function calcMA(data, period) {
   });
 }
 
+// ─── FETCH: TSA CHECKPOINT ───────────────────────────────────────────────────
+async function fetchTSA() {
+  if (cache['TSA']) return cache['TSA'];
+
+  // TSA HTML 파싱 헬퍼
+  // 각 행: "날짜 현재연도값 [전년값 전전년값 ...]"
+  // colYears: col0(날짜 제외 첫째)부터 각 열이 어떤 연도인지
+  const parseHTML = (html, colYears) => {
+    const rows = (html.match(/<tr[^>]*>[\s\S]*?<\/tr>/gi) || [])
+      .map(r => r.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim())
+      .filter(r => /^\d+\/\d+\/\d{4}/.test(r));
+    const pts = {};
+    for (const row of rows) {
+      const parts = row.split(/\s+/);
+      const [m, d, baseYear] = parts[0].split('/').map(Number);
+      colYears.forEach((yr, i) => {
+        const raw = parts[i + 1]?.replace(/,/g, '');
+        const val = parseFloat(raw);
+        if (!isNaN(val) && val > 0) {
+          // Feb 29 → 비윤년이면 Feb 28로 대체
+          let day = d;
+          if (m === 2 && d === 29) {
+            const isLeap = yr % 4 === 0 && (yr % 100 !== 0 || yr % 400 === 0);
+            if (!isLeap) day = 28;
+          }
+          const key = `${yr}-${String(m).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+          if (!pts[key]) pts[key] = val; // 먼저 온 게 우선
+        }
+      });
+    }
+    return pts;
+  };
+
+  const proxy = u => `https://corsproxy.io/?${encodeURIComponent(u)}`;
+  const TSA_URL = 'https://www.tsa.gov/travel/passenger-volumes';
+  const SNAP_2023 = 'https://web.archive.org/web/20230101185405/' + TSA_URL;
+  // Wayback CDX로 2025 스냅샷 URL 동적 조회
+  const snap2025Res = await fetch('https://archive.org/wayback/available?url=tsa.gov/travel/passenger-volumes&timestamp=20250101')
+    .then(r => r.json()).catch(() => null);
+  const SNAP_2025 = snap2025Res?.archived_snapshots?.closest?.url
+    || 'https://web.archive.org/web/20250101000000/' + TSA_URL;
+
+  const [html2023, html2025, htmlNow] = await Promise.all([
+    fetch(proxy(SNAP_2023)).then(r => r.text()),
+    fetch(proxy(SNAP_2025)).then(r => r.text()),
+    fetch(proxy(TSA_URL)).then(r => r.text()),
+  ]);
+
+  const currentYear = new Date().getFullYear();
+  const all = {
+    ...parseHTML(html2023, [2022, 2021, 2020, 2019]),
+    ...parseHTML(html2025, [2024, 2023]),
+    ...parseHTML(htmlNow,  [currentYear]),
+  };
+
+  const points = Object.entries(all)
+    .map(([x, y]) => ({ x, y }))
+    .sort((a, b) => a.x.localeCompare(b.x));
+
+  if (points.length === 0) throw new Error('TSA 데이터를 가져오지 못했습니다.');
+  cache['TSA'] = points;
+  return points;
+}
+
 // ─── FETCH ────────────────────────────────────────────────────────────────────
 async function fetchFRED(seriesId, freq) {
   if (!apiKey) {
@@ -908,7 +975,7 @@ async function selectIndicator(ind) {
   if (dot) { dot.className = 'status-dot loading'; }
 
   try {
-    const raw = await fetchFRED(ind.id, ind.freq);
+    const raw = ind.source === 'tsa' ? await fetchTSA() : await fetchFRED(ind.id, ind.freq);
     currentRawData = raw;
     currentMode = defaultMode(ind);
     const data = applyTransform(raw, currentMode);
