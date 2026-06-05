@@ -506,8 +506,8 @@
   </div>
   <div id="country-tabs">
     <button class="country-btn active" data-country="US">🇺🇸 US</button>
-    <button class="country-btn disabled" data-country="KR" title="준비 중">🇰🇷 KR</button>
-    <button class="country-btn disabled" data-country="JP" title="준비 중">🇯🇵 JP</button>
+    <button class="country-btn" data-country="KR">🇰🇷 KR</button>
+    <button class="country-btn" data-country="JP">🇯🇵 JP</button>
     <button class="country-btn disabled" data-country="EU" title="준비 중">🇪🇺 EU</button>
   </div>
   <div id="sidebar-scroll" id="indicator-list"></div>
@@ -608,33 +608,57 @@ const INDICATORS = [
   { id:'BOPCA',       name:'경상수지',               unit:'B$',    category:'성장 / GROWTH' },
 
   // PMI
-  { id:'MFGPHLX',     name:'필라델피아 제조업 서베이', unit:'Index', category:'PMI' },
+  { id:'MFGPHLX',     name:'필라델피아 제조업 서베이', unit:'Index', category:'PMI',              country:'US' },
 
-  // 금리 & 스프레드  (DGS10/DGS2: 주간, T10Y2Y/BAMLH0A0HYM2: 월간)
-  { id:'FEDFUNDS',    name:'기준금리 (FFR)',          unit:'%',     category:'금리 & 스프레드' },
-  { id:'DGS10',       name:'10년물 국채금리',         unit:'%',     category:'금리 & 스프레드', freq:'w', noStats:true },
-  { id:'DGS2',        name:'2년물 국채금리',          unit:'%',     category:'금리 & 스프레드', freq:'w', noStats:true },
-  { id:'MORTGAGE30US',name:'30년 모기지 금리',        unit:'%',     category:'금리 & 스프레드' },
-  { id:'T10Y2Y',      name:'장단기 스프레드 (10Y-2Y)',unit:'%p',    category:'금리 & 스프레드', freq:'m' },
-  { id:'BAMLH0A0HYM2',name:'하이일드 스프레드',       unit:'%p',    category:'금리 & 스프레드', freq:'m' },
+  // 금리 & 스프레드
+  { id:'FEDFUNDS',    name:'기준금리 (FFR)',          unit:'%',     category:'금리 & 스프레드',  country:'US' },
+  { id:'DGS10',       name:'10년물 국채금리',         unit:'%',     category:'금리 & 스프레드',  country:'US', freq:'w', noStats:true },
+  { id:'DGS2',        name:'2년물 국채금리',          unit:'%',     category:'금리 & 스프레드',  country:'US', freq:'w', noStats:true },
+  { id:'MORTGAGE30US',name:'30년 모기지 금리',        unit:'%',     category:'금리 & 스프레드',  country:'US' },
+  { id:'T10Y2Y',      name:'장단기 스프레드 (10Y-2Y)',unit:'%p',    category:'금리 & 스프레드',  country:'US', freq:'m' },
+  { id:'BAMLH0A0HYM2',name:'하이일드 스프레드',       unit:'%p',    category:'금리 & 스프레드',  country:'US', freq:'m' },
 
   // 주택
-  { id:'HOUST',       name:'주택착공건수',            unit:'K',     category:'주택 / HOUSING' },
+  { id:'HOUST',       name:'주택착공건수',            unit:'K',     category:'주택 / HOUSING',   country:'US' },
 
   // 소비
-  { id:'RSAFS',       name:'소매판매',               unit:'% YoY', category:'소비 / CONSUMER', transform:'yoy' },
-  { id:'UMCSENT',     name:'미시간 소비자심리',        unit:'Index', category:'소비 / CONSUMER' },
-  { id:'PCE',         name:'개인소비지출 (PCE)',      unit:'% YoY', category:'소비 / CONSUMER', transform:'yoy' },
+  { id:'RSAFS',       name:'소매판매',               unit:'% YoY', category:'소비 / CONSUMER',  country:'US', transform:'yoy' },
+  { id:'UMCSENT',     name:'미시간 소비자심리',        unit:'Index', category:'소비 / CONSUMER',  country:'US' },
+  { id:'PCE',         name:'개인소비지출 (PCE)',      unit:'% YoY', category:'소비 / CONSUMER',  country:'US', transform:'yoy' },
 
   // 통화
-  { id:'M2SL',        name:'M2 통화량',              unit:'B$',    category:'통화 / MONEY SUPPLY' },
-  { id:'BOGMBASE',    name:'본원통화',               unit:'M$',    category:'통화 / MONEY SUPPLY' },
+  { id:'M2SL',        name:'M2 통화량',              unit:'B$',    category:'통화 / MONEY SUPPLY', country:'US' },
+  { id:'BOGMBASE',    name:'본원통화',               unit:'M$',    category:'통화 / MONEY SUPPLY', country:'US' },
 
   // 국제
-  { id:'DTWEXBGS',    name:'달러 인덱스 (무역가중)',   unit:'Index', category:'국제 / INTERNATIONAL' },
+  { id:'DTWEXBGS',    name:'달러 인덱스 (무역가중)',   unit:'Index', category:'국제 / INTERNATIONAL', country:'US' },
 
-  // 기타 고빈도 지표
-  { id:'TSA_CHECKPOINT', name:'TSA 공항 검색대 (일간)', unit:'명',  category:'기타 / OTHER', source:'tsa' },
+  // 경기선행
+  { id:'USALOLITOAASTSAM', name:'경기선행지수 (OECD CLI)', unit:'Index', category:'경기선행 / LEI', country:'US' },
+
+  // 기타 고빈도
+  { id:'TSA_CHECKPOINT', name:'TSA 공항 검색대 (일간)', unit:'명',  category:'기타 / OTHER', country:'US', source:'tsa' },
+
+  // ── 🇰🇷 KOREA ──────────────────────────────────────────────────────────────
+  // CTGYM = 이미 전년동월비(YoY %) → transform 불필요
+  { id:'KORCPALTT01CTGYM', name:'CPI (전체)',          unit:'%',     category:'물가 / INFLATION',   country:'KR' },
+  // PPDMMINMEI = 지수 수준 → YoY 변환 필요
+  { id:'KORPPDMMINMEI',    name:'PPI (제조업)',         unit:'% YoY', category:'물가 / INFLATION',   country:'KR', transform:'yoy' },
+  { id:'LRUNTTTTKRM156S',  name:'실업률',              unit:'%',     category:'고용 / EMPLOYMENT',  country:'KR' },
+  // GDP = 실질 지수 수준 → YoY 변환
+  { id:'KORGDPRQPSMEI',    name:'실질 GDP',            unit:'% YoY', category:'성장 / GROWTH',      country:'KR', transform:'yoy' },
+  // PROINDMISMEI = 산업생산 지수 → YoY 변환
+  { id:'KORPROINDMISMEI',  name:'산업생산 (제조업)',    unit:'% YoY', category:'성장 / GROWTH',      country:'KR', transform:'yoy' },
+  { id:'KORB6BLTT02STSAQ', name:'경상수지',            unit:'USD B', category:'국제수지 / BOP',     country:'KR' },
+
+  // ── 🇯🇵 JAPAN ──────────────────────────────────────────────────────────────
+  { id:'JPNCPALTT01CTGYM', name:'CPI (전체)',          unit:'%',     category:'물가 / INFLATION',   country:'JP' },
+  { id:'JPNPPDMMINMEI',    name:'PPI (제조업)',         unit:'% YoY', category:'물가 / INFLATION',   country:'JP', transform:'yoy' },
+  { id:'LRUN64TTJPM156S',  name:'실업률',              unit:'%',     category:'고용 / EMPLOYMENT',  country:'JP' },
+  { id:'JPNGDPRQPSMEI',    name:'실질 GDP',            unit:'% YoY', category:'성장 / GROWTH',      country:'JP', transform:'yoy' },
+  { id:'JPNPROINDMISMEI',  name:'산업생산 (제조업)',    unit:'% YoY', category:'성장 / GROWTH',      country:'JP', transform:'yoy' },
+  { id:'JPNB6BLTT02STSAQ', name:'경상수지',            unit:'USD B', category:'국제수지 / BOP',     country:'JP' },
+  { id:'IRSTCB01JPM156N',  name:'기준금리 (BOJ)',       unit:'%',     category:'금리 / RATES',       country:'JP' },
 ];
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
@@ -644,6 +668,7 @@ let currentIndicator = null;
 let currentYears = 10;
 let currentMode = 'raw'; // 'raw' | 'yoy' | 'mom'
 let currentRawData = null;
+let currentCountry = 'US';
 let overlays = []; // [{ind, raw, color}]
 let chart = null;
 let cache = {};
@@ -665,14 +690,15 @@ const apiKeyInput   = document.getElementById('api-key-input');
 // ─── SIDEBAR BUILD ────────────────────────────────────────────────────────────
 function buildSidebar() {
   sidebarScroll.innerHTML = '';
-  const categories = [...new Set(INDICATORS.map(i => i.category))];
+  const visible = INDICATORS.filter(i => (i.country || 'US') === currentCountry);
+  const categories = [...new Set(visible.map(i => i.category))];
   categories.forEach(cat => {
     const label = document.createElement('div');
     label.className = 'category-label';
     label.textContent = cat;
     sidebarScroll.appendChild(label);
 
-    INDICATORS.filter(i => i.category === cat).forEach(ind => {
+    visible.filter(i => i.category === cat).forEach(ind => {
       const el = document.createElement('div');
       el.className = 'indicator-item';
       el.dataset.id = ind.id;
@@ -1241,6 +1267,136 @@ apiModal.addEventListener('click', e => {
   if (e.target === apiModal) apiModal.classList.remove('show');
 });
 
+// ─── COUNTRY TABS ─────────────────────────────────────────────────────────────
+document.querySelectorAll('.country-btn:not(.disabled)').forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentCountry = btn.dataset.country;
+    document.querySelectorAll('.country-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    overlays = [];
+    renderOverlayChips();
+    updateOverlayBtns();
+    buildSidebar();
+    // 탭 전환 시 첫 번째 지표 자동 선택
+    const first = INDICATORS.find(i => (i.country || 'US') === currentCountry);
+    if (first) selectIndicator(first);
+  });
+});
+
+// ─── LEGEND COLOR/THICKNESS PICKER ───────────────────────────────────────────
+const CHART_DS_LABELS = ['Raw', 'MA3', 'MA6', 'MA12', 'MA24', 'MA60'];
+
+(function setupColorPicker() {
+  // 피커 팝업 생성
+  const picker = document.createElement('div');
+  picker.id = 'color-picker-popup';
+  picker.style.cssText = `
+    display:none; position:fixed; z-index:200;
+    background:var(--panel-bg); border:1px solid var(--border);
+    border-radius:10px; padding:12px 14px; min-width:160px;
+    box-shadow:0 4px 20px rgba(0,0,0,0.5);
+  `;
+  picker.innerHTML = `
+    <div style="font-size:10px;color:var(--text-muted);margin-bottom:8px">색상 / 굵기</div>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+      <input type="color" id="pc-color" style="width:32px;height:28px;border:none;border-radius:4px;cursor:pointer;background:none">
+      <span id="pc-label" style="font-size:11px;color:var(--text)">—</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:10px;color:var(--text-muted)">굵기</span>
+      <input type="range" id="pc-width" min="0.5" max="5" step="0.5" style="flex:1;accent-color:var(--accent)">
+      <span id="pc-width-val" style="font-size:10px;color:var(--text-muted);min-width:24px">2</span>
+    </div>
+  `;
+  document.body.appendChild(picker);
+
+  let targetDsIndex = -1;
+  let targetIsOverlay = false;
+  let targetOverlayId = null;
+
+  function openPicker(e, label, color, width, dsIndex, isOverlay, overlayId) {
+    targetDsIndex = dsIndex;
+    targetIsOverlay = isOverlay;
+    targetOverlayId = overlayId;
+    document.getElementById('pc-label').textContent = label;
+    document.getElementById('pc-color').value = color || '#ffffff';
+    document.getElementById('pc-width').value = width || 2;
+    document.getElementById('pc-width-val').textContent = width || 2;
+    const rect = e.target.getBoundingClientRect();
+    picker.style.left = Math.min(rect.left, window.innerWidth - 180) + 'px';
+    picker.style.top = (rect.bottom + 6) + 'px';
+    picker.style.display = 'block';
+    e.stopPropagation();
+  }
+
+  document.getElementById('pc-color').addEventListener('input', () => {
+    const color = document.getElementById('pc-color').value;
+    applyPickerChange(color, null);
+  });
+  document.getElementById('pc-width').addEventListener('input', () => {
+    const w = parseFloat(document.getElementById('pc-width').value);
+    document.getElementById('pc-width-val').textContent = w;
+    applyPickerChange(null, w);
+  });
+
+  function applyPickerChange(color, width) {
+    if (!chart) return;
+    if (targetIsOverlay) {
+      const ov = overlays.find(o => o.ind.id === targetOverlayId);
+      if (ov) {
+        if (color) ov.color = color;
+        const ds = chart.data.datasets.find(d => d.label === ov.ind.name);
+        if (ds) { if (color) ds.borderColor = color; if (width) ds.borderWidth = width; }
+      }
+    } else if (targetDsIndex >= 0) {
+      const ds = chart.data.datasets[targetDsIndex];
+      if (!ds) return;
+      if (targetDsIndex === 0) { // Raw bar
+        if (color) { ds.backgroundColor = color + '55'; ds.borderColor = color; }
+      } else {
+        if (color) ds.borderColor = color;
+        if (width) ds.borderWidth = width;
+      }
+    }
+    chart.update('none');
+    renderOverlayChips();
+  }
+
+  // 범례 아이템 더블클릭
+  document.querySelectorAll('.legend-item').forEach((item, i) => {
+    const dot = item.querySelector('.legend-color');
+    if (!dot) return;
+    dot.style.cursor = 'pointer';
+    dot.title = '더블클릭: 색상/굵기 변경';
+    dot.addEventListener('dblclick', e => {
+      const ds = chart?.data?.datasets?.[i];
+      if (!ds) return;
+      const color = ds.borderColor || '#ffffff';
+      const width = ds.borderWidth || 2;
+      openPicker(e, CHART_DS_LABELS[i] || ds.label, color, width, i, false, null);
+    });
+  });
+
+  // overlay chip 색상 더블클릭 (동적이므로 event delegation)
+  document.getElementById('overlay-chips').addEventListener('dblclick', e => {
+    const dot = e.target.closest('.overlay-chip-dot');
+    if (!dot) return;
+    const chip = dot.closest('.overlay-chip');
+    const xBtn = chip?.querySelector('.overlay-chip-x');
+    if (!xBtn) return;
+    const id = xBtn.dataset.id;
+    const ov = overlays.find(o => o.ind.id === id);
+    if (!ov) return;
+    const ds = chart?.data?.datasets?.find(d => d.label === ov.ind.name);
+    openPicker(e, ov.ind.name, ov.color, ds?.borderWidth || 2.5, -1, true, id);
+  });
+
+  // 바깥 클릭 시 닫기
+  document.addEventListener('click', e => {
+    if (!picker.contains(e.target)) picker.style.display = 'none';
+  });
+})();
+
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 buildSidebar();
 loadingEl.style.display = 'none';
@@ -1248,7 +1404,6 @@ loadingEl.style.display = 'none';
 if (!apiKey) {
   apiModal.classList.add('show');
 } else {
-  // Auto-load first indicator
   selectIndicator(INDICATORS[0]);
 }
 </script>
