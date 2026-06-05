@@ -95,6 +95,63 @@
 
     .indicator-item:hover { background: rgba(88,166,255,0.06); }
     .indicator-item.active { background: var(--active-bg); }
+    .indicator-item.overlaid { background: rgba(127,231,135,0.07); }
+
+    .overlay-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      border-radius: 4px;
+      font-size: 11px;
+      width: 18px; height: 18px;
+      line-height: 1;
+      cursor: pointer;
+      flex-shrink: 0;
+      margin-left: 4px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+    .indicator-item:hover .overlay-btn { display: flex; }
+    .overlay-btn:hover { border-color: var(--category-color); color: var(--category-color); }
+    .overlay-btn.active-overlay { display: flex; border-color: var(--category-color); color: var(--category-color); background: rgba(127,231,135,0.15); }
+
+    #overlay-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      align-items: center;
+    }
+
+    .overlay-chip {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--panel-bg);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 2px 6px 2px 8px;
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .overlay-chip-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .overlay-chip-x {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 12px;
+      line-height: 1;
+      padding: 0 0 0 2px;
+    }
+    .overlay-chip-x:hover { color: var(--red); }
 
     .indicator-item .name {
       font-size: 12px;
@@ -501,6 +558,7 @@
     <div class="legend-item"><div class="legend-color" style="background:#7ee787;opacity:0.9"></div> MA12</div>
     <div class="legend-item"><div class="legend-color" style="background:#d2a8ff;opacity:0.9"></div> MA24</div>
     <div class="legend-item"><div class="legend-color" style="background:#e3b341;opacity:0.9"></div> MA60</div>
+    <div id="overlay-chips"></div>
     <button id="reset-zoom-btn">↺ Reset</button>
     <div id="yrange-bar">
       Y축: <input class="yrange-input" id="ymin-input" placeholder="Min" />
@@ -586,8 +644,11 @@ let currentIndicator = null;
 let currentYears = 10;
 let currentMode = 'raw'; // 'raw' | 'yoy' | 'mom'
 let currentRawData = null;
+let overlays = []; // [{ind, raw, color}]
 let chart = null;
 let cache = {};
+
+const OVERLAY_COLORS = ['#f0a500','#c678dd','#56b6c2','#e06c75','#98c379','#61afef','#d19a66'];
 
 // ─── DOM REFS ─────────────────────────────────────────────────────────────────
 const sidebarScroll = document.getElementById('sidebar-scroll');
@@ -616,13 +677,21 @@ function buildSidebar() {
       el.className = 'indicator-item';
       el.dataset.id = ind.id;
       el.innerHTML = `
-        <div>
+        <div style="flex:1;min-width:0">
           <div class="name">${ind.name}</div>
           <div class="meta">${ind.id} · ${ind.unit}</div>
         </div>
+        <button class="overlay-btn" id="ovbtn-${ind.id}" title="차트에 겹쳐보기">＋</button>
         <div class="status-dot" id="dot-${ind.id}"></div>
       `;
-      el.addEventListener('click', () => selectIndicator(ind));
+      el.addEventListener('click', (e) => {
+        if (e.target.closest('.overlay-btn')) return;
+        selectIndicator(ind);
+      });
+      el.querySelector('.overlay-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleOverlay(ind);
+      });
       sidebarScroll.appendChild(el);
     });
   });
@@ -879,6 +948,9 @@ function renderChart(allData, ind) {
     spanGaps: false,
   });
 
+  // 이중 Y축: overlay 중 단위가 다른 게 있으면 y2 사용
+  const hasY2 = overlays.some(o => o.ind.unit !== ind.unit);
+
   const datasets = [
     {
       type: 'bar',
@@ -889,12 +961,29 @@ function renderChart(allData, ind) {
       borderWidth: 0,
       maxBarThickness: 12,
       barPercentage: 0.9,
+      yAxisID: 'y',
     },
     makeLineDS('MA3',  ma3,  '#ff7b72', 1.5),
     makeLineDS('MA6',  ma6,  '#ffa657', 1.5),
     makeLineDS('MA12', ma12, '#7ee787', 2),
     makeLineDS('MA24', ma24, '#d2a8ff', 2),
     makeLineDS('MA60', ma60, '#e3b341', 2.5),
+    // overlay 데이터셋 (단순 선, MA 없음)
+    ...overlays.map(o => {
+      const oData = filterByYears(applyTransform(o.raw, defaultMode(o.ind)), currentYears);
+      const sameUnit = o.ind.unit === ind.unit;
+      return {
+        type: 'line',
+        label: o.ind.name,
+        data: oData,
+        borderColor: o.color,
+        borderWidth: 2.5,
+        pointRadius: 0,
+        tension: 0.3,
+        spanGaps: false,
+        yAxisID: sameUnit ? 'y' : 'y2',
+      };
+    }),
   ];
 
   if (chart) chart.destroy();
@@ -935,8 +1024,15 @@ function renderChart(allData, ind) {
           min: getYMin() ?? s.min,
           max: getYMax() ?? s.max,
           grid: { color: 'rgba(48,54,61,0.5)' },
-          ticks: { color: '#8b949e', font: { size: 10 }, callback: v => v.toLocaleString() }
-        }; })()
+          ticks: { color: '#8b949e', font: { size: 10 }, callback: v => v.toLocaleString() },
+          title: { display: overlays.length > 0, text: ind.unit, color: '#8b949e', font: { size: 9 } }
+        }; })(),
+        ...(hasY2 ? { y2: {
+          position: 'right',
+          grid: { drawOnChartArea: false },
+          ticks: { color: '#8b949e', font: { size: 10 }, callback: v => v.toLocaleString() },
+          title: { display: true, text: overlays.filter(o=>o.ind.unit!==ind.unit).map(o=>o.ind.unit).join('/'), color: '#8b949e', font: { size: 9 } }
+        }} : {})
       },
       plugins: {
         zoom: {
@@ -952,6 +1048,66 @@ function renderChart(allData, ind) {
   if (last) {
     latestValEl.textContent = `${last.y.toLocaleString()} ${ind.unit} (${last.x})`;
   }
+}
+
+// ─── OVERLAY ──────────────────────────────────────────────────────────────────
+async function toggleOverlay(ind) {
+  if (!currentIndicator) return;
+  if (ind.id === currentIndicator.id) return; // 현재 주 지표는 overlay 불가
+
+  const existing = overlays.findIndex(o => o.ind.id === ind.id);
+  if (existing !== -1) {
+    overlays.splice(existing, 1);
+  } else {
+    const color = OVERLAY_COLORS[overlays.length % OVERLAY_COLORS.length];
+    const dot = document.getElementById(`dot-${ind.id}`);
+    if (dot) dot.className = 'status-dot loading';
+    try {
+      const raw = ind.source === 'tsa' ? await fetchTSA() : await fetchFRED(ind.id, ind.freq);
+      overlays.push({ ind, raw, color });
+      if (dot) dot.className = 'status-dot loaded';
+    } catch(e) {
+      if (dot) dot.className = 'status-dot error';
+      return;
+    }
+  }
+  updateOverlayBtns();
+  renderOverlayChips();
+  if (currentRawData) {
+    const data = applyTransform(currentRawData, currentMode);
+    renderChart(data, currentIndicator);
+  }
+}
+
+function updateOverlayBtns() {
+  document.querySelectorAll('.overlay-btn').forEach(btn => {
+    const id = btn.id.replace('ovbtn-', '');
+    const isOverlaid = overlays.some(o => o.ind.id === id);
+    btn.classList.toggle('active-overlay', isOverlaid);
+    btn.textContent = isOverlaid ? '✕' : '＋';
+    const item = btn.closest('.indicator-item');
+    if (item) item.classList.toggle('overlaid', isOverlaid);
+  });
+}
+
+function renderOverlayChips() {
+  const el = document.getElementById('overlay-chips');
+  el.innerHTML = overlays.map(o => `
+    <div class="overlay-chip">
+      <div class="overlay-chip-dot" style="background:${o.color}"></div>
+      <span>${o.ind.name}</span>
+      <button class="overlay-chip-x" data-id="${o.ind.id}">✕</button>
+    </div>
+  `).join('');
+  el.querySelectorAll('.overlay-chip-x').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      overlays = overlays.filter(o => o.ind.id !== id);
+      updateOverlayBtns();
+      renderOverlayChips();
+      if (currentRawData) renderChart(applyTransform(currentRawData, currentMode), currentIndicator);
+    });
+  });
 }
 
 // ─── SELECT INDICATOR ─────────────────────────────────────────────────────────
