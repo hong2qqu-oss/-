@@ -452,6 +452,38 @@
       align-items: center;
     }
 
+    #cot-bar {
+      display: none;
+      gap: 5px;
+      align-items: center;
+      margin-left: 12px;
+    }
+    .cot-cat-btn {
+      background: var(--panel-bg);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .cot-cat-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .cot-cat-btn.active { background: var(--accent); border-color: var(--accent); color: #0d1117; font-weight: 600; }
+
+    .cot-view-btn {
+      background: var(--panel-bg);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .cot-view-btn:hover { border-color: var(--category-color); color: var(--category-color); }
+    .cot-view-btn.active { background: var(--category-color); border-color: var(--category-color); color: #0d1117; font-weight: 600; }
+
     .stat-box {
       background: var(--panel-bg);
       border: 1px solid var(--border);
@@ -532,6 +564,7 @@
     <button class="country-btn active" data-country="US">🇺🇸 US</button>
     <button class="country-btn" data-country="KR">🇰🇷 KR</button>
     <button class="country-btn" data-country="JP">🇯🇵 JP</button>
+    <button class="country-btn" data-country="COT">📊 COT</button>
     <button class="country-btn disabled" data-country="EU" title="준비 중">🇪🇺 EU</button>
   </div>
   <div id="sidebar-scroll" id="indicator-list"></div>
@@ -553,6 +586,14 @@
         <div class="stat-box-label">MoM</div>
         <div class="stat-box-val stat-neutral" id="stat-mom-val">—</div>
       </div>
+    </div>
+    <div id="cot-bar">
+      <button class="cot-cat-btn active" data-cot="noncomm">투기세력</button>
+      <button class="cot-cat-btn" data-cot="comm">실수요자</button>
+      <button class="cot-cat-btn" data-cot="nonrept">소액</button>
+      <span style="width:1px;height:18px;background:var(--border);margin:0 4px"></span>
+      <button class="cot-view-btn active" data-view="net">순포지션</button>
+      <button class="cot-view-btn" data-view="index">COT Index</button>
     </div>
     <div id="controls">
       <button class="range-btn" data-years="5">5Y</button>
@@ -618,7 +659,7 @@ const INDICATORS = [
 
   // 고용
   { id:'UNRATE',      name:'실업률',                unit:'%',     category:'고용 / EMPLOYMENT' },
-  { id:'PAYEMS',      name:'비농업 고용',            unit:'K',     category:'고용 / EMPLOYMENT' },
+  { id:'PAYEMS',      name:'비농업 고용',            unit:'K',     category:'고용 / EMPLOYMENT', diffMode:true },
   { id:'CIVPART',     name:'경제활동참가율',          unit:'%',     category:'고용 / EMPLOYMENT' },
   { id:'ICSA',        name:'신규 실업수당 청구',      unit:'K',     category:'고용 / EMPLOYMENT' },
   { id:'CCSA',        name:'연속 실업수당 청구',      unit:'K',     category:'고용 / EMPLOYMENT' },
@@ -663,6 +704,26 @@ const INDICATORS = [
   // 기타 고빈도
   { id:'TSA_CHECKPOINT', name:'TSA 공항 검색대 (일간)', unit:'명',  category:'기타 / OTHER', country:'US', source:'tsa' },
 
+  // ── 📊 COT 선물 순포지션 (CFTC 주간) + 가격(Yahoo 선물) ─────────────────────
+  // 지수
+  { id:'COT_SP500',   name:'S&P500',     unit:'계약', category:'주가지수 / INDEX',   country:'COT', source:'cot', cotName:'E-MINI S&P 500', yf:'ES=F' },
+  { id:'COT_NASDAQ',  name:'나스닥',      unit:'계약', category:'주가지수 / INDEX',   country:'COT', source:'cot', cotName:'NASDAQ MINI', yf:'NQ=F' },
+  // 금속
+  { id:'COT_GOLD',    name:'금',          unit:'계약', category:'금속 / METAL',       country:'COT', source:'cot', cotName:'GOLD', yf:'GC=F' },
+  { id:'COT_SILVER',  name:'은',          unit:'계약', category:'금속 / METAL',       country:'COT', source:'cot', cotName:'SILVER', yf:'SI=F' },
+  { id:'COT_COPPER',  name:'구리',        unit:'계약', category:'금속 / METAL',       country:'COT', source:'cot', cotName:'COPPER- #1', yf:'HG=F' },
+  // 에너지
+  { id:'COT_WTI',     name:'WTI 원유',    unit:'계약', category:'에너지 / ENERGY',    country:'COT', source:'cot', cotName:'CRUDE OIL, LIGHT SWEET-WTI', yf:'CL=F' },
+  // 통화
+  { id:'COT_EUR',     name:'유로',        unit:'계약', category:'통화 / FX',          country:'COT', source:'cot', cotName:'EURO FX', yf:'6E=F' },
+  { id:'COT_JPY',     name:'엔',          unit:'계약', category:'통화 / FX',          country:'COT', source:'cot', cotName:'JAPANESE YEN', yf:'6J=F' },
+  // 금리
+  { id:'COT_UST2Y',   name:'미국채 2년',   unit:'계약', category:'금리 / RATES',       country:'COT', source:'cot', cotName:'UST 2Y NOTE', yf:'ZT=F' },
+  { id:'COT_UST10Y',  name:'미국채 10년',  unit:'계약', category:'금리 / RATES',       country:'COT', source:'cot', cotName:'UST 10Y NOTE', yf:'ZN=F' },
+  { id:'COT_UST30Y',  name:'미국채 30년',  unit:'계약', category:'금리 / RATES',       country:'COT', source:'cot', cotName:'UST BOND', yf:'ZB=F' },
+  // 암호화폐
+  { id:'COT_BTC',     name:'비트코인',     unit:'계약', category:'암호화폐 / CRYPTO',  country:'COT', source:'cot', cotName:'BITCOIN', yf:'BTC-USD' },
+
   // ── 🇰🇷 KOREA ──────────────────────────────────────────────────────────────
   // CTGYM = 이미 전년동월비(YoY %) → transform 불필요
   { id:'KORCPALTT01CTGYM', name:'CPI (전체)',          unit:'%',     category:'물가 / INFLATION',   country:'KR' },
@@ -693,6 +754,10 @@ let currentYears = 10;
 let currentMode = 'raw'; // 'raw' | 'yoy' | 'mom'
 let currentRawData = null;
 let currentCountry = 'US';
+let currentCotRaw = null;          // COT 원본 (카테고리별 long/short 전부 포함)
+let currentCotCat = 'noncomm';     // 'noncomm'(투기) | 'comm'(실수요) | 'nonrept'(소액)
+let currentCotView = 'net';        // 'net'(순포지션) | 'index'(COT Index)
+let currentCotPrice = null;        // COT 상품 가격 {x,y}[] (우측 축)
 let overlays = []; // [{ind, raw, color}]
 let chart = null;
 let cache = {};
@@ -757,9 +822,19 @@ function calcMoM(data) {
   }).filter(pt => pt.y !== null);
 }
 
-function applyTransform(raw, mode) {
+// 절대 변화량 (퍼센트 아닌 실제 수치 차이) — 비농업 고용 같은 지표에 사용
+function calcAbsDiff(data) {
+  return data.map((pt, i) => {
+    if (i === 0) return { x: pt.x, y: null };
+    const prev = data[i - 1];
+    if (!prev || prev.y === null) return { x: pt.x, y: null };
+    return { x: pt.x, y: +(pt.y - prev.y).toFixed(1) };
+  }).filter(pt => pt.y !== null);
+}
+
+function applyTransform(raw, mode, ind) {
   if (mode === 'yoy') return calcYoY(raw);
-  if (mode === 'mom') return calcMoM(raw);
+  if (mode === 'mom') return (ind?.diffMode) ? calcAbsDiff(raw) : calcMoM(raw);
   return raw;
 }
 
@@ -813,6 +888,16 @@ function calcStats(rawData, ind) {
     || [...rawData].reverse().find(p => p.x.slice(0, 7) <= prevYearStr);
 
   const pct = (a, b) => b ? +((a - b) / Math.abs(b) * 100).toFixed(2) : null;
+  const abs = (a, b) => b !== undefined ? +(a - b).toFixed(1) : null;
+
+  if (ind.diffMode) {
+    // 비농업 고용처럼 절대 변화량으로 보는 게 맞는 지표
+    return {
+      yoy: prevYear  ? { val: abs(latest.y, prevYear.y),  suffix: ind.unit, label: 'YoY Δ' } : null,
+      mom: prevMonth ? { val: abs(latest.y, prevMonth.y), suffix: ind.unit, label: 'MoM Δ' } : null,
+    };
+  }
+
   return {
     yoy: prevYear  ? { val: pct(latest.y, prevYear.y),  suffix: '%', label: 'YoY' } : null,
     mom: prevMonth ? { val: pct(latest.y, prevMonth.y), suffix: '%', label: 'MoM' } : null,
@@ -851,15 +936,63 @@ function renderStatBoxes(stats, ind) {
   el.style.display = 'flex';
 }
 
+// COT 카테고리 토글 바 표시/숨김 + 버튼 활성화
+function updateCotBar(ind) {
+  const bar = document.getElementById('cot-bar');
+  if (ind && ind.source === 'cot') {
+    bar.style.display = 'flex';
+    document.querySelectorAll('.cot-cat-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.cot === currentCotCat);
+    });
+    document.querySelectorAll('.cot-view-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.view === currentCotView);
+    });
+  } else {
+    bar.style.display = 'none';
+  }
+}
+
+// 현재 COT 카테고리 + 뷰로 다시 렌더
+function renderCotCurrent() {
+  if (!currentCotRaw || !currentIndicator) return;
+  const net = cotNetSeries(currentCotRaw, currentCotCat);
+  if (currentCotView === 'index') {
+    const idx = calcCotIndex(net, 156);
+    currentRawData = idx;
+    renderChart(idx, currentIndicator);
+  } else {
+    currentRawData = net;
+    renderChart(net, currentIndicator);
+    const last = net[net.length - 1];
+    if (last) latestValEl.textContent = `${last.y.toLocaleString()} 계약 순포지션 (${last.x})`;
+  }
+  updateCotBar(currentIndicator);
+}
+
+// COT 카테고리 전환
+function switchCotCategory(cat) {
+  if (!currentCotRaw || !currentIndicator) return;
+  currentCotCat = cat;
+  renderCotCurrent();
+}
+
+// COT 뷰 전환 (순포지션 / COT Index)
+function switchCotView(view) {
+  if (!currentCotRaw || !currentIndicator) return;
+  currentCotView = view;
+  renderCotCurrent();
+}
+
 function switchMode(newMode) {
   if (!currentIndicator || !currentRawData) return;
   currentMode = (currentMode === newMode) ? defaultMode(currentIndicator) : newMode;
-  const unitSuffix = currentMode === 'yoy' ? '% YoY' : currentMode === 'mom' ? '% MoM' : currentIndicator.unit;
+  const momUnit = currentIndicator.diffMode ? `Δ${currentIndicator.unit}` : '% MoM';
+  const unitSuffix = currentMode === 'yoy' ? '% YoY' : currentMode === 'mom' ? momUnit : currentIndicator.unit;
   const displayInd = { ...currentIndicator, unit: unitSuffix };
-  renderChart(applyTransform(currentRawData, currentMode), displayInd);
+  renderChart(applyTransform(currentRawData, currentMode, currentIndicator), displayInd);
   renderStatBoxes(calcStats(currentRawData, currentIndicator), currentIndicator);
   latestValEl.textContent = (() => {
-    const d = applyTransform(currentRawData, currentMode);
+    const d = applyTransform(currentRawData, currentMode, currentIndicator);
     const last = d[d.length - 1];
     return last ? `${last.y.toLocaleString()} ${unitSuffix} (${last.x})` : '—';
   })();
@@ -873,6 +1006,103 @@ function calcMA(data, period) {
     for (let j = i - period + 1; j <= i; j++) sum += data[j].y;
     return { x: pt.x, y: +(sum / period).toFixed(4) };
   });
+}
+
+// ─── FETCH: CFTC COT (선물 포지션) ───────────────────────────────────────────
+async function fetchCOT(cotName) {
+  const cacheKey = `cot_${cotName}`;
+  if (cache[cacheKey]) return cache[cacheKey];
+
+  const where = encodeURIComponent(`contract_market_name='${cotName}'`);
+  const url = `https://publicreporting.cftc.gov/resource/6dca-aqww.json?`
+    + `$select=report_date_as_yyyy_mm_dd,noncomm_positions_long_all,noncomm_positions_short_all,`
+    + `comm_positions_long_all,comm_positions_short_all,nonrept_positions_long_all,nonrept_positions_short_all`
+    + `&$where=${where}&$order=report_date_as_yyyy_mm_dd ASC&$limit=2000`;
+  const proxied = `https://corsproxy.io/?${encodeURIComponent(url)}`;
+
+  let res;
+  try { res = await fetch(proxied); }
+  catch (e) { throw new Error('네트워크 오류: CFTC 서버에 연결할 수 없습니다.'); }
+  if (!res.ok) throw new Error(`CFTC 서버 오류 (HTTP ${res.status})`);
+  const json = await res.json();
+  if (!Array.isArray(json) || json.length === 0) throw new Error('COT 데이터 없음');
+
+  let rows = json.map(o => ({
+    x: o.report_date_as_yyyy_mm_dd?.slice(0, 10),
+    ncL: +o.noncomm_positions_long_all || 0,
+    ncS: +o.noncomm_positions_short_all || 0,
+    cL:  +o.comm_positions_long_all || 0,
+    cS:  +o.comm_positions_short_all || 0,
+    nrL: +o.nonrept_positions_long_all || 0,
+    nrS: +o.nonrept_positions_short_all || 0,
+  })).filter(r => r.x);
+
+  // 날짜순 정렬 + 중복 날짜 제거 (rolling 계산 정확도 위해 필수)
+  rows.sort((a, b) => a.x.localeCompare(b.x));
+  const seen = new Set();
+  rows = rows.filter(r => seen.has(r.x) ? false : (seen.add(r.x), true));
+
+  cache[cacheKey] = rows;
+  return rows;
+}
+
+// COT 원본 → 선택 카테고리의 순포지션(long-short) {x,y} 배열로 변환
+function cotNetSeries(rows, cat) {
+  return rows.map(r => {
+    let net;
+    if (cat === 'comm')        net = r.cL - r.cS;
+    else if (cat === 'nonrept') net = r.nrL - r.nrS;
+    else                        net = r.ncL - r.ncS; // noncomm (투기) 기본
+    return { x: r.x, y: net };
+  });
+}
+
+const COT_CAT_LABEL = { noncomm: '투기세력', comm: '실수요자', nonrept: '소액' };
+
+// COT Index: 순포지션을 과거 lookback주 기준 0~100으로 정규화 (3년=156주) + smooth주 평활
+// 윈도우가 다 안 찬 초기 구간은 null (불안정 → 그리지 않음)
+function calcCotIndex(net, lookback = 156, smooth = 6) {
+  const raw = net.map((p, i) => {
+    if (i < lookback - 1) return { x: p.x, y: null };
+    const win = net.slice(i - lookback + 1, i + 1).map(q => q.y);
+    const mn = Math.min(...win), mx = Math.max(...win);
+    const idx = (mx === mn) ? 50 : (p.y - mn) / (mx - mn) * 100;
+    return { x: p.x, y: idx };
+  });
+  // 평활 (톱니 제거, null은 무시)
+  return raw.map((p, i) => {
+    if (p.y === null) return p;
+    const start = Math.max(0, i - smooth + 1);
+    const win = raw.slice(start, i + 1).map(q => q.y).filter(v => v !== null);
+    return { x: p.x, y: win.length ? +(win.reduce((a, b) => a + b, 0) / win.length).toFixed(1) : null };
+  });
+}
+
+// 0~100 정규화 (가격 다이버전스 비교용, 표시 구간 기준)
+function normalize0100(series) {
+  const ys = series.filter(p => p.y != null).map(p => p.y);
+  if (!ys.length) return series;
+  const mn = Math.min(...ys), mx = Math.max(...ys);
+  return series.map(p => ({ x: p.x, y: (mx === mn) ? 50 : +((p.y - mn) / (mx - mn) * 100).toFixed(1) }));
+}
+
+// Yahoo Finance 주간 가격 (선물)
+async function fetchYahooWeekly(symbol, range = '10y') {
+  const cacheKey = `yf_${symbol}_${range}`;
+  if (cache[cacheKey]) return cache[cacheKey];
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1wk&range=${range}`;
+  const proxied = `https://corsproxy.io/?${encodeURIComponent(url)}`;
+  const j = await fetch(proxied).then(r => r.json());
+  const r = j.chart?.result?.[0];
+  if (!r) throw new Error('가격 데이터 없음');
+  const ts = r.timestamp || [];
+  const closes = r.indicators?.quote?.[0]?.close || [];
+  const pts = ts.map((t, i) => ({
+    x: new Date(t * 1000).toISOString().slice(0, 10),
+    y: closes[i] != null ? +closes[i].toFixed(4) : null
+  })).filter(p => p.y !== null);
+  cache[cacheKey] = pts;
+  return pts;
 }
 
 // ─── FETCH: TSA CHECKPOINT ───────────────────────────────────────────────────
@@ -979,7 +1209,78 @@ function filterByYears(data, years) {
   return data.filter(p => p.x >= cutStr);
 }
 
+// 커서 추적 세로 점선 (십자선)
+const crosshairPlugin = {
+  id: 'crosshair',
+  afterDatasetsDraw(chart) {
+    const active = chart.tooltip?.getActiveElements?.() || [];
+    if (!active.length) return;
+    const x = active[0].element.x;
+    const { top, bottom } = chart.chartArea;
+    const c = chart.ctx;
+    c.save();
+    c.beginPath();
+    c.moveTo(x, top);
+    c.lineTo(x, bottom);
+    c.lineWidth = 1;
+    c.strokeStyle = 'rgba(230,237,243,0.45)';
+    c.setLineDash([4, 4]);
+    c.stroke();
+    c.restore();
+  }
+};
+
+// COT Index 전용 차트 (0~100 정규화 + 가격 정규화 겹침 + 90/10 기준선)
+function renderCotIndexChart(idxAll, ind) {
+  const idxData = filterByYears(idxAll, currentYears);
+  const priceNorm = currentCotPrice
+    ? normalize0100(filterByYears(currentCotPrice, currentYears)) : null;
+  const x0 = idxData[0]?.x, x1 = idxData[idxData.length - 1]?.x;
+
+  const datasets = [
+    { type:'line', label:'COT Index', data: idxData, borderColor:'#58a6ff',
+      backgroundColor:'rgba(88,166,255,0.08)', borderWidth:2, pointRadius:0, tension:0.2, fill:true, spanGaps:false },
+    ...(priceNorm ? [{ type:'line', label:'가격(정규화)', data: priceNorm,
+      borderColor:'#ffffff', borderWidth:2, pointRadius:0, tension:0.2, spanGaps:true }] : []),
+    { type:'line', label:'과열(90)', data:[{x:x0,y:90},{x:x1,y:90}], borderColor:'rgba(248,81,73,0.6)',
+      borderWidth:1, borderDash:[5,5], pointRadius:0 },
+    { type:'line', label:'침체(10)', data:[{x:x0,y:10},{x:x1,y:10}], borderColor:'rgba(126,231,135,0.6)',
+      borderWidth:1, borderDash:[5,5], pointRadius:0 },
+  ];
+
+  if (chart) chart.destroy();
+  const ctx = document.getElementById('myChart').getContext('2d');
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: { datasets },
+    plugins: [crosshairPlugin],
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: { backgroundColor:'#1c2128', borderColor:'#30363d', borderWidth:1,
+          titleColor:'#e6edf3', bodyColor:'#8b949e',
+          callbacks: { label: c => c.parsed.y===null?null:`${c.dataset.label}: ${c.parsed.y}` } },
+        zoom: { zoom:{ wheel:{enabled:true,speed:0.08}, pinch:{enabled:true}, mode:'x' }, pan:{enabled:true,mode:'x'} }
+      },
+      scales: {
+        x: { type:'time', time:{tooltipFormat:'yyyy-MM-dd'}, grid:{color:'rgba(48,54,61,0.5)'},
+          ticks:{color:'#8b949e',maxTicksLimit:10,font:{size:10}} },
+        y: { min:0, max:100, grid:{color:'rgba(48,54,61,0.5)'},
+          ticks:{color:'#8b949e',font:{size:10}} }
+      }
+    }
+  });
+
+  const last = idxData[idxData.length - 1];
+  if (last) latestValEl.textContent = `COT Index ${last.y} / 100 (${last.x})`;
+}
+
 function renderChart(allData, ind) {
+  if (ind.source === 'cot' && currentCotView === 'index') {
+    return renderCotIndexChart(allData, ind);
+  }
   const data = filterByYears(allData, currentYears);
   const ma3  = filterByYears(calcMA(allData, 3),  currentYears);
   const ma6  = filterByYears(calcMA(allData, 6),  currentYears);
@@ -998,11 +1299,39 @@ function renderChart(allData, ind) {
     spanGaps: false,
   });
 
-  // 이중 Y축: overlay 중 단위가 다른 게 있으면 y2 사용
-  const hasY2 = overlays.some(o => o.ind.unit !== ind.unit);
+  const isCot = ind.source === 'cot';
+  const hasCotPrice = isCot && currentCotPrice && currentCotPrice.length > 0;
+  // 이중 Y축: overlay 단위 다르거나 COT 가격 있을 때
+  const hasY2 = overlays.some(o => o.ind.unit !== ind.unit) || hasCotPrice;
 
-  const datasets = [
-    {
+  let rawDS;
+  if (isCot) {
+    rawDS = {
+      type: 'bar',
+      label: '순포지션',
+      data,
+      backgroundColor: data.map(p => p.y >= 0 ? 'rgba(126,231,135,0.35)' : 'rgba(248,81,73,0.35)'),
+      borderWidth: 0,
+      barPercentage: 1.0,
+      categoryPercentage: 1.0,
+      yAxisID: 'y',
+      order: 3,
+    };
+  } else if (ind.lineRaw) {
+    rawDS = {
+      type: 'line',
+      label: '가격',
+      data,
+      borderColor: '#58a6ff',
+      backgroundColor: 'rgba(88,166,255,0.08)',
+      borderWidth: 2,
+      pointRadius: 0,
+      tension: 0.2,
+      fill: true,
+      yAxisID: 'y',
+    };
+  } else {
+    rawDS = {
       type: 'bar',
       label: 'Raw',
       data,
@@ -1012,12 +1341,21 @@ function renderChart(allData, ind) {
       maxBarThickness: 12,
       barPercentage: 0.9,
       yAxisID: 'y',
-    },
-    makeLineDS('MA3',  ma3,  '#ff7b72', 1.5),
-    makeLineDS('MA6',  ma6,  '#ffa657', 1.5),
-    makeLineDS('MA12', ma12, '#7ee787', 2),
-    makeLineDS('MA24', ma24, '#d2a8ff', 2),
-    makeLineDS('MA60', ma60, '#e3b341', 2.5),
+    };
+  }
+
+  const datasets = [
+    rawDS,
+    // COT은 MA60만 (순포지션 막대 + MA60 + 가격선)
+    ...(isCot ? [
+      makeLineDS('MA60', ma60, '#e3b341', 2.5),
+    ] : [
+      makeLineDS('MA3',  ma3,  '#ff7b72', 1.5),
+      makeLineDS('MA6',  ma6,  '#ffa657', 1.5),
+      makeLineDS('MA12', ma12, '#7ee787', 2),
+      makeLineDS('MA24', ma24, '#d2a8ff', 2),
+      makeLineDS('MA60', ma60, '#e3b341', 2.5),
+    ]),
     // overlay 데이터셋 (단순 선, MA 없음)
     ...overlays.map(o => {
       const oData = filterByYears(applyTransform(o.raw, defaultMode(o.ind)), currentYears);
@@ -1036,12 +1374,29 @@ function renderChart(allData, ind) {
     }),
   ];
 
+  // COT 가격 라인 (우측 축)
+  if (hasCotPrice) {
+    datasets.push({
+      type: 'line',
+      label: '가격',
+      data: filterByYears(currentCotPrice, currentYears),
+      borderColor: '#ffffff',
+      borderWidth: 2.5,
+      pointRadius: 0,
+      tension: 0.2,
+      spanGaps: true,
+      yAxisID: 'y2',
+      order: 0,
+    });
+  }
+
   if (chart) chart.destroy();
 
   const ctx = document.getElementById('myChart').getContext('2d');
   chart = new Chart(ctx, {
     type: 'bar',
     data: { datasets },
+    plugins: [crosshairPlugin],
     options: {
       responsive: true,
       maintainAspectRatio: false,
@@ -1081,7 +1436,7 @@ function renderChart(allData, ind) {
           position: 'right',
           grid: { drawOnChartArea: false },
           ticks: { color: '#8b949e', font: { size: 10 }, callback: v => v.toLocaleString() },
-          title: { display: true, text: overlays.filter(o=>o.ind.unit!==ind.unit).map(o=>o.ind.unit).join('/'), color: '#8b949e', font: { size: 9 } }
+          title: { display: true, text: hasCotPrice ? '가격' : overlays.filter(o=>o.ind.unit!==ind.unit).map(o=>o.ind.unit).join('/'), color: '#8b949e', font: { size: 9 } }
         }} : {})
       },
       plugins: {
@@ -1098,6 +1453,44 @@ function renderChart(allData, ind) {
   if (last) {
     latestValEl.textContent = `${last.y.toLocaleString()} ${ind.unit} (${last.x})`;
   }
+
+  // 차트 선/막대 더블클릭 → 색상 피커
+  const canvas = document.getElementById('myChart');
+  canvas.ondblclick = (e) => {
+    const points = chart.getElementsAtEventForMode(e, 'nearest', { intersect: false }, true);
+    if (!points.length) return;
+    const dsIndex = points[0].datasetIndex;
+    const ds = chart.data.datasets[dsIndex];
+    if (!ds) return;
+
+    // overlay 지표인지 확인
+    const ovMatch = overlays.find(o => o.ind.name === ds.label);
+    const isOverlay = !!ovMatch;
+    const color = (typeof ds.borderColor === 'string' ? ds.borderColor : '#58a6ff');
+    const hexColor = color.startsWith('#') ? color : '#58a6ff';
+    const width = ds.borderWidth || 2;
+    const label = ds.label || CHART_DS_LABELS[dsIndex] || '선';
+
+    // 피커 열기 (openPicker는 setupColorPicker 안에 있으므로 직접 구현)
+    document.getElementById('pc-label').textContent = label;
+    document.getElementById('pc-color').value = hexColor;
+    document.getElementById('pc-width').value = width;
+    document.getElementById('pc-width-val').textContent = width;
+
+    const picker = document.getElementById('color-picker-popup');
+    const PH = 140, PW = 180;
+    const rect = canvas.getBoundingClientRect();
+    const left = Math.max(4, Math.min(e.clientX, window.innerWidth - PW - 8));
+    const top = e.clientY > window.innerHeight * 0.5 ? e.clientY - PH - 8 : e.clientY + 8;
+    picker.style.left = left + 'px';
+    picker.style.top = Math.max(4, top) + 'px';
+    picker.style.display = 'block';
+
+    // 임시로 타겟 설정 (색상 변경 시 적용될 대상)
+    picker._dsIndex = dsIndex;
+    picker._isOverlay = isOverlay;
+    picker._overlayId = ovMatch?.ind?.id || null;
+  };
 }
 
 // ─── OVERLAY ──────────────────────────────────────────────────────────────────
@@ -1155,7 +1548,7 @@ function renderOverlayChips() {
       overlays = overlays.filter(o => o.ind.id !== id);
       updateOverlayBtns();
       renderOverlayChips();
-      if (currentRawData) renderChart(applyTransform(currentRawData, currentMode), currentIndicator);
+      if (currentRawData) renderChart(applyTransform(currentRawData, currentMode, currentIndicator), currentIndicator);
     });
   });
 }
@@ -1181,12 +1574,29 @@ async function selectIndicator(ind) {
   if (dot) { dot.className = 'status-dot loading'; }
 
   try {
-    const raw = ind.source === 'tsa' ? await fetchTSA() : await fetchFRED(ind.id, ind.freq);
-    currentRawData = raw;
-    currentMode = defaultMode(ind);
-    const data = applyTransform(raw, currentMode);
-    renderChart(data, ind);
-    renderStatBoxes(calcStats(raw, ind), ind);
+    if (ind.source === 'cot') {
+      // COT: 원본 받아서 카테고리별 순포지션 변환 + 가격 동시 로딩
+      const rows = await fetchCOT(ind.cotName);
+      currentCotRaw = rows;
+      currentCotPrice = null;
+      currentMode = 'raw';
+      // 가격 (실패해도 순포지션은 표시)
+      if (ind.yf) {
+        try { currentCotPrice = await fetchYahooWeekly(ind.yf, 'max'); } catch(e) { currentCotPrice = null; }
+      }
+      renderCotCurrent();           // 현재 카테고리 + 뷰(순포지션/Index)로 렌더
+      renderStatBoxes(null, ind);   // COT은 YoY/MoM 박스 대신 토글 사용
+    } else {
+      const raw = ind.source === 'tsa' ? await fetchTSA() : await fetchFRED(ind.id, ind.freq);
+      currentCotRaw = null;
+      currentCotPrice = null;
+      currentRawData = raw;
+      currentMode = defaultMode(ind);
+      const data = applyTransform(raw, currentMode, ind);
+      renderChart(data, ind);
+      renderStatBoxes(calcStats(raw, ind), ind);
+    }
+    updateCotBar(ind);
     // Reset y-range inputs on new indicator
     document.getElementById('ymin-input').value = '';
     document.getElementById('ymax-input').value = '';
@@ -1210,7 +1620,7 @@ document.querySelectorAll('.range-btn').forEach(btn => {
     btn.classList.add('active');
     currentYears = parseInt(btn.dataset.years);
     if (currentIndicator && currentRawData) {
-      renderChart(applyTransform(currentRawData, currentMode), currentIndicator);
+      renderChart(applyTransform(currentRawData, currentMode, currentIndicator), currentIndicator);
     }
   });
 });
@@ -1218,6 +1628,14 @@ document.querySelectorAll('.range-btn').forEach(btn => {
 // ─── STAT BOX CLICK (mode toggle) ────────────────────────────────────────────
 document.querySelector('.stat-box:nth-child(1)').addEventListener('click', () => switchMode('yoy'));
 document.querySelector('.stat-box:nth-child(2)').addEventListener('click', () => switchMode('mom'));
+
+// ─── COT 카테고리 / 뷰 버튼 ──────────────────────────────────────────────────
+document.querySelectorAll('.cot-cat-btn').forEach(btn => {
+  btn.addEventListener('click', () => switchCotCategory(btn.dataset.cot));
+});
+document.querySelectorAll('.cot-view-btn').forEach(btn => {
+  btn.addEventListener('click', () => switchCotView(btn.dataset.view));
+});
 
 // ─── RESET ZOOM ──────────────────────────────────────────────────────────────
 document.getElementById('reset-zoom-btn').addEventListener('click', () => {
@@ -1301,6 +1719,9 @@ document.querySelectorAll('.country-btn:not(.disabled)').forEach(btn => {
     renderOverlayChips();
     updateOverlayBtns();
     buildSidebar();
+    // COT 탭은 기본 ALL, 그 외 10Y
+    currentYears = (currentCountry === 'COT') ? 0 : 10;
+    document.querySelectorAll('.range-btn').forEach(b => b.classList.toggle('active', +b.dataset.years === currentYears));
     // 탭 전환 시 첫 번째 지표 자동 선택
     const first = INDICATORS.find(i => (i.country || 'US') === currentCountry);
     if (first) selectIndicator(first);
@@ -1371,17 +1792,23 @@ const CHART_DS_LABELS = ['Raw', 'MA3', 'MA6', 'MA12', 'MA24', 'MA60'];
 
   function applyPickerChange(color, width) {
     if (!chart) return;
-    if (targetIsOverlay) {
-      const ov = overlays.find(o => o.ind.id === targetOverlayId);
+    // 차트 더블클릭으로 열린 경우 (_dsIndex 사용)
+    const pickerEl = document.getElementById('color-picker-popup');
+    const activeDsIndex  = pickerEl._dsIndex  !== undefined ? pickerEl._dsIndex  : targetDsIndex;
+    const activeIsOverlay= pickerEl._isOverlay !== undefined ? pickerEl._isOverlay : targetIsOverlay;
+    const activeOverlayId= pickerEl._overlayId !== undefined ? pickerEl._overlayId : targetOverlayId;
+
+    if (activeIsOverlay) {
+      const ov = overlays.find(o => o.ind.id === activeOverlayId);
       if (ov) {
         if (color) ov.color = color;
         const ds = chart.data.datasets.find(d => d.label === ov.ind.name);
         if (ds) { if (color) ds.borderColor = color; if (width) ds.borderWidth = width; }
       }
-    } else if (targetDsIndex >= 0) {
-      const ds = chart.data.datasets[targetDsIndex];
+    } else if (activeDsIndex >= 0) {
+      const ds = chart.data.datasets[activeDsIndex];
       if (!ds) return;
-      if (targetDsIndex === 0) { // Raw bar
+      if (activeDsIndex === 0) { // Raw bar
         if (color) { ds.backgroundColor = color + '55'; ds.borderColor = color; }
       } else {
         if (color) ds.borderColor = color;
@@ -1423,8 +1850,34 @@ const CHART_DS_LABELS = ['Raw', 'MA3', 'MA6', 'MA12', 'MA24', 'MA60'];
 
   // 바깥 클릭 시 닫기
   document.addEventListener('click', e => {
-    if (!picker.contains(e.target)) picker.style.display = 'none';
+    if (!picker.contains(e.target)) {
+      picker.style.display = 'none';
+      delete picker._dsIndex; delete picker._isOverlay; delete picker._overlayId;
+    }
   });
+})();
+
+// ─── Y축 휠 줌 (마우스가 좌측 Y축 영역에 있을 때) ─────────────────────────────
+(function setupYAxisZoom() {
+  const canvas = document.getElementById('myChart');
+  canvas.addEventListener('wheel', (e) => {
+    if (!chart || !chart.chartArea) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    // Y축(왼쪽 눈금) 영역에서만 동작 — plot 영역은 plugin이 x줌 처리
+    if (x >= chart.chartArea.left) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const y = e.clientY - rect.top;
+    const sc = chart.scales.y;
+    if (!sc) return;
+    const val = sc.getValueForPixel(y);
+    const min = sc.min, max = sc.max;
+    const f = e.deltaY < 0 ? 0.85 : 1.18;   // 위로=확대, 아래로=축소
+    sc.options.min = val - (val - min) * f;
+    sc.options.max = val + (max - val) * f;
+    chart.update('none');
+  }, { capture: true, passive: false });
 })();
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
