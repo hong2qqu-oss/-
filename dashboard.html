@@ -564,6 +564,7 @@
     <button class="country-btn active" data-country="US">🇺🇸 US</button>
     <button class="country-btn" data-country="KR">🇰🇷 KR</button>
     <button class="country-btn" data-country="JP">🇯🇵 JP</button>
+    <button class="country-btn" data-country="SENTI">📐 센티먼트</button>
     <button class="country-btn" data-country="COT">📊 COT</button>
     <button class="country-btn disabled" data-country="EU" title="준비 중">🇪🇺 EU</button>
   </div>
@@ -704,24 +705,32 @@ const INDICATORS = [
   // 기타 고빈도
   { id:'TSA_CHECKPOINT', name:'TSA 공항 검색대 (일간)', unit:'명',  category:'기타 / OTHER', country:'US', source:'tsa' },
 
+  // ── 📐 센티먼트 / 포지셔닝 (Yahoo 주간) ──────────────────────────────────────
+  // 변동성 & 헤지 수요
+  { id:'SENTI_VIX',   name:'VIX (변동성)',       unit:'pt', category:'변동성 & 헤지수요', country:'SENTI', source:'price', yf:'^VIX',  lineRaw:true },
+  { id:'SENTI_SKEW',  name:'SKEW (꼬리위험)',    unit:'pt', category:'변동성 & 헤지수요', country:'SENTI', source:'price', yf:'^SKEW', lineRaw:true },
+  // 모멘텀
+  { id:'SENTI_MTUM',   name:'모멘텀/SPY 상대성과', unit:'비율', category:'모멘텀 / MOMENTUM', country:'SENTI', source:'ratio', yf:'MTUM', yfDenom:'SPY', lineRaw:true },
+  { id:'SENTI_MTUMPX', name:'모멘텀 ETF (MTUM)',  unit:'$',   category:'모멘텀 / MOMENTUM', country:'SENTI', source:'price', yf:'MTUM', lineRaw:true },
+  // 추세추종 (CTA)
+  { id:'SENTI_DBMF',  name:'DBMF (CTA 대용)',    unit:'$',  category:'추세추종 / CTA',   country:'SENTI', source:'price', yf:'DBMF', lineRaw:true },
+  // 옵션 심리 (CNN Fear&Greed, 약 1년)
+  { id:'SENTI_PC',    name:'풋콜 비율',          unit:'비율', category:'옵션 심리 / OPTIONS', country:'SENTI', source:'cnn', cnnKey:'put_call_options', lineRaw:true,
+    refLines:[ {y:1.0, color:'rgba(126,231,135,0.6)', label:'풋우위 1.0(공포)'}, {y:0.7, color:'rgba(248,81,73,0.6)', label:'콜우위 0.7(탐욕)'} ] },
+  { id:'SENTI_FG',    name:'공포·탐욕 지수',      unit:'0~100', category:'옵션 심리 / OPTIONS', country:'SENTI', source:'cnn', cnnKey:'fear_and_greed_historical', lineRaw:true },
+
   // ── 📊 COT 선물 순포지션 (CFTC 주간) + 가격(Yahoo 선물) ─────────────────────
-  // 지수
   { id:'COT_SP500',   name:'S&P500',     unit:'계약', category:'주가지수 / INDEX',   country:'COT', source:'cot', cotName:'E-MINI S&P 500', yf:'ES=F' },
   { id:'COT_NASDAQ',  name:'나스닥',      unit:'계약', category:'주가지수 / INDEX',   country:'COT', source:'cot', cotName:'NASDAQ MINI', yf:'NQ=F' },
-  // 금속
   { id:'COT_GOLD',    name:'금',          unit:'계약', category:'금속 / METAL',       country:'COT', source:'cot', cotName:'GOLD', yf:'GC=F' },
   { id:'COT_SILVER',  name:'은',          unit:'계약', category:'금속 / METAL',       country:'COT', source:'cot', cotName:'SILVER', yf:'SI=F' },
   { id:'COT_COPPER',  name:'구리',        unit:'계약', category:'금속 / METAL',       country:'COT', source:'cot', cotName:'COPPER- #1', yf:'HG=F' },
-  // 에너지
   { id:'COT_WTI',     name:'WTI 원유',    unit:'계약', category:'에너지 / ENERGY',    country:'COT', source:'cot', cotName:'CRUDE OIL, LIGHT SWEET-WTI', yf:'CL=F' },
-  // 통화
   { id:'COT_EUR',     name:'유로',        unit:'계약', category:'통화 / FX',          country:'COT', source:'cot', cotName:'EURO FX', yf:'6E=F' },
   { id:'COT_JPY',     name:'엔',          unit:'계약', category:'통화 / FX',          country:'COT', source:'cot', cotName:'JAPANESE YEN', yf:'6J=F' },
-  // 금리
   { id:'COT_UST2Y',   name:'미국채 2년',   unit:'계약', category:'금리 / RATES',       country:'COT', source:'cot', cotName:'UST 2Y NOTE', yf:'ZT=F' },
   { id:'COT_UST10Y',  name:'미국채 10년',  unit:'계약', category:'금리 / RATES',       country:'COT', source:'cot', cotName:'UST 10Y NOTE', yf:'ZN=F' },
   { id:'COT_UST30Y',  name:'미국채 30년',  unit:'계약', category:'금리 / RATES',       country:'COT', source:'cot', cotName:'UST BOND', yf:'ZB=F' },
-  // 암호화폐
   { id:'COT_BTC',     name:'비트코인',     unit:'계약', category:'암호화폐 / CRYPTO',  country:'COT', source:'cot', cotName:'BITCOIN', yf:'BTC-USD' },
 
   // ── 🇰🇷 KOREA ──────────────────────────────────────────────────────────────
@@ -1105,6 +1114,49 @@ async function fetchYahooWeekly(symbol, range = '10y') {
   return pts;
 }
 
+// CNN Fear & Greed API (풋콜 비율 등, 약 1년 일간)
+// 방문할 때마다 localStorage에 누적 머지 → 시간이 지날수록 히스토리가 길어짐
+async function fetchCNN(key) {
+  const cacheKey = `cnn_${key}`;
+  if (cache[cacheKey]) return cache[cacheKey];
+
+  // 1) 기존 누적분 로드
+  const storeKey = `cnnhist_${key}`;
+  let stored = {};
+  try { stored = JSON.parse(localStorage.getItem(storeKey) || '{}'); } catch (e) {}
+
+  // 2) 신규 1년치 받아서 머지 (실패해도 누적분으로 그림)
+  try {
+    const url = 'https://production.dataviz.cnn.io/index/fearandgreed/graphdata';
+    const j = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`).then(r => r.json());
+    const arr = j[key]?.data || [];
+    arr.filter(d => d.y != null).forEach(d => {
+      const date = new Date(d.x).toISOString().slice(0, 10);
+      stored[date] = +(+d.y).toFixed(3);   // 날짜별 머지 (신규 우선)
+    });
+    localStorage.setItem(storeKey, JSON.stringify(stored));
+  } catch (e) { /* 네트워크 실패 시 기존 누적분만 사용 */ }
+
+  const pts = Object.entries(stored)
+    .map(([x, y]) => ({ x, y: +y }))
+    .sort((a, b) => a.x.localeCompare(b.x));
+  if (!pts.length) throw new Error('CNN 데이터 없음');
+  cache[cacheKey] = pts;
+  return pts;
+}
+
+// 두 티커의 비율 시리즈 (예: MTUM/SPY 상대성과)
+async function fetchRatio(numSym, denomSym, range = 'max') {
+  const [num, den] = await Promise.all([
+    fetchYahooWeekly(numSym, range),
+    fetchYahooWeekly(denomSym, range),
+  ]);
+  const denMap = new Map(den.map(p => [p.x, p.y]));
+  return num
+    .filter(p => denMap.has(p.x) && denMap.get(p.x))
+    .map(p => ({ x: p.x, y: +(p.y / denMap.get(p.x)).toFixed(4) }));
+}
+
 // ─── FETCH: TSA CHECKPOINT ───────────────────────────────────────────────────
 async function fetchTSA() {
   if (cache['TSA']) return cache['TSA'];
@@ -1390,6 +1442,23 @@ function renderChart(allData, ind) {
     });
   }
 
+  // 기준선 (예: 풋콜 0.7/1.0)
+  if (ind.refLines && data.length) {
+    const x0 = data[0].x, x1 = data[data.length - 1].x;
+    ind.refLines.forEach(rl => {
+      datasets.push({
+        type: 'line',
+        label: rl.label || `기준 ${rl.y}`,
+        data: [{ x: x0, y: rl.y }, { x: x1, y: rl.y }],
+        borderColor: rl.color || 'rgba(139,148,158,0.6)',
+        borderWidth: 1,
+        borderDash: [5, 5],
+        pointRadius: 0,
+        yAxisID: 'y',
+      });
+    });
+  }
+
   if (chart) chart.destroy();
 
   const ctx = document.getElementById('myChart').getContext('2d');
@@ -1574,7 +1643,20 @@ async function selectIndicator(ind) {
   if (dot) { dot.className = 'status-dot loading'; }
 
   try {
-    if (ind.source === 'cot') {
+    if (ind.source === 'price' || ind.source === 'ratio' || ind.source === 'cnn') {
+      // 가격 / 비율 / CNN 차트 — 라인 + 이동평균선
+      const px = ind.source === 'ratio'
+        ? await fetchRatio(ind.yf, ind.yfDenom, 'max')
+        : ind.source === 'cnn'
+        ? await fetchCNN(ind.cnnKey)
+        : await fetchYahooWeekly(ind.yf, 'max');
+      currentCotRaw = null; currentCotPrice = null;
+      currentRawData = px;
+      currentMode = 'raw';
+      renderChart(px, ind);
+      renderStatBoxes(null, ind);
+      updateCotBar(ind);
+    } else if (ind.source === 'cot') {
       // COT: 원본 받아서 카테고리별 순포지션 변환 + 가격 동시 로딩
       const rows = await fetchCOT(ind.cotName);
       currentCotRaw = rows;
@@ -1719,8 +1801,8 @@ document.querySelectorAll('.country-btn:not(.disabled)').forEach(btn => {
     renderOverlayChips();
     updateOverlayBtns();
     buildSidebar();
-    // COT 탭은 기본 ALL, 그 외 10Y
-    currentYears = (currentCountry === 'COT') ? 0 : 10;
+    // 센티먼트·COT 탭은 기본 ALL, 그 외 10Y
+    currentYears = (currentCountry === 'SENTI' || currentCountry === 'COT') ? 0 : 10;
     document.querySelectorAll('.range-btn').forEach(b => b.classList.toggle('active', +b.dataset.years === currentYears));
     // 탭 전환 시 첫 번째 지표 자동 선택
     const first = INDICATORS.find(i => (i.country || 'US') === currentCountry);
