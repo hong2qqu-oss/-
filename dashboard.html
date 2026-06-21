@@ -680,7 +680,7 @@
       <button class="sup-subtab active" data-sup="today">📋 당일 수급</button>
       <button class="sup-subtab" data-sup="sigma">📊 수급 시그마</button>
     </div>
-    <p class="sup-note">단위: 억원 · 순매수(+매수우위 / −매도우위) · <b>샘플 데이터</b> (KRX 연동 전, 모양 확인용) · 초록=＋ 빨강=−</p>
+    <p class="sup-note">단위: 억원 · 순매수(+매수우위 / −매도우위) · <b>현물=KRX 실데이터 / 파생(선물·옵션)=준비중</b> · 초록=＋ 빨강=−</p>
     <div class="sup-view show" id="sup-view-today">
       <div class="sup-range">기간 <input type="date" id="today-from"> ~ <input type="date" id="today-to">
         <button class="sup-mini" id="today-reset">최근 20일</button></div>
@@ -2038,35 +2038,19 @@ const SUP_INV  = [
   { key:'frn',  label:'외인' },
   { key:'inst', label:'기관' },
 ];
-const SUP_STD  = { spot:2800, fut:4500, callopt:500, putopt:500, sfut:600 };
-
-// 결정적 난수 (모양 확인용 샘플 데이터)
-function supMulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
-
-let SUP_DATA = null;
-function supBuildData(){
+// 실데이터(supply_data.json) 로더 — KRX 수집 스크립트 fetch_supply.py 산출물
+let SUP_DATA = null;     // [{date:Date, v:{spot|fut|callopt|putopt|sfut: {ind,frn,inst}|null}}]
+let SUP_META = null;
+async function supEnsureData(){
   if (SUP_DATA) return SUP_DATA;
-  const rnd = supMulberry32(20260610);
-  const gauss = () => { let u=0,v=0; while(!u)u=rnd(); while(!v)v=rnd(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); };
-  const days = [];
-  let d = new Date(2026, 5, 10);   // 2026-06-10 (오늘)
-  while (days.length < 130) {
-    const wd = d.getDay();
-    if (wd !== 0 && wd !== 6) {
-      const v = {};
-      SUP_SEGS.forEach(seg => {
-        const frn  = Math.round(gauss() * SUP_STD[seg.key]);
-        const inst = Math.round(gauss() * SUP_STD[seg.key]);
-        v[seg.key] = { frn, inst, ind: -(frn + inst) };  // 개인 = 외인+기관 반대편
-      });
-      days.push({ date: new Date(d), v });
-    }
-    d.setDate(d.getDate() - 1);
-  }
-  days.reverse();   // 오래된 → 최신
-  SUP_DATA = days;
-  return days;
+  const res = await fetch('supply_data.json', { cache:'no-store' });
+  if (!res.ok) throw new Error('supply_data.json 로드 실패 ('+res.status+')');
+  const j = await res.json();
+  SUP_META = j;
+  SUP_DATA = (j.days||[]).map(d => ({ date: new Date(d.date + 'T00:00:00'), v: d.v }));
+  return SUP_DATA;
 }
+function supBuildData(){ return SUP_DATA || []; }
 
 function supFmtDate(dt){ const m=String(dt.getMonth()+1).padStart(2,'0'), day=String(dt.getDate()).padStart(2,'0'); return `${m}/${day}`; }
 function supDateKey(dt){ const y=dt.getFullYear(), m=String(dt.getMonth()+1).padStart(2,'0'), d=String(dt.getDate()).padStart(2,'0'); return `${y}-${m}-${d}`; }
@@ -2099,10 +2083,15 @@ function supRenderToday(){
   rows.forEach(day => {
     const key = supDateKey(day.date);
     body += `<tr><td class="date-col">${supFmtDate(day.date)}</td>`;
-    SUP_SEGS.forEach(seg => SUP_INV.forEach((inv,i) => {
-      const n = day.v[seg.key][inv.key];
-      body += `<td class="${supCls(n)} ${i===0?'grp-sep':''}">${supNum(n)}</td>`;
-    }));
+    SUP_SEGS.forEach(seg => {
+      const segv = day.v[seg.key];
+      SUP_INV.forEach((inv,i) => {
+        const sep = i===0?'grp-sep':'';
+        if (!segv) { body += `<td class="sup-zero ${sep}">—</td>`; return; }
+        const n = segv[inv.key];
+        body += `<td class="${supCls(n)} ${sep}">${supNum(n)}</td>`;
+      });
+    });
     body += `<td class="chk-col grp-sep"><input type="checkbox" class="sup-chk" ${checks[key]?'checked':''} onchange="supToggleChk('${key}', this.checked)"></td></tr>`;
   });
   document.getElementById('sup-today-table').innerHTML =
@@ -2111,9 +2100,10 @@ function supRenderToday(){
 
 // 기준일(refIdx)의 segKey/invKey 순매수가 직전 W일 평균 대비 몇 σ인가
 function supZ(refIdx, days, segKey, invKey, W){
+  if (!days[refIdx].v[segKey]) return null;   // 파생 준비중 등 null
   const slice = days.slice(0, refIdx).slice(-W);   // 기준일 이전 W일
-  if (slice.length < 2) return null;
-  const arr = slice.map(d => d.v[segKey][invKey]);
+  const arr = slice.map(d => d.v[segKey] ? d.v[segKey][invKey] : null).filter(x => x !== null);
+  if (arr.length < 2) return null;
   const mean = arr.reduce((a,b)=>a+b,0)/arr.length;
   const sd = Math.sqrt(arr.reduce((a,b)=>a+(b-mean)*(b-mean),0)/arr.length) || 1;
   return (days[refIdx].v[segKey][invKey] - mean) / sd;
@@ -2191,16 +2181,23 @@ function supInitControls(){
   }
 }
 
-function showSupplyPanel(){
+async function showSupplyPanel(){
   document.getElementById('topbar').style.display = 'none';
   document.getElementById('chart-area').style.display = 'none';
   document.getElementById('legend-area').style.display = 'none';
   document.getElementById('sidebar-scroll').innerHTML =
     '<div style="padding:16px;color:var(--text-muted);font-size:12px;line-height:1.7">💹 <b style="color:var(--text)">수급 탭</b><br>우측 표를 확인하세요.<br><br>· 당일 수급<br>· 수급 시그마</div>';
+  document.getElementById('supply-panel').classList.add('show');
+  document.getElementById('sup-today-table').innerHTML = '<p class="sup-note">KRX 데이터 불러오는 중…</p>';
+  try {
+    await supEnsureData();
+  } catch (e) {
+    document.getElementById('sup-today-table').innerHTML = '<p class="sup-note">데이터 로드 실패: ' + e.message + '</p>';
+    return;
+  }
   supInitControls();
   supRenderToday();
   supRenderSigma();
-  document.getElementById('supply-panel').classList.add('show');
 }
 function hideSupplyPanel(){
   document.getElementById('supply-panel').classList.remove('show');

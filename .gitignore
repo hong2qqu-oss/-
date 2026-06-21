@@ -1,1 +1,4 @@
 .claude/
+_*.py
+.env
+*.local
