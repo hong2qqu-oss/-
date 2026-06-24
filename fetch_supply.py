@@ -108,7 +108,7 @@ def fetch_drv(ks, isuCd, isuOpt, dd):
         return None
     d = {r["INVST_TP_NM"]: pnum(r.get("NETBID_TRDVAL")) for r in rows}
     if "합계" not in d: return None
-    eok = lambda v: round(v / 1e8)
+    eok = lambda v: round(v / 1e8, 1)   # 억원 소수1자리(=천만원) — 옵션 같은 소액도 표시
     return {"ind": eok(d.get("개인", 0)), "frn": eok(d.get("외국인", 0)), "inst": eok(d.get("기관합계", 0))}
 
 # ── 거래일/저장 ─────────────────────────────────────────────
@@ -155,7 +155,9 @@ def main():
         ordered.append(d); prev = sp
 
     # 3) 파생 채우기(KRX) — 아직 안 채운 거래일만
-    todo = [d for d in ordered if data[d].get("fut") is None]
+    # 파생: 아직 없는 거래일 + 오늘(확정 늦게 올라오므로 매번 재수집). --redrv=전체 재수집(일회성)
+    redrv = "--redrv" in sys.argv
+    todo = [d for d in ordered if redrv or data[d].get("fut") is None or d == today]
     print(f"파생 수집 {len(todo)}일 (×4상품)")
     for i, d in enumerate(todo):
         dd = d.replace("-", "")

@@ -2055,7 +2055,7 @@ function supBuildData(){ return SUP_DATA || []; }
 function supFmtDate(dt){ const m=String(dt.getMonth()+1).padStart(2,'0'), day=String(dt.getDate()).padStart(2,'0'); return `${m}/${day}`; }
 function supDateKey(dt){ const y=dt.getFullYear(), m=String(dt.getMonth()+1).padStart(2,'0'), d=String(dt.getDate()).padStart(2,'0'); return `${y}-${m}-${d}`; }
 function supCls(n){ return n>0?'sup-pos':n<0?'sup-neg':'sup-zero'; }
-function supNum(n){ n=Math.round(n); return (n>0?'+':'')+n.toLocaleString(); }
+function supNum(n){ const r=Math.round(n*10)/10; return (r>0?'+':'')+r.toLocaleString(undefined,{maximumFractionDigits:1}); }
 
 function supGetChecks(){ try { return JSON.parse(localStorage.getItem('supplyChecks')||'{}'); } catch(e){ return {}; } }
 function supToggleChk(key, on){ const c=supGetChecks(); if(on) c[key]=true; else delete c[key]; localStorage.setItem('supplyChecks', JSON.stringify(c)); }
