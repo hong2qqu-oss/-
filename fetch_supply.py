@@ -8,13 +8,57 @@
 환경변수: KIWOOM_APP_KEY/SECRET (현물), KRX_ID/KRX_PW (파생).
 사용: py -3.13 fetch_supply.py [--last N]
 """
-import os, sys, json, time
+import os, sys, json, time, subprocess
 import datetime as dt
 import requests
 from pathlib import Path
 from pykrx.website.comm.auth import get_auth_session
+try:
+    import winreg
+except ImportError:
+    winreg = None
 
 OUT = Path(__file__).parent / "supply_data.json"
+LOG = Path(__file__).parent / "supply_run.log"
+JOURNAL_ENV = Path(r"C:\Users\user\OneDrive\바탕 화면\Trading\daily-trade-journal\.env")
+
+def log(m):
+    line = f"{dt.datetime.now():%Y-%m-%d %H:%M:%S}  {m}"
+    print(line)
+    try: LOG.open("a", encoding="utf-8").write(line + "\n")
+    except Exception: pass
+
+def _reg_env(name):
+    if not winreg: return None
+    try:
+        k = winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Environment")
+        v, _ = winreg.QueryValueEx(k, name); winreg.CloseKey(k); return v
+    except Exception:
+        return None
+
+def load_keys():
+    """키움 키는 매매일지 .env에서, KRX 키는 레지스트리(User)/env에서 → os.environ 채움."""
+    if JOURNAL_ENV.exists():
+        for ln in JOURNAL_ENV.read_text(encoding="utf-8").splitlines():
+            ln = ln.strip()
+            if ln and not ln.startswith("#") and "=" in ln:
+                k, v = ln.split("=", 1); k = k.strip()
+                if k in ("KIWOOM_APP_KEY", "KIWOOM_APP_SECRET") and not os.environ.get(k):
+                    os.environ[k] = v.split("#")[0].strip()
+    for k in ("KRX_ID", "KRX_PW"):
+        if not os.environ.get(k):
+            v = _reg_env(k)
+            if v: os.environ[k] = v
+
+def git_push():
+    p = OUT.parent
+    subprocess.run(["git", "add", "supply_data.json"], cwd=p)
+    if subprocess.run(["git", "diff", "--cached", "--quiet"], cwd=p).returncode != 0:
+        subprocess.run(["git", "commit", "-m", f"수급 자동갱신 {dt.date.today():%Y-%m-%d}"], cwd=p)
+        r = subprocess.run(["git", "push", "origin", "main"], cwd=p)
+        log("git push " + ("완료" if r.returncode == 0 else "실패"))
+    else:
+        log("변경 없음 — push 생략")
 KIWOOM = "https://api.kiwoom.com"
 KRX_URL = "http://data.krx.co.kr/comm/bldAttendant/getJsonData.cmd"
 
@@ -82,7 +126,9 @@ def candidate_dates(lookback=230):
     return sorted(out)
 
 def main():
+    log("===== 시작 =====")
     last = int(sys.argv[sys.argv.index("--last")+1]) if "--last" in sys.argv else None
+    load_keys()
     ktok = kiwoom_token()
     ks = get_auth_session()          # KRX 로그인
     data = existing_map()
@@ -122,8 +168,10 @@ def main():
     payload = {"updated": dt.datetime.now().isoformat(timespec="seconds"), "unit": "억원",
                "source": "현물=키움[0784] ka10051 / 파생=KRX MDCSTAT13101", "days": days}
     OUT.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-    print(f"저장: {OUT} (총 {len(days)}일)")
-    if days: print("최신:", json.dumps(days[-1], ensure_ascii=False))
+    log(f"저장 총 {len(days)}일")
+    if "--push" in sys.argv:
+        git_push()
+    log("===== 끝 =====")
 
 if __name__ == "__main__":
     main()

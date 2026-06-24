@@ -2,3 +2,4 @@
 _*.py
 .env
 *.local
+*.log
