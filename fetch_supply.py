@@ -53,8 +53,8 @@ def _reg_env(name):
 
 def _load_envfile(p, keys):
     if not p.exists(): return
-    for ln in p.read_text(encoding="utf-8").splitlines():
-        ln = ln.strip()
+    for ln in p.read_text(encoding="utf-8-sig").splitlines():
+        ln = ln.lstrip("﻿").strip()
         if ln and not ln.startswith("#") and "=" in ln:
             k, v = ln.split("=", 1); k = k.strip()
             if (keys is None or k in keys) and not os.environ.get(k):
@@ -154,6 +154,17 @@ def push():
         github_api_push()
 
 # ── 거래일/메인 ─────────────────────────────────────────────
+def drv_incomplete(v):
+    # 파생 4종 중 하나라도 미수집(None)이거나 3주체 전부 0(장중/미발표 sentinel)이면 재수집 대상.
+    # → 저녁 발표 전 장중에 긁혀 0으로 박힌 날(특히 주식선물)이 다음 실행에서 자동 보정됨.
+    for k in DRV:
+        x = v.get(k)
+        if x is None:
+            return True
+        if x.get("ind", 0) == 0 and x.get("frn", 0) == 0 and x.get("inst", 0) == 0:
+            return True
+    return False
+
 def existing_map():
     if OUT.exists():
         j = json.loads(OUT.read_text(encoding="utf-8"))
@@ -195,7 +206,7 @@ def main():
         ordered.append(d); prev = sp
 
     redrv = "--redrv" in sys.argv
-    todo = [d for d in ordered if redrv or data[d].get("fut") is None or d == today]
+    todo = [d for d in ordered if redrv or drv_incomplete(data[d]) or d == today]
     log(f"파생 수집 {len(todo)}일")
     for i, d in enumerate(todo):
         dd = d.replace("-", "")
