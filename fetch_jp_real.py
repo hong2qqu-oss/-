@@ -116,6 +116,14 @@ def main():
     merged.update({r["d"]: r for r in rows})
     days = [merged[k] for k in sorted(merged)]
 
+    last = days[-1]
+
+    # 원본은 월 단위로만 갱신된다. 값이 그대로면 파일을 아예 건드리지 않는다.
+    # (updated 타임스탬프만 바뀌어도 git은 변경으로 보고 매일 빈 커밋을 만든다)
+    if days == old:
+        log(f"변경 없음 — {len(days)}일, 최신 {last['d']} (파일/커밋 생략)")
+        return
+
     payload = {
         "updated": dt.datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
         "unit": "%",
@@ -125,7 +133,6 @@ def main():
     }
     OUT.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
 
-    last = days[-1]
     log(f"✓ {len(days)}일 저장 (신규 {added}) | {days[0]['d']} ~ {last['d']}")
     log(f"  최신: real={last['real']}%  nom={last['nom']}%  bei={last['bei']}%")
 
