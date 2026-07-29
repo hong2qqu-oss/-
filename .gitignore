@@ -4,3 +4,4 @@ _*.py
 *.local
 *.log
 __pycache__/
+.wayback_cache/
