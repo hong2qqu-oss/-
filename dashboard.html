@@ -742,8 +742,15 @@ const INDICATORS = [
   { id:'DGS10',       name:'10년물 국채금리',         unit:'%',     category:'금리 & 스프레드',  country:'US', freq:'w', noStats:true },
   { id:'DGS2',        name:'2년물 국채금리',          unit:'%',     category:'금리 & 스프레드',  country:'US', freq:'w', noStats:true },
   { id:'MORTGAGE30US',name:'30년 모기지 금리',        unit:'%',     category:'금리 & 스프레드',  country:'US' },
+  { id:'DFII10',      name:'10년 실질금리 (TIPS)',   unit:'%',     category:'금리 & 스프레드',  country:'US', freq:'w', noStats:true },
+  { id:'T10YIE',      name:'10년 기대인플레 (BEI)',   unit:'%',     category:'금리 & 스프레드',  country:'US', freq:'w', noStats:true },
   { id:'T10Y2Y',      name:'장단기 스프레드 (10Y-2Y)',unit:'%p',    category:'금리 & 스프레드',  country:'US', freq:'m' },
   { id:'BAMLH0A0HYM2',name:'하이일드 스프레드',       unit:'%p',    category:'금리 & 스프레드',  country:'US', freq:'m' },
+  // 미-일 실질금리차 = US TIPS(DFII10) − 일본 10년 물가연동채. 엔/달러의 근본 동인.
+  // 일본쪽 데이터가 2023-12부터라 이 지표도 그 이후만 나온다.
+  { id:'SPREAD_USJP_REAL', name:'미-일 실질금리차 (10Y)', unit:'%p', category:'금리 & 스프레드', country:'US',
+    source:'spread', noStats:true, lineRaw:true,
+    refLines:[ {y:0, color:'rgba(230,237,243,0.5)', label:'0'} ] },
 
   // 주택
   { id:'HOUST',       name:'주택착공건수',            unit:'K',     category:'주택 / HOUSING',   country:'US' },
@@ -814,6 +821,10 @@ const INDICATORS = [
   { id:'JPNPROINDMISMEI',  name:'산업생산 (제조업)',    unit:'% YoY', category:'성장 / GROWTH',      country:'JP', transform:'yoy' },
   { id:'JPNB6BLTT02STSAQ', name:'경상수지',            unit:'USD B', category:'국제수지 / BOP',     country:'JP' },
   { id:'IRSTCB01JPM156N',  name:'기준금리 (BOJ)',       unit:'%',     category:'금리 / RATES',       country:'JP' },
+  // 일본상호증권(BB) 스크랩 → jp_real.json. 생성: python fetch_jp_real.py
+  { id:'JPR_REAL', name:'10년 실질금리 (물가연동채)', unit:'%', category:'금리 / RATES', country:'JP', source:'jpreal', jpField:'real', noStats:true, lineRaw:true },
+  { id:'JPR_NOM',  name:'10년 국채금리',              unit:'%', category:'금리 / RATES', country:'JP', source:'jpreal', jpField:'nom',  noStats:true, lineRaw:true },
+  { id:'JPR_BEI',  name:'10년 기대인플레 (BEI)',      unit:'%', category:'금리 / RATES', country:'JP', source:'jpreal', jpField:'bei',  noStats:true, lineRaw:true },
 ];
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
@@ -1313,6 +1324,61 @@ async function fetchFRED(seriesId, freq) {
   return points;
 }
 
+// ─── 일본 실질금리 (jp_real.json) ─────────────────────────────────────────────
+// bb.jbts.co.jp 는 CORS 프록시가 전부 막혀 브라우저에서 직접 못 부른다.
+// fetch_jp_real.py 가 긁어 만든 JSON을 동일출처로 읽는다. (수급 탭과 같은 방식)
+let jpRealCache = null;
+async function fetchJPReal(field) {
+  if (!jpRealCache) {
+    const res = await fetch('jp_real.json', { cache:'no-store' });
+    if (!res.ok) throw new Error(
+      `jp_real.json 로드 실패 (HTTP ${res.status})\n• 저장소에 파일이 없습니다\n• python fetch_jp_real.py 를 실행해 생성하세요`);
+    jpRealCache = (await res.json()).days || [];
+  }
+  return jpRealCache
+    .map(r => ({ x: r.d, y: r[field] }))
+    .filter(p => typeof p.y === 'number');
+}
+
+// 휴장일이 서로 다른 두 일간 시계열의 차이. b는 직전 영업일 값을 끌어쓴다(as-of).
+// 단, b가 maxStale일 넘게 끊긴 구간은 계산하지 않는다 — 안 그러면 일본 데이터가
+// 멈춘 뒤에도 마지막 값이 옆으로 끌려가 가짜 스프레드가 그려진다.
+function spreadAsOf(a, b, maxStale = 7) {
+  const bs = b.slice().sort((p, q) => p.x < q.x ? -1 : 1);
+  const out = [];
+  let j = -1;
+  for (const p of a) {
+    while (j + 1 < bs.length && bs[j + 1].x <= p.x) j++;
+    if (j < 0) continue;
+    const gapDays = (new Date(p.x) - new Date(bs[j].x)) / 86400000;
+    if (gapDays > maxStale) continue;
+    out.push({ x: p.x, y: +(p.y - bs[j].y).toFixed(3) });
+  }
+  return out;
+}
+
+// 미-일 실질금리차 = 미국 TIPS 10년 − 일본 물가연동채 10년 (둘 다 시장 실질금리)
+async function fetchUSJPRealSpread() {
+  const [us, jp] = await Promise.all([ fetchFRED('DFII10'), fetchJPReal('real') ]);
+  const out = spreadAsOf(us, jp);
+  if (!out.length) throw new Error('겹치는 기간이 없습니다 — jp_real.json 이 비었거나 너무 오래됐습니다.');
+  return out;
+}
+
+// 라인 차트로 그리는 소스들 (FRED/TSA는 별도 경로)
+const LINE_SOURCES = {
+  price:  ind => fetchYahooWeekly(ind.yf, 'max'),
+  ratio:  ind => fetchRatio(ind.yf, ind.yfDenom, 'max'),
+  cnn:    ind => fetchCNN(ind.cnnKey),
+  jpreal: ind => fetchJPReal(ind.jpField),
+  spread: ()  => fetchUSJPRealSpread(),
+};
+
+const SOURCE_LABEL = {
+  price:'Yahoo', ratio:'Yahoo', cnn:'CNN Fear&Greed', cot:'CFTC COT',
+  tsa:'TSA', jpreal:'日本相互証券', spread:'FRED + 日本相互証券',
+};
+
 // ─── CHART ────────────────────────────────────────────────────────────────────
 function filterByYears(data, years) {
   if (!years) return data;
@@ -1322,23 +1388,31 @@ function filterByYears(data, years) {
   return data.filter(p => p.x >= cutStr);
 }
 
-// 커서 추적 세로 점선 (십자선)
+// 커서 추적 십자선 (세로=데이터 스냅, 가로=마우스 Y)
 const crosshairPlugin = {
   id: 'crosshair',
+  afterEvent(chart, args) {
+    const e = args.event;
+    chart._chY = (e.type === 'mousemove') ? e.y : null;
+    if (e.type === 'mouseout') chart._chY = null;
+  },
   afterDatasetsDraw(chart) {
     const active = chart.tooltip?.getActiveElements?.() || [];
     if (!active.length) return;
-    const x = active[0].element.x;
-    const { top, bottom } = chart.chartArea;
+    const { top, bottom, left, right } = chart.chartArea;
     const c = chart.ctx;
     c.save();
-    c.beginPath();
-    c.moveTo(x, top);
-    c.lineTo(x, bottom);
     c.lineWidth = 1;
     c.strokeStyle = 'rgba(230,237,243,0.45)';
     c.setLineDash([4, 4]);
-    c.stroke();
+    // 세로선 (데이터 지점)
+    const x = active[0].element.x;
+    c.beginPath(); c.moveTo(x, top); c.lineTo(x, bottom); c.stroke();
+    // 가로선 (마우스 Y 높이)
+    const y = chart._chY;
+    if (y != null && y >= top && y <= bottom) {
+      c.beginPath(); c.moveTo(left, y); c.lineTo(right, y); c.stroke();
+    }
     c.restore();
   }
 };
@@ -1636,7 +1710,11 @@ async function toggleOverlay(ind) {
     const dot = document.getElementById(`dot-${ind.id}`);
     if (dot) dot.className = 'status-dot loading';
     try {
-      const raw = ind.source === 'tsa' ? await fetchTSA() : await fetchFRED(ind.id, ind.freq);
+      // LINE_SOURCES(야후/CNN/일본금리/스프레드)도 겹쳐볼 수 있어야 한다.
+      // 예전엔 FRED로만 보내서 VIX·MTUM 같은 걸 오버레이하면 조용히 실패했다.
+      const raw = LINE_SOURCES[ind.source] ? await LINE_SOURCES[ind.source](ind)
+                : ind.source === 'tsa'     ? await fetchTSA()
+                : await fetchFRED(ind.id, ind.freq);
       overlays.push({ ind, raw, color });
       if (dot) dot.className = 'status-dot loaded';
     } catch(e) {
@@ -1694,7 +1772,7 @@ async function selectIndicator(ind) {
 
   // Header
   chartTitle.textContent = ind.name;
-  chartSubtitle.textContent = `${ind.id} · ${ind.unit} · Source: FRED`;
+  chartSubtitle.textContent = `${ind.id} · ${ind.unit} · Source: ${SOURCE_LABEL[ind.source] || 'FRED'}`;
 
   // Show loading
   loadingEl.style.display = 'flex';
@@ -1704,13 +1782,9 @@ async function selectIndicator(ind) {
   if (dot) { dot.className = 'status-dot loading'; }
 
   try {
-    if (ind.source === 'price' || ind.source === 'ratio' || ind.source === 'cnn') {
-      // 가격 / 비율 / CNN 차트 — 라인 + 이동평균선
-      const px = ind.source === 'ratio'
-        ? await fetchRatio(ind.yf, ind.yfDenom, 'max')
-        : ind.source === 'cnn'
-        ? await fetchCNN(ind.cnnKey)
-        : await fetchYahooWeekly(ind.yf, 'max');
+    if (LINE_SOURCES[ind.source]) {
+      // 라인 + 이동평균선 (가격 / 비율 / CNN / 일본금리 / 스프레드)
+      const px = await LINE_SOURCES[ind.source](ind);
       currentCotRaw = null; currentCotPrice = null;
       currentRawData = px;
       currentMode = 'raw';
