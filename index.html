@@ -766,6 +766,8 @@ const INDICATORS = [
 
   // 국제
   { id:'DTWEXBGS',    name:'달러 인덱스 (무역가중)',   unit:'Index', category:'국제 / INTERNATIONAL', country:'US' },
+  // 미-일 실질금리차와 겹쳐보라고 넣음 (범례 도트 클릭 → 오버레이 + 이중 Y축)
+  { id:'FX_USDJPY',   name:'달러/엔 (USDJPY)',        unit:'¥',     category:'국제 / INTERNATIONAL', country:'US', source:'price', yf:'JPY=X', lineRaw:true },
 
   // 경기선행
   { id:'USALOLITOAASTSAM', name:'경기선행지수 (OECD CLI)', unit:'Index', category:'경기선행 / LEI', country:'US' },
