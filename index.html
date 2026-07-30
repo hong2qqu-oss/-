@@ -729,7 +729,7 @@
     <div class="fm-head">
       <div>
         <b>미국 경제 지도</b>
-        <span class="fm-sub">실선=포함 · 점선=다리/예정 · 빨강=할 일 · 파란 화살표=직접 그린 선(더블클릭 삭제) · 클릭=차트 · 드래그=이동 · 더블클릭=이름 수정</span>
+        <span class="fm-sub">실선=포함 · 점선=다리/예정 · 빨강=할 일 · 파란 화살표=직접 그린 선(클릭 후 Del=삭제) · 클릭=차트 · 드래그=이동 · 더블클릭=이름 수정</span>
       </div>
       <div style="display:flex;gap:6px">
         <button id="fm-add" title="커스텀 박스 추가">＋ 박스</button>
@@ -843,6 +843,7 @@ const INDICATORS = [
   { id:'INT_TAX_RATIO', name:'이자 / 세입 비율', unit:'%', category:'재정 / FISCAL', country:'US',
     source:'fredratio', fredNum:'A091RC1Q027SBEA', fredDen:'W006RC1Q027SBEA', noStats:true },
   { id:'WTREGEN', name:'TGA 잔고 (정부 통장)', unit:'M$', category:'재정 / FISCAL', country:'US', freq:'w', noStats:true, lineRaw:true },
+  { id:'FED_LIQUIDITY', name:'연준 유동성 (자산−TGA−역레포)', unit:'T$', category:'재정 / FISCAL', country:'US', source:'fedliq', noStats:true },
   { id:'THREEFYTP10', name:'기간 프리미엄 (10Y)', unit:'%', category:'재정 / FISCAL', country:'US', freq:'w', noStats:true },
 
   // ── 📐 센티먼트 / 포지셔닝 (Yahoo 주간) ──────────────────────────────────────
@@ -1484,6 +1485,18 @@ async function fetchFredRatio(ind) {
             .map(p => ({ x: p.x, y: +(p.y / denMap[p.x] * 100).toFixed(2) }));
 }
 
+// 연준 유동성 = 연준 총자산(WALCL, M$) − TGA(WTREGEN, M$) − 역레포(RRPONTSYD, B$) → 조$ 단위
+// 세 시리즈의 발표 요일이 달라서 각 날짜 기준 최근값으로 맞춘다
+async function fetchFedLiquidity() {
+  const [w, t, r] = await Promise.all([fetchFRED('WALCL', 'w'), fetchFRED('WTREGEN', 'w'), fetchFRED('RRPONTSYD', 'w')]);
+  const asOf = (arr, x) => { let v = null; for (const p of arr) { if (p.x <= x) v = p.y; else break; } return v; };
+  return w.map(p => {
+    const tga = asOf(t, p.x), rrp = asOf(r, p.x);
+    if (tga === null || rrp === null) return null;
+    return { x: p.x, y: +((p.y - tga - rrp * 1000) / 1e6).toFixed(3) };
+  }).filter(Boolean);
+}
+
 // 라인 차트로 그리는 소스들 (FRED/TSA는 별도 경로)
 const LINE_SOURCES = {
   price:  ind => fetchYahooWeekly(ind.yf, 'max'),
@@ -1492,11 +1505,12 @@ const LINE_SOURCES = {
   jpreal: ind => fetchJPReal(ind.jpField),
   spread: ()  => fetchUSJPRealSpread(),
   fredratio: ind => fetchFredRatio(ind),
+  fedliq: () => fetchFedLiquidity(),
 };
 
 const SOURCE_LABEL = {
   price:'Yahoo', ratio:'Yahoo', cnn:'CNN Fear&Greed', cot:'CFTC COT',
-  tsa:'TSA', jpreal:'日本相互証券', spread:'FRED + 日本相互証券', fredratio:'FRED (계산)',
+  tsa:'TSA', jpreal:'日本相互証券', spread:'FRED + 日本相互証券', fredratio:'FRED (계산)', fedliq:'FRED (계산)',
 };
 
 // ─── CHART ────────────────────────────────────────────────────────────────────
@@ -2431,15 +2445,13 @@ const FM_NODES = [
   { id:'C',   g:'part', x:800, y:190, hub:true, p:'C0', dashed:true, label:'소비 C', sub:'예정' },
   { id:'I',   g:'part', x:870, y:330, hub:true, p:'C0', dashed:true, label:'투자 I', sub:'예정' },
   { id:'NX',  g:'part', x:800, y:470, hub:true, p:'C0', dashed:true, label:'순수출 NX', sub:'예정' },
-  // G 직속 — 성장 기여도 · 정부 고용
-  { id:'CONTRIB', g:'gov', x:460, y:185, p:'G', chart:'A822RY2Q224SBEA', label:'성장 기여도 %p' },
-  { id:'GOVEMP',  g:'gov', x:620, y:210, p:'G', chart:'USGOVT', label:'정부 고용' },
-  // G 렌즈 1 · GDP 조각 (분기)
-  { id:'H1',    g:'gdp',  x:290, y:215, hub:true, p:'G', label:'GDP 조각 · 분기' },
-  { id:'FGCE',  g:'gdp',  x:140, y:140, p:'H1',  chart:'FGCE',   label:'연방 $2.0조' },
+  // G 직속 — 성장 기여도 · 정부 고용 · 연방/주지방 분해 (허브 없이 바로)
+  { id:'CONTRIB', g:'gov', x:330, y:220, p:'G', chart:'A822RY2Q224SBEA', label:'성장 기여도 %p' },
+  { id:'GOVEMP',  g:'gov', x:620, y:210, p:'G', chart:'USGOVT', label:'정부 고용자 수', sub:'연방+주·지방 · 월간' },
+  { id:'FGCE',  g:'gdp',  x:140, y:140, p:'G',   chart:'FGCE',   label:'연방 $2.0조' },
   { id:'FDEFX', g:'gdp',  x:70,  y:40,  p:'FGCE',chart:'FDEFX',  label:'국방 $1.2조' },
   { id:'FNDEFX',g:'gdp',  x:215, y:45,  p:'FGCE',chart:'FNDEFX', label:'비국방 $0.8조' },
-  { id:'SLCE',  g:'gdp',  x:355, y:90,  p:'H1',  chart:'SLCE',   label:'주·지방 $3.4조' },
+  { id:'SLCE',  g:'gdp',  x:390, y:85,  p:'G',   chart:'SLCE',   label:'주·지방 $3.4조' },
   // G 렌즈 2 · 현금 흐름 (통장 = TGA)
   { id:'H2',    g:'cash', x:350, y:460, hub:true, p:'G', label:'현금 흐름 · 통장' },
   { id:'W006',  g:'cash', x:230, y:420, p:'H2',  chart:'W006RC1Q027SBEA', label:'세입 $3.6조' },
@@ -2458,7 +2470,8 @@ const FM_NODES = [
   // 다리 (점선) — 지표의 거주지는 상대 상자
   { id:'BR_C',  g:'bridge', x:800, y:60,  p:'C',   dashed:true, label:'이전지출 (PCTR)', sub:'G→C 다리 · $5.1조' },
   { id:'BR_EMP',g:'bridge', x:915, y:105, p:'C',   dashed:true, chart:'ICSA', label:'→ 고용', sub:'실업수당 · 신규청구' },
-  { id:'BR_FED',g:'bridge', x:260, y:645, p:'TGA', dashed:true, label:'연준 유동성', sub:'자산−TGA−역레포 계산 중…' },
+  // TGA 딸린 파생 지표 — 시계열 계산이라 차트·YoY/MoM 전부 지원
+  { id:'BR_FED',g:'cash', x:390, y:640, p:'TGA', chart:'FED_LIQUIDITY', label:'연준 유동성', sub:'자산−TGA−역레포' },
 ];
 
 // 커스텀 박스 (＋ 박스 버튼으로 추가, localStorage)
@@ -2471,18 +2484,27 @@ let fmStatsLoaded = false;
 function fmLoadStats() {
   if (fmStatsLoaded || !apiKey) return;
   fmStatsLoaded = true;
+  const rerender = () => { if (document.getElementById('fiscal-panel').classList.contains('show')) fmRender(); };
   const ids = [...new Set(fmAllNodes().filter(n => n.chart).map(n => n.chart))];
   ids.forEach(id => {
     const ind = INDICATORS.find(i => i.id === id);
-    if (!ind || ind.source) return; // FRED 소스만
-    fetchFRED(ind.id, ind.freq).then(raw => {
+    if (!ind) return;
+    // FRED 직접 + 계산 소스(fredratio, fedliq)만 — Yahoo류는 제외
+    const fetcher = !ind.source ? () => fetchFRED(ind.id, ind.freq)
+      : (ind.source === 'fredratio' || ind.source === 'fedliq') ? () => LINE_SOURCES[ind.source](ind)
+      : null;
+    if (!fetcher) return;
+    fetcher().then(raw => {
       if (!raw || raw.length < 2) return;
-      const last = raw[raw.length - 1], prev = raw[raw.length - 2];
-      const yAgo = new Date(last.x); yAgo.setFullYear(yAgo.getFullYear() - 1);
-      let yPt = null;
-      for (let i = raw.length - 1; i >= 0; i--) if (new Date(raw[i].x) <= yAgo) { yPt = raw[i]; break; }
-      // 금리·비율(%)은 %p 차이, 나머지는 % 변화율
-      const pp = ind.unit === '%';
+      const last = raw[raw.length - 1];
+      // 주간·일간 시리즈에서도 "한 달 전/1년 전"이 맞도록 날짜로 찾는다 (직전 관측치 X)
+      const back = days => {
+        const cut = new Date(last.x); cut.setDate(cut.getDate() - days);
+        for (let i = raw.length - 2; i >= 0; i--) if (new Date(raw[i].x) <= cut) return raw[i];
+        return null;
+      };
+      const mPt = back(28), yPt = back(365);
+      const pp = ind.unit === '%' || ind.unit === '%p';
       const f = (a, b) => {
         if (b === null || b === undefined) return '—';
         if (pp) { const d = a - b; return (d >= 0 ? '+' : '') + d.toFixed(2) + 'pp'; }
@@ -2490,21 +2512,15 @@ function fmLoadStats() {
         const d = (a - b) / Math.abs(b) * 100;
         return (d >= 0 ? '+' : '') + d.toFixed(1) + '%';
       };
-      fmStatsCache[id] = `YoY ${yPt ? f(last.y, yPt.y) : '—'} · MoM ${f(last.y, prev.y)}`;
-      if (document.getElementById('fiscal-panel').classList.contains('show')) fmRender();
+      fmStatsCache[id] = `YoY ${yPt ? f(last.y, yPt.y) : '—'} · MoM ${mPt ? f(last.y, mPt.y) : '—'}`;
+      if (id === 'FED_LIQUIDITY') fmDynSub.BR_FED = `$${last.y.toFixed(2)}조 · 자산−TGA−역레포`;
+      rerender();
     }).catch(() => {});
   });
   // 금리 박스: 10Y + 기간 프리미엄 실시간 값을 부제에 합쳐 표시
   Promise.all([fetchFRED('DGS10', 'w'), fetchFRED('THREEFYTP10', 'w')]).then(([dg, tp]) => {
-    const a = dg[dg.length - 1], b = tp[tp.length - 1];
-    fmDynSub.RATE = `10Y ${a.y.toFixed(2)}% · 프리미엄 ${b.y.toFixed(2)}%`;
-    if (document.getElementById('fiscal-panel').classList.contains('show')) fmRender();
-  }).catch(() => {});
-  // 연준 유동성 = 연준 총자산(WALCL, M$) − TGA(WTREGEN, M$) − 역레포(RRPONTSYD, B$)
-  Promise.all([fetchFRED('WALCL', 'w'), fetchFRED('WTREGEN', 'w'), fetchFRED('RRPONTSYD', 'w')]).then(([w, t, r]) => {
-    const tril = (w[w.length - 1].y - t[t.length - 1].y - r[r.length - 1].y * 1000) / 1e6;
-    fmDynSub.BR_FED = `≈ $${tril.toFixed(2)}조 (자산−TGA−역레포)`;
-    if (document.getElementById('fiscal-panel').classList.contains('show')) fmRender();
+    fmDynSub.RATE = `10Y ${dg[dg.length - 1].y.toFixed(2)}% · 프리미엄 ${tp[tp.length - 1].y.toFixed(2)}%`;
+    rerender();
   }).catch(() => {});
 }
 // 노드별 동적 부제 (실시간 계산값이 기본 부제를 덮어씀 — 사용자가 이름을 직접 수정한 경우는 예외)
@@ -2538,6 +2554,7 @@ function fmEsc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').r
 // 사용자가 그린 선 (＋ 선 버튼): {from, to, dir:'one'|'two'}
 function fmLinks() { return JSON.parse(localStorage.getItem('fmLinks_v1') || '[]'); }
 let fmLinkMode = null;          // {dir, first} — 선 그리기 모드
+let fmSelLink = null;           // 선택된 사용자 선 인덱스 (클릭 → Del로 삭제)
 let fmNavFromMap = false;       // 지도에서 차트로 들어왔는지 (복귀 버튼용)
 const fmDims = {};              // 마지막 렌더의 노드 크기 (선 끝점을 박스 가장자리에 붙이기용)
 
@@ -2607,8 +2624,9 @@ function fmRender() {
     if (!a || !b) return;
     const p1 = fmEdgePoint(a, fmXY(b)), p2 = fmEdgePoint(b, fmXY(a));
     const mk = L.dir === 'two' ? 'marker-start="url(#fm-arr)" marker-end="url(#fm-arr)"' : 'marker-end="url(#fm-arr)"';
-    links += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="#79c0ff" stroke-opacity="0.85" stroke-width="1.7" ${mk}/>
-      <line class="fm-userlink-hit" data-idx="${i}" x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="rgba(0,0,0,0)" stroke-width="11" style="pointer-events:stroke;cursor:pointer"/>`;
+    const sel = fmSelLink === i;
+    links += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${sel ? '#f85149' : '#79c0ff'}" stroke-opacity="${sel ? 1 : 0.85}" stroke-width="${sel ? 2.4 : 1.7}" ${mk}/>
+      <line class="fm-userlink-hit" data-idx="${i}" x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="rgba(0,0,0,0)" stroke-width="12" style="pointer-events:stroke;cursor:pointer"/>`;
   });
   svg.innerHTML = defs + edges + nodes + links;
 }
@@ -2741,6 +2759,28 @@ function hideFiscalMap() {
     if (!confirm('노드 배치와 이름을 기본값으로 되돌릴까요? (커스텀 박스·메모는 유지)')) return;
     localStorage.removeItem('fmPos_v1');
     localStorage.removeItem('fmLabels_v1');
+    fmRender();
+  });
+  // 선 클릭 → 선택(빨강 강조), 다른 곳 클릭 → 해제, Del/Backspace → 삭제
+  svg.addEventListener('click', e => {
+    if (e.target.classList && e.target.classList.contains('fm-userlink-hit')) {
+      fmSelLink = +e.target.dataset.idx;
+      fmRender();
+    } else if (fmSelLink !== null) {
+      fmSelLink = null;
+      fmRender();
+    }
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Delete' && e.key !== 'Backspace') return;
+    if (fmSelLink === null) return;
+    if (!document.getElementById('fiscal-panel').classList.contains('show')) return;
+    const tag = (document.activeElement || {}).tagName;
+    if (tag === 'TEXTAREA' || tag === 'INPUT') return;   // 메모 입력 중엔 무시
+    const list = fmLinks();
+    list.splice(fmSelLink, 1);
+    localStorage.setItem('fmLinks_v1', JSON.stringify(list));
+    fmSelLink = null;
     fmRender();
   });
   document.getElementById('map-back-btn').addEventListener('click', () => {
