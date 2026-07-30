@@ -729,7 +729,7 @@
     <div class="fm-head">
       <div>
         <b>미국 경제 지도</b>
-        <span class="fm-sub">실선=포함 · 점선=다리/예정 · 빨강=할 일 · 파란 화살표=직접 그린 선(클릭 후 Del=삭제) · 클릭=차트 · 드래그=이동 · 더블클릭=이름 수정</span>
+        <span class="fm-sub">실선=포함 · 점선=다리/예정 · 빨강=할 일 · 화살표=그린 선(클릭+Del 삭제) · 클릭=차트(R로 복귀) · 드래그=가지째 이동 · Shift+드래그=한 개만 · 더블클릭=이름</span>
       </div>
       <div style="display:flex;gap:6px">
         <button id="fm-add" title="커스텀 박스 추가">＋ 박스</button>
@@ -2679,9 +2679,25 @@ function hideFiscalMap() {
   svg.addEventListener('pointerdown', e => {
     const g = e.target.closest('.fm-node');
     if (!g) return;
-    const n = fmAllNodes().find(m => m.id === g.dataset.id);
-    const p = toVB(e), cur = fmXY(n);
-    drag = { n, dx: p.x - cur.x, dy: p.y - cur.y, sx: e.clientX, sy: e.clientY, moved: false };
+    const all = fmAllNodes();
+    const n = all.find(m => m.id === g.dataset.id);
+    const p = toVB(e);
+    // 기본 드래그 = 서브트리(자식 전부) 통째로 이동 · Shift+드래그 = 이 노드 하나만
+    const ids = [n.id];
+    if (!e.shiftKey) {
+      let grew = true;
+      while (grew) {
+        grew = false;
+        all.forEach(m => {
+          if (m.p && ids.includes(m.p) && !ids.includes(m.id)) { ids.push(m.id); grew = true; }
+        });
+      }
+    }
+    const starts = ids.map(id => {
+      const c = fmXY(all.find(x => x.id === id));
+      return { id, x0: c.x, y0: c.y };
+    });
+    drag = { n, starts, px0: p.x, py0: p.y, sx: e.clientX, sy: e.clientY, moved: false };
     svg.setPointerCapture(e.pointerId);
   });
   svg.addEventListener('pointermove', e => {
@@ -2689,8 +2705,9 @@ function hideFiscalMap() {
     if (Math.abs(e.clientX - drag.sx) + Math.abs(e.clientY - drag.sy) > 5) drag.moved = true;
     if (!drag.moved) return;
     const p = toVB(e);
+    const dx = p.x - drag.px0, dy = p.y - drag.py0;
     const pos = fmStore('fmPos_v1');
-    pos[drag.n.id] = { x: Math.round(p.x - drag.dx), y: Math.round(p.y - drag.dy) };
+    drag.starts.forEach(s => { pos[s.id] = { x: Math.round(s.x0 + dx), y: Math.round(s.y0 + dy) }; });
     fmStore('fmPos_v1', pos);
     fmRender();
   });
