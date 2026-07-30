@@ -827,6 +827,12 @@ const INDICATORS = [
   // 기타 고빈도
   { id:'TSA_CHECKPOINT', name:'TSA 공항 검색대 (일간)', unit:'명',  category:'기타 / OTHER', country:'US', source:'tsa' },
 
+  // 무역 — 순수출 NX 상자 (월간 무역수지가 헤드라인, NIIP은 저량)
+  { id:'BOPGSTB',    name:'무역수지 (상품+서비스)', unit:'M$', category:'무역 / TRADE', country:'US' },
+  { id:'BOPTEXP',    name:'수출 (상품+서비스)',     unit:'M$', category:'무역 / TRADE', country:'US' },
+  { id:'BOPTIMP',    name:'수입 (상품+서비스)',     unit:'M$', category:'무역 / TRADE', country:'US' },
+  { id:'IIPUSNETIQ', name:'대외순자산 (NIIP)',      unit:'M$', category:'무역 / TRADE', country:'US', noStats:true },
+
   // 재정 — US 사이드바 맨 아래 (사용자 지정). 거주지 원칙: PCTR은 소비, W825RC1은 고용 거주.
   { id:'GCE',    name:'정부지출 G (총액)',    unit:'B$', category:'재정 / FISCAL', country:'US' },
   { id:'A822RY2Q224SBEA', name:'G의 성장 기여도', unit:'%p', category:'재정 / FISCAL', country:'US', noStats:true },
@@ -2436,7 +2442,7 @@ document.querySelectorAll('.sup-subtab').forEach(btn => {
 // 중심 = "정부"라는 행위자. 가지 = 렌즈 4개 (GDP 기여 / 현금 흐름 / 빚 / 시장의 판정).
 // 점선 = 다른 상자로 가는 다리 + 예정 항목. 라벨의 수치는 스냅샷(2026-07) — 클릭하면 실데이터 차트.
 // 위치(fmPos)·이름(fmLabels)·메모(fmMemo)는 localStorage 저장이라 코드와 무관하게 편집 가능.
-const FM_COLORS = { us:'#58a6ff', gov:'#58a6ff', gdp:'#d2a8ff', cash:'#ffa657', debt:'#e3b341', mkt:'#7ee787', bridge:'#8b949e', part:'#8b949e', todo:'#f85149', custom:'#79c0ff' };
+const FM_COLORS = { us:'#58a6ff', gov:'#58a6ff', gdp:'#d2a8ff', cash:'#ffa657', debt:'#e3b341', mkt:'#7ee787', nx:'#56d4dd', bridge:'#8b949e', part:'#8b949e', todo:'#f85149', custom:'#79c0ff' };
 const FM_NODES = [
   // 중앙 = 미국 경제. 부제(경기 국면 요약)는 더블클릭으로 직접 작성 → localStorage 저장
   { id:'C0',  g:'us', x:660, y:330, center:true, label:'미국 경제 🇺🇸', sub:'경기 국면 요약 — 더블클릭해서 작성' },
@@ -2444,14 +2450,16 @@ const FM_NODES = [
   { id:'G',   g:'gov',  x:470, y:330, p:'C0', chart:'GCE', label:'정부 G', sub:'총지출 $5.4조' },
   { id:'C',   g:'part', x:800, y:190, hub:true, p:'C0', dashed:true, label:'소비 C', sub:'예정' },
   { id:'I',   g:'part', x:870, y:330, hub:true, p:'C0', dashed:true, label:'투자 I', sub:'예정' },
-  { id:'NX',  g:'part', x:800, y:470, hub:true, p:'C0', dashed:true, label:'순수출 NX', sub:'예정' },
-  // G 직속 — 성장 기여도 · 정부 고용 · 연방/주지방 분해 (허브 없이 바로)
+  // 순수출 NX — 노드 자체가 무역수지(월간). 연보라 분해 노드는 사용자 요청으로 제거, 상세는 사이드바 무역 카테고리에.
+  { id:'NX',  g:'nx', x:810, y:460, p:'C0', chart:'BOPGSTB', label:'순수출 NX', sub:'무역수지 · 월간' },
+  { id:'EXP', g:'nx', x:705, y:545, p:'NX', chart:'BOPTEXP', label:'수출' },
+  { id:'IMP', g:'nx', x:905, y:545, p:'NX', chart:'BOPTIMP', label:'수입' },
+  { id:'NIIP',g:'nx', x:935, y:385, p:'NX', chart:'IIPUSNETIQ', label:'NIIP −$21조', sub:'대외순자산 · 저량' },
+  { id:'BR_CA', g:'bridge', x:925, y:285, p:'NIIP', dashed:true, chart:'BOPCA', label:'경상수지', sub:'유량 → NIIP 축적' },
+  { id:'BR_DXY',g:'bridge', x:620, y:640, p:'NX', dashed:true, chart:'DTWEXBGS', label:'→ 달러 인덱스', sub:'거주: 국제' },
+  // G 직속 — 성장 기여도 · 정부 고용 (연보라 분해 노드는 제거, 사이드바 재정 카테고리에 있음)
   { id:'CONTRIB', g:'gov', x:330, y:220, p:'G', chart:'A822RY2Q224SBEA', label:'성장 기여도 %p' },
   { id:'GOVEMP',  g:'gov', x:620, y:210, p:'G', chart:'USGOVT', label:'정부 고용자 수', sub:'연방+주·지방 · 월간' },
-  { id:'FGCE',  g:'gdp',  x:140, y:140, p:'G',   chart:'FGCE',   label:'연방 $2.0조' },
-  { id:'FDEFX', g:'gdp',  x:70,  y:40,  p:'FGCE',chart:'FDEFX',  label:'국방 $1.2조' },
-  { id:'FNDEFX',g:'gdp',  x:215, y:45,  p:'FGCE',chart:'FNDEFX', label:'비국방 $0.8조' },
-  { id:'SLCE',  g:'gdp',  x:390, y:85,  p:'G',   chart:'SLCE',   label:'주·지방 $3.4조' },
   // G 렌즈 2 · 현금 흐름 (통장 = TGA)
   { id:'H2',    g:'cash', x:350, y:460, hub:true, p:'G', label:'현금 흐름 · 통장' },
   { id:'W006',  g:'cash', x:230, y:420, p:'H2',  chart:'W006RC1Q027SBEA', label:'세입 $3.6조' },
@@ -2574,8 +2582,7 @@ function fmRender() {
   const svg = document.getElementById('fm-svg');
   const all = fmAllNodes();
   const byId = Object.fromEntries(all.map(n => [n.id, n]));
-  const defs = `<defs><marker id="fm-arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1.5 1.5L8.5 5L1.5 8.5" fill="none" stroke="#79c0ff" stroke-width="1.7" stroke-linecap="round"/></marker></defs>`;
-  let edges = '', nodes = '', links = '';
+  let linkDefs = '', edges = '', nodes = '', links = '';
   all.forEach(n => {
     if (n.p && byId[n.p]) {
       const a = fmXY(n), b = fmXY(byId[n.p]);
@@ -2592,11 +2599,12 @@ function fmRender() {
     const lines = [{ txt: t.label, kind: 'label' }];
     if (t.sub) lines.push({ txt: t.sub, kind: 'sub' });
     if (stats) lines.push({ txt: stats, kind: 'stat' });
-    const w = Math.max(n.center ? 180 : (n.hub ? 104 : 110),
-      fmW(t.label) * 1.1 + 30, fmW(t.sub) + 28, stats ? fmW(stats) * 0.9 + 26 : 0);
-    const h = n.center ? 58 : (lines.length === 3 ? 64 : lines.length === 2 ? 50 : 34);
-    const offs = lines.length === 3 ? [-18, -1, 17] : lines.length === 2 ? [-9, 10] : [0];
-    const rx = n.hub ? Math.min(h / 2, 22) : 9;
+    // 4파트 확장 대비 컴팩트 사이즈 (사용자 요청)
+    const w = Math.max(n.center ? 150 : (n.hub ? 88 : 90),
+      fmW(t.label) * 1.02 + 24, fmW(t.sub) * 0.92 + 22, stats ? fmW(stats) * 0.82 + 20 : 0);
+    const h = n.center ? 50 : (lines.length === 3 ? 54 : lines.length === 2 ? 42 : 28);
+    const offs = lines.length === 3 ? [-15, -1, 14] : lines.length === 2 ? [-8, 9] : [0];
+    const rx = n.hub ? Math.min(h / 2, 18) : 8;
     // 전부 불투명 — 부모 선이 박스를 관통해 보이지 않게
     const fill = n.center ? '#173152'
       : n.g === 'todo' ? '#3a1f22'
@@ -2608,7 +2616,7 @@ function fmRender() {
       const fillT = L.kind === 'label'
         ? (n.g === 'todo' ? '#ff9b95' : (n.hub || n.dashed ? color : '#e6edf3'))
         : L.kind === 'stat' ? '#9aa4af' : '#a8b3bd';
-      const size = L.kind === 'label' ? (n.center ? 14.5 : 12.5) : L.kind === 'stat' ? 10 : 10.5;
+      const size = L.kind === 'label' ? (n.center ? 13 : 11.5) : L.kind === 'stat' ? 9.5 : 10;
       const weight = L.kind === 'label' && (n.center || n.hub || n.g === 'todo') ? 700 : L.kind === 'label' ? 600 : 400;
       return `<text x="${x}" y="${y + offs[i]}" text-anchor="middle" dominant-baseline="central" fill="${fillT}" font-size="${size}" font-weight="${weight}">${fmEsc(L.txt)}</text>`;
     }).join('');
@@ -2618,17 +2626,27 @@ function fmRender() {
       ${n.chart ? `<circle cx="${x + w/2 - 8}" cy="${y - h/2 + 8}" r="2.6" fill="${color}"/>` : ''}
     </g>`;
   });
-  // 사용자 선 — 노드 위에 그림. 화살표는 박스 가장자리에서 시작/끝. 더블클릭=삭제.
+  // 사용자 선 — 몸통은 출발색→도착색 그라데이션, 화살촉은 도착 노드 색. 클릭 후 Del=삭제.
   fmLinks().forEach((L, i) => {
     const a = byId[L.from], b = byId[L.to];
     if (!a || !b) return;
+    const ca = FM_COLORS[a.g] || '#79c0ff', cb = FM_COLORS[b.g] || '#79c0ff';
     const p1 = fmEdgePoint(a, fmXY(b)), p2 = fmEdgePoint(b, fmXY(a));
-    const mk = L.dir === 'two' ? 'marker-start="url(#fm-arr)" marker-end="url(#fm-arr)"' : 'marker-end="url(#fm-arr)"';
-    const sel = fmSelLink === i;
-    links += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${sel ? '#f85149' : '#79c0ff'}" stroke-opacity="${sel ? 1 : 0.85}" stroke-width="${sel ? 2.4 : 1.7}" ${mk}/>
-      <line class="fm-userlink-hit" data-idx="${i}" x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="rgba(0,0,0,0)" stroke-width="12" style="pointer-events:stroke;cursor:pointer"/>`;
+    const dx = p2.x - p1.x, dy = p2.y - p1.y, len = Math.hypot(dx, dy) || 1;
+    const ux = dx / len, uy = dy / len, sel = fmSelLink === i;
+    linkDefs += `<linearGradient id="fmlg${i}" gradientUnits="userSpaceOnUse" x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}"><stop offset="0" stop-color="${ca}"/><stop offset="1" stop-color="${cb}"/></linearGradient>`;
+    const head = (tip, hx, hy, color) => {
+      const bx = tip.x - hx * 9, by = tip.y - hy * 9, px = -hy, py = hx;
+      return `<path d="M${tip.x} ${tip.y} L${(bx + px * 4.5).toFixed(1)} ${(by + py * 4.5).toFixed(1)} L${(bx - px * 4.5).toFixed(1)} ${(by - py * 4.5).toFixed(1)} Z" fill="${color}"/>`;
+    };
+    const q2 = { x: p2.x - ux * 8, y: p2.y - uy * 8 };
+    const q1 = L.dir === 'two' ? { x: p1.x + ux * 8, y: p1.y + uy * 8 } : p1;
+    links += `<line x1="${q1.x}" y1="${q1.y}" x2="${q2.x}" y2="${q2.y}" stroke="${sel ? '#f85149' : `url(#fmlg${i})`}" stroke-opacity="${sel ? 1 : 0.9}" stroke-width="${sel ? 2.6 : 1.8}"/>`
+      + head(p2, ux, uy, sel ? '#f85149' : cb)
+      + (L.dir === 'two' ? head(p1, -ux, -uy, sel ? '#f85149' : ca) : '')
+      + `<line class="fm-userlink-hit" data-idx="${i}" x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="rgba(0,0,0,0)" stroke-width="12" style="pointer-events:stroke;cursor:pointer"/>`;
   });
-  svg.innerHTML = defs + edges + nodes + links;
+  svg.innerHTML = `<defs>${linkDefs}</defs>` + edges + nodes + links;
 }
 
 function showFiscalMap(ind) {
@@ -2787,6 +2805,14 @@ function hideFiscalMap() {
     document.getElementById('map-back-btn').style.display = 'none';
     const map = INDICATORS.find(i => i.id === 'FISCAL_MAP');
     if (map) selectIndicator(map);
+  });
+  // R 키 = 지도로 복귀 (지도에서 들어온 차트에서만 — 복귀 버튼이 보일 때)
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'r' && e.key !== 'R') return;
+    const tag = (document.activeElement || {}).tagName;
+    if (tag === 'TEXTAREA' || tag === 'INPUT') return;
+    const btn = document.getElementById('map-back-btn');
+    if (btn && btn.style.display !== 'none') btn.click();
   });
   const memo = document.getElementById('fm-memo');
   memo.value = localStorage.getItem('fmMemo_v1') || '';
