@@ -560,9 +560,15 @@
     .fm-head { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-shrink:0; }
     .fm-head b { font-size:15px; }
     .fm-sub { color:var(--text-muted); font-size:11px; margin-left:10px; }
-    #fm-reset, #fm-add { background:var(--panel-bg); color:var(--text-muted); border:1px solid var(--border);
+    #fm-reset, #fm-add, #fm-link { background:var(--panel-bg); color:var(--text-muted); border:1px solid var(--border);
       border-radius:6px; padding:4px 10px; cursor:pointer; font-size:11px; }
-    #fm-reset:hover, #fm-add:hover { color:var(--text); border-color:var(--accent); }
+    #fm-reset:hover, #fm-add:hover, #fm-link:hover { color:var(--text); border-color:var(--accent); }
+    #collapse-btn { background:transparent; color:var(--text-muted); border:1px solid var(--border);
+      border-radius:5px; padding:2px 7px; cursor:pointer; font-size:10px; flex-shrink:0; }
+    #collapse-btn:hover { color:var(--text); border-color:var(--accent); }
+    #map-back-btn { background:var(--active-bg); color:var(--accent); border:1px solid var(--accent);
+      border-radius:6px; padding:4px 10px; cursor:pointer; font-size:11px; font-weight:600; }
+    #map-back-btn:hover { background:var(--accent); color:#0d1117; }
     #fm-svg-wrap { flex:1; min-height:380px; background:var(--panel-bg);
       border:1px solid var(--border); border-radius:12px; overflow:hidden; }
     #fm-svg { width:100%; height:100%; display:block; touch-action:none; }
@@ -618,7 +624,10 @@
 <!-- Sidebar -->
 <nav id="sidebar">
   <div id="sidebar-header">
-    <h1>경제레이더 · 민홍</h1>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
+      <h1>경제레이더 · 민홍</h1>
+      <button id="collapse-btn" title="모든 카테고리 접기/펼치기 (헤더 클릭=개별 토글)">간추리기</button>
+    </div>
     <p id="last-updated">데이터 로딩 전</p>
   </div>
   <div id="country-tabs">
@@ -659,6 +668,7 @@
       <button class="cot-view-btn" data-view="index">COT Index</button>
     </div>
     <div id="controls">
+      <button id="map-back-btn" style="display:none" title="경제 지도로 돌아가기">🗺 지도로</button>
       <button class="range-btn" data-years="5">5Y</button>
       <button class="range-btn active" data-years="10">10Y</button>
       <button class="range-btn" data-years="20">20Y</button>
@@ -719,11 +729,12 @@
     <div class="fm-head">
       <div>
         <b>미국 경제 지도</b>
-        <span class="fm-sub">실선=포함 · 점선=다리/예정 · 빨강=미완성 할 일 · 클릭=차트 · 드래그=이동 · 더블클릭=이름 수정(커스텀은 비우면 삭제)</span>
+        <span class="fm-sub">실선=포함 · 점선=다리/예정 · 빨강=할 일 · 파란 화살표=직접 그린 선(더블클릭 삭제) · 클릭=차트 · 드래그=이동 · 더블클릭=이름 수정</span>
       </div>
       <div style="display:flex;gap:6px">
         <button id="fm-add" title="커스텀 박스 추가">＋ 박스</button>
-        <button id="fm-reset" title="노드 배치와 이름을 기본값으로 되돌림 (커스텀 박스·메모는 유지)">↺ 배치 초기화</button>
+        <button id="fm-link" title="노드 두 개를 클릭해 화살표로 연결 (더블클릭으로 삭제)">＋ 선</button>
+        <button id="fm-reset" title="노드 배치와 이름을 기본값으로 되돌림 (커스텀 박스·선·메모는 유지)">↺ 배치 초기화</button>
       </div>
     </div>
     <div id="fm-svg-wrap"><svg id="fm-svg" viewBox="0 0 1000 680" preserveAspectRatio="xMidYMid meet"></svg></div>
@@ -748,21 +759,7 @@
 const INDICATORS = [
   // ── 🗺 재정 지도 (US 탭 맨 위 · 1칸) ──────────────────────────────────────
   // 노드 드래그·더블클릭 이름수정·메모 전부 localStorage 저장 (기기별)
-  { id:'FISCAL_MAP', name:'🗺 미국 재정 지도', unit:'인터랙티브', category:'지도 / MAP', country:'US', source:'fiscalmap', noStats:true },
-
-  // 재정 — 거주지 원칙: PCTR은 소비 상자, W825RC1은 고용 상자 거주. 여기엔 지도의 점선 다리로만.
-  { id:'GCE',    name:'정부지출 G (총액)',    unit:'B$', category:'재정 / FISCAL', country:'US' },
-  { id:'FGCE',   name:'연방 정부지출',        unit:'B$', category:'재정 / FISCAL', country:'US' },
-  { id:'SLCE',   name:'주·지방 정부지출',     unit:'B$', category:'재정 / FISCAL', country:'US' },
-  { id:'FDEFX',  name:'연방 국방지출',        unit:'B$', category:'재정 / FISCAL', country:'US' },
-  { id:'FNDEFX', name:'연방 비국방지출',      unit:'B$', category:'재정 / FISCAL', country:'US' },
-  { id:'W006RC1Q027SBEA', name:'연방 세입',   unit:'B$', category:'재정 / FISCAL', country:'US' },
-  // 월간 원값은 4월 세금달 계절성 톱니라 12개월 굴림합으로 표시 (M$→B$ 축소 포함)
-  { id:'MTSDS133FMS', name:'재정수지 (12M 누적)', unit:'B$', category:'재정 / FISCAL', country:'US', transform:'sum12', noStats:true },
-  { id:'GFDEGDQ188S', name:'연방부채 / GDP',  unit:'%',  category:'재정 / FISCAL', country:'US', noStats:true },
-  { id:'A091RC1Q027SBEA', name:'연방 이자지급', unit:'B$', category:'재정 / FISCAL', country:'US' },
-  { id:'WTREGEN', name:'TGA 잔고 (정부 통장)', unit:'M$', category:'재정 / FISCAL', country:'US', freq:'w', noStats:true, lineRaw:true },
-  { id:'THREEFYTP10', name:'기간 프리미엄 (10Y)', unit:'%', category:'재정 / FISCAL', country:'US', freq:'w', noStats:true },
+  { id:'FISCAL_MAP', name:'🗺 미국 경제 지도', unit:'인터랙티브', category:'지도 / MAP', country:'US', source:'fiscalmap', noStats:true },
 
   // 물가
   { id:'CPIAUCSL',    name:'CPI (전체)',            unit:'% YoY', category:'물가 / INFLATION', transform:'yoy' },
@@ -829,6 +826,24 @@ const INDICATORS = [
 
   // 기타 고빈도
   { id:'TSA_CHECKPOINT', name:'TSA 공항 검색대 (일간)', unit:'명',  category:'기타 / OTHER', country:'US', source:'tsa' },
+
+  // 재정 — US 사이드바 맨 아래 (사용자 지정). 거주지 원칙: PCTR은 소비, W825RC1은 고용 거주.
+  { id:'GCE',    name:'정부지출 G (총액)',    unit:'B$', category:'재정 / FISCAL', country:'US' },
+  { id:'A822RY2Q224SBEA', name:'G의 성장 기여도', unit:'%p', category:'재정 / FISCAL', country:'US', noStats:true },
+  { id:'USGOVT', name:'정부 고용자 수',       unit:'K',  category:'재정 / FISCAL', country:'US', diffMode:true },
+  { id:'FGCE',   name:'연방 정부지출',        unit:'B$', category:'재정 / FISCAL', country:'US' },
+  { id:'SLCE',   name:'주·지방 정부지출',     unit:'B$', category:'재정 / FISCAL', country:'US' },
+  { id:'FDEFX',  name:'연방 국방지출',        unit:'B$', category:'재정 / FISCAL', country:'US' },
+  { id:'FNDEFX', name:'연방 비국방지출',      unit:'B$', category:'재정 / FISCAL', country:'US' },
+  { id:'W006RC1Q027SBEA', name:'연방 세입',   unit:'B$', category:'재정 / FISCAL', country:'US' },
+  // 월간 원값은 4월 세금달 계절성 톱니라 12개월 굴림합으로 표시 (M$→B$ 축소 포함)
+  { id:'MTSDS133FMS', name:'재정수지 (12M 누적)', unit:'B$', category:'재정 / FISCAL', country:'US', transform:'sum12', noStats:true },
+  { id:'GFDEGDQ188S', name:'연방부채 / GDP',  unit:'%',  category:'재정 / FISCAL', country:'US', noStats:true },
+  { id:'A091RC1Q027SBEA', name:'연방 이자지급', unit:'B$', category:'재정 / FISCAL', country:'US' },
+  { id:'INT_TAX_RATIO', name:'이자 / 세입 비율', unit:'%', category:'재정 / FISCAL', country:'US',
+    source:'fredratio', fredNum:'A091RC1Q027SBEA', fredDen:'W006RC1Q027SBEA', noStats:true },
+  { id:'WTREGEN', name:'TGA 잔고 (정부 통장)', unit:'M$', category:'재정 / FISCAL', country:'US', freq:'w', noStats:true, lineRaw:true },
+  { id:'THREEFYTP10', name:'기간 프리미엄 (10Y)', unit:'%', category:'재정 / FISCAL', country:'US', freq:'w', noStats:true },
 
   // ── 📐 센티먼트 / 포지셔닝 (Yahoo 주간) ──────────────────────────────────────
   // 변동성 & 헤지 수요
@@ -917,13 +932,23 @@ const apiKeyInput   = document.getElementById('api-key-input');
 // ─── SIDEBAR BUILD ────────────────────────────────────────────────────────────
 function buildSidebar() {
   sidebarScroll.innerHTML = '';
+  const collapsed = JSON.parse(localStorage.getItem('sbCollapsed_v1') || '{}');
   const visible = INDICATORS.filter(i => (i.country || 'US') === currentCountry);
   const categories = [...new Set(visible.map(i => i.category))];
   categories.forEach(cat => {
+    const isCol = !!collapsed[cat];
     const label = document.createElement('div');
     label.className = 'category-label';
-    label.textContent = cat;
+    label.textContent = (isCol ? '▸ ' : '▾ ') + cat;
+    label.style.cursor = 'pointer';
+    label.addEventListener('click', () => {
+      const c = JSON.parse(localStorage.getItem('sbCollapsed_v1') || '{}');
+      if (c[cat]) delete c[cat]; else c[cat] = true;
+      localStorage.setItem('sbCollapsed_v1', JSON.stringify(c));
+      buildSidebar();
+    });
     sidebarScroll.appendChild(label);
+    if (isCol) return;   // 접힌 카테고리는 항목 생략
 
     visible.filter(i => i.category === cat).forEach(ind => {
       const el = document.createElement('div');
@@ -949,6 +974,18 @@ function buildSidebar() {
     });
   });
 }
+
+// 간추리기 — 현재 탭의 카테고리 전체 접기/펼치기 토글
+document.getElementById('collapse-btn').addEventListener('click', () => {
+  const visible = INDICATORS.filter(i => (i.country || 'US') === currentCountry);
+  const cats = [...new Set(visible.map(i => i.category))];
+  const cur = JSON.parse(localStorage.getItem('sbCollapsed_v1') || '{}');
+  const allCollapsed = cats.length && cats.every(c => cur[c]);
+  if (allCollapsed) cats.forEach(c => delete cur[c]);
+  else cats.forEach(c => { cur[c] = true; });
+  localStorage.setItem('sbCollapsed_v1', JSON.stringify(cur));
+  buildSidebar();
+});
 
 // ─── TRANSFORMS ──────────────────────────────────────────────────────────────
 function calcMoM(data) {
@@ -1439,6 +1476,14 @@ async function fetchUSJPRealSpread() {
   return out;
 }
 
+// FRED 두 시리즈의 비율(%) — 이자/세입 같은 파생 지표용. 같은 날짜끼리만 나눔.
+async function fetchFredRatio(ind) {
+  const [num, den] = await Promise.all([fetchFRED(ind.fredNum, ind.freq), fetchFRED(ind.fredDen, ind.freq)]);
+  const denMap = Object.fromEntries(den.map(p => [p.x, p.y]));
+  return num.filter(p => denMap[p.x] !== undefined && denMap[p.x] !== 0)
+            .map(p => ({ x: p.x, y: +(p.y / denMap[p.x] * 100).toFixed(2) }));
+}
+
 // 라인 차트로 그리는 소스들 (FRED/TSA는 별도 경로)
 const LINE_SOURCES = {
   price:  ind => fetchYahooWeekly(ind.yf, 'max'),
@@ -1446,11 +1491,12 @@ const LINE_SOURCES = {
   cnn:    ind => fetchCNN(ind.cnnKey),
   jpreal: ind => fetchJPReal(ind.jpField),
   spread: ()  => fetchUSJPRealSpread(),
+  fredratio: ind => fetchFredRatio(ind),
 };
 
 const SOURCE_LABEL = {
   price:'Yahoo', ratio:'Yahoo', cnn:'CNN Fear&Greed', cot:'CFTC COT',
-  tsa:'TSA', jpreal:'日本相互証券', spread:'FRED + 日本相互証券',
+  tsa:'TSA', jpreal:'日本相互証券', spread:'FRED + 日本相互証券', fredratio:'FRED (계산)',
 };
 
 // ─── CHART ────────────────────────────────────────────────────────────────────
@@ -1837,9 +1883,13 @@ function renderOverlayChips() {
 
 // ─── SELECT INDICATOR ─────────────────────────────────────────────────────────
 async function selectIndicator(ind) {
-  // 🗺 재정 지도는 차트 대신 지도 패널을 띄운다
+  // 🗺 경제 지도는 차트 대신 지도 패널을 띄운다
   if (ind.source === 'fiscalmap') { showFiscalMap(ind); return; }
   hideFiscalMap();
+  // 지도에서 눌러 들어온 경우에만 "지도로" 복귀 버튼 노출
+  const backBtn = document.getElementById('map-back-btn');
+  if (backBtn) { backBtn.style.display = fmNavFromMap ? '' : 'none'; }
+  fmNavFromMap = false;
   currentIndicator = ind;
 
   // Sidebar active
@@ -2375,39 +2425,40 @@ document.querySelectorAll('.sup-subtab').forEach(btn => {
 const FM_COLORS = { us:'#58a6ff', gov:'#58a6ff', gdp:'#d2a8ff', cash:'#ffa657', debt:'#e3b341', mkt:'#7ee787', bridge:'#8b949e', part:'#8b949e', todo:'#f85149', custom:'#79c0ff' };
 const FM_NODES = [
   // 중앙 = 미국 경제. 부제(경기 국면 요약)는 더블클릭으로 직접 작성 → localStorage 저장
-  { id:'C0',  g:'us', x:640, y:340, center:true, label:'미국 경제 🇺🇸', sub:'경기 국면 요약 — 더블클릭해서 작성' },
-  // GDP 4파트 — G만 해부 완료, 나머지는 자리만
-  { id:'G',   g:'gov',  x:470, y:330, hub:true, p:'C0', label:'정부 G' },
-  { id:'C',   g:'part', x:770, y:200, hub:true, p:'C0', dashed:true, label:'소비 C', sub:'예정' },
-  { id:'I',   g:'part', x:850, y:340, hub:true, p:'C0', dashed:true, label:'투자 I', sub:'예정' },
-  { id:'NX',  g:'part', x:770, y:480, hub:true, p:'C0', dashed:true, label:'순수출 NX', sub:'예정' },
-  // G 렌즈 1 · GDP 기여 (분기) — 현금 지출 중 '직접구매' 조각만 GDP의 G
-  { id:'H1',    g:'gdp',  x:350, y:215, hub:true, p:'G', label:'GDP 기여 · 분기' },
-  { id:'GCE',   g:'gdp',  x:215, y:165, p:'H1',  chart:'GCE',    label:'G 총지출 $5.4조' },
-  { id:'FGCE',  g:'gdp',  x:90,  y:105, p:'GCE', chart:'FGCE',   label:'연방 $2.0조' },
-  { id:'FDEFX', g:'gdp',  x:80,  y:30,  p:'FGCE',chart:'FDEFX',  label:'국방 $1.2조' },
-  { id:'FNDEFX',g:'gdp',  x:210, y:50,  p:'FGCE',chart:'FNDEFX', label:'비국방 $0.8조' },
-  { id:'SLCE',  g:'gdp',  x:340, y:85,  p:'GCE', chart:'SLCE',   label:'주·지방 $3.4조' },
-  // G 렌즈 2 · 현금 흐름 (통장 = TGA) — 이전지출·이자도 여기서 나가지만 G엔 없음
-  { id:'H2',    g:'cash', x:350, y:450, hub:true, p:'G', label:'현금 흐름 · 통장' },
-  { id:'W006',  g:'cash', x:215, y:425, p:'H2',  chart:'W006RC1Q027SBEA', label:'세입 $3.6조' },
-  { id:'MTS',   g:'cash', x:230, y:530, p:'H2',  chart:'MTSDS133FMS', label:'재정수지 12M 누적' },
-  { id:'TGA',   g:'cash', x:360, y:570, p:'H2',  chart:'WTREGEN', label:'TGA $8,296억' },
-  { id:'DTS',   g:'todo', x:75,  y:470, p:'W006', dashed:true, label:'원천징수 트래커', sub:'미완성 · 마지막에' },
-  // G 렌즈 3 · 빚 (저량) — 현금 적자가 쌓인 것
+  { id:'C0',  g:'us', x:660, y:330, center:true, label:'미국 경제 🇺🇸', sub:'경기 국면 요약 — 더블클릭해서 작성' },
+  // GDP 4파트 — G 노드 자체가 총지출(클릭=GCE 차트). 나머지는 자리만.
+  { id:'G',   g:'gov',  x:470, y:330, p:'C0', chart:'GCE', label:'정부 G', sub:'총지출 $5.4조' },
+  { id:'C',   g:'part', x:800, y:190, hub:true, p:'C0', dashed:true, label:'소비 C', sub:'예정' },
+  { id:'I',   g:'part', x:870, y:330, hub:true, p:'C0', dashed:true, label:'투자 I', sub:'예정' },
+  { id:'NX',  g:'part', x:800, y:470, hub:true, p:'C0', dashed:true, label:'순수출 NX', sub:'예정' },
+  // G 직속 — 성장 기여도 · 정부 고용
+  { id:'CONTRIB', g:'gov', x:460, y:185, p:'G', chart:'A822RY2Q224SBEA', label:'성장 기여도 %p' },
+  { id:'GOVEMP',  g:'gov', x:620, y:210, p:'G', chart:'USGOVT', label:'정부 고용' },
+  // G 렌즈 1 · GDP 조각 (분기)
+  { id:'H1',    g:'gdp',  x:290, y:215, hub:true, p:'G', label:'GDP 조각 · 분기' },
+  { id:'FGCE',  g:'gdp',  x:140, y:140, p:'H1',  chart:'FGCE',   label:'연방 $2.0조' },
+  { id:'FDEFX', g:'gdp',  x:70,  y:40,  p:'FGCE',chart:'FDEFX',  label:'국방 $1.2조' },
+  { id:'FNDEFX',g:'gdp',  x:215, y:45,  p:'FGCE',chart:'FNDEFX', label:'비국방 $0.8조' },
+  { id:'SLCE',  g:'gdp',  x:355, y:90,  p:'H1',  chart:'SLCE',   label:'주·지방 $3.4조' },
+  // G 렌즈 2 · 현금 흐름 (통장 = TGA)
+  { id:'H2',    g:'cash', x:350, y:460, hub:true, p:'G', label:'현금 흐름 · 통장' },
+  { id:'W006',  g:'cash', x:230, y:420, p:'H2',  chart:'W006RC1Q027SBEA', label:'세입 $3.6조' },
+  { id:'MTS',   g:'cash', x:240, y:530, p:'H2',  chart:'MTSDS133FMS', label:'재정수지 12M 누적' },
+  { id:'TGA',   g:'cash', x:380, y:570, p:'H2',  chart:'WTREGEN', label:'TGA $8,296억' },
+  { id:'DTS',   g:'todo', x:75,  y:600, p:'W006', dashed:true, label:'원천징수 트래커', sub:'미완성 · 마지막에' },
+  // G 렌즈 3 · 빚 (저량)
   { id:'H3',    g:'debt', x:170, y:330, hub:true, p:'G', label:'빚 · 저량' },
-  { id:'DEBT',  g:'debt', x:80,  y:265, p:'H3',  chart:'GFDEGDQ188S', label:'부채/GDP 122.6%' },
-  { id:'INT',   g:'debt', x:85,  y:395, p:'H3',  chart:'A091RC1Q027SBEA', label:'이자 $1.2조', sub:'국방비 추월' },
-  // G 렌즈 4 · 시장의 판정 (일간)
-  { id:'H4',    g:'mkt',  x:560, y:500, hub:true, p:'G', label:'시장의 판정 · 일간' },
-  { id:'DGS10', g:'mkt',  x:490, y:595, p:'H4',  chart:'DGS10', label:'10년 금리' },
-  { id:'TP',    g:'mkt',  x:650, y:600, p:'H4',  chart:'THREEFYTP10', label:'기간 프리미엄' },
-  { id:'QRA',   g:'todo', x:860, y:560, p:'H4',  dashed:true, label:'⚠ 경매 · QRA 미완성', sub:'출처: 재무부 사이트 · 클릭',
+  { id:'DEBT',  g:'debt', x:85,  y:260, p:'H3',  chart:'GFDEGDQ188S', label:'부채/GDP 122.6%' },
+  { id:'INT',   g:'debt', x:85,  y:400, p:'H3',  chart:'A091RC1Q027SBEA', label:'이자 $1.2조', sub:'국방비 추월' },
+  { id:'RATIO', g:'debt', x:90,  y:475, p:'INT', chart:'INT_TAX_RATIO', label:'이자/세입 비율' },
+  // 금리 — 10Y와 기간 프리미엄 한 박스 (부제에 실시간 값, 클릭=10Y 차트)
+  { id:'RATE',  g:'mkt',  x:560, y:540, p:'G', chart:'DGS10', label:'금리', sub:'10Y · 기간 프리미엄' },
+  { id:'QRA',   g:'todo', x:790, y:610, p:'RATE', dashed:true, label:'⚠ 경매 · QRA 미완성', sub:'출처: 재무부 사이트 · 클릭',
     url:'https://www.treasurydirect.gov/auctions/announcements-data-results/' },
   // 다리 (점선) — 지표의 거주지는 상대 상자
-  { id:'BR_C',  g:'bridge', x:575, y:150, p:'C',   dashed:true, label:'이전지출 (PCTR)', sub:'G→C 다리 · $5.1조' },
-  { id:'BR_EMP',g:'bridge', x:660, y:60,  p:'C0',  dashed:true, chart:'ICSA', label:'→ 고용', sub:'실업수당 · 신규청구' },
-  { id:'BR_FED',g:'bridge', x:250, y:640, p:'TGA', dashed:true, label:'→ 연준 · 유동성', sub:'연준자산 − TGA − 역레포' },
+  { id:'BR_C',  g:'bridge', x:800, y:60,  p:'C',   dashed:true, label:'이전지출 (PCTR)', sub:'G→C 다리 · $5.1조' },
+  { id:'BR_EMP',g:'bridge', x:915, y:105, p:'C',   dashed:true, chart:'ICSA', label:'→ 고용', sub:'실업수당 · 신규청구' },
+  { id:'BR_FED',g:'bridge', x:260, y:645, p:'TGA', dashed:true, label:'연준 유동성', sub:'자산−TGA−역레포 계산 중…' },
 ];
 
 // 커스텀 박스 (＋ 박스 버튼으로 추가, localStorage)
@@ -2443,7 +2494,21 @@ function fmLoadStats() {
       if (document.getElementById('fiscal-panel').classList.contains('show')) fmRender();
     }).catch(() => {});
   });
+  // 금리 박스: 10Y + 기간 프리미엄 실시간 값을 부제에 합쳐 표시
+  Promise.all([fetchFRED('DGS10', 'w'), fetchFRED('THREEFYTP10', 'w')]).then(([dg, tp]) => {
+    const a = dg[dg.length - 1], b = tp[tp.length - 1];
+    fmDynSub.RATE = `10Y ${a.y.toFixed(2)}% · 프리미엄 ${b.y.toFixed(2)}%`;
+    if (document.getElementById('fiscal-panel').classList.contains('show')) fmRender();
+  }).catch(() => {});
+  // 연준 유동성 = 연준 총자산(WALCL, M$) − TGA(WTREGEN, M$) − 역레포(RRPONTSYD, B$)
+  Promise.all([fetchFRED('WALCL', 'w'), fetchFRED('WTREGEN', 'w'), fetchFRED('RRPONTSYD', 'w')]).then(([w, t, r]) => {
+    const tril = (w[w.length - 1].y - t[t.length - 1].y - r[r.length - 1].y * 1000) / 1e6;
+    fmDynSub.BR_FED = `≈ $${tril.toFixed(2)}조 (자산−TGA−역레포)`;
+    if (document.getElementById('fiscal-panel').classList.contains('show')) fmRender();
+  }).catch(() => {});
 }
+// 노드별 동적 부제 (실시간 계산값이 기본 부제를 덮어씀 — 사용자가 이름을 직접 수정한 경우는 예외)
+const fmDynSub = {};
 
 const fmStore = (k, v) => v === undefined
   ? JSON.parse(localStorage.getItem(k) || '{}')
@@ -2455,7 +2520,11 @@ function fmXY(n) {
 }
 function fmText(n) {
   const lab = fmStore('fmLabels_v1');
-  return { label: (lab[n.id] && lab[n.id].label) || n.label, sub: (lab[n.id] && lab[n.id].sub !== undefined) ? lab[n.id].sub : n.sub };
+  const userSub = lab[n.id] && lab[n.id].sub !== undefined ? lab[n.id].sub : null;
+  return {
+    label: (lab[n.id] && lab[n.id].label) || n.label,
+    sub: userSub !== null ? userSub : (fmDynSub[n.id] || n.sub),
+  };
 }
 // 한글/기호 폭 추정 (11px 기준) — 노드 박스 크기 자동 산출용
 function fmW(s) {
@@ -2466,16 +2535,35 @@ function fmW(s) {
 }
 function fmEsc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
+// 사용자가 그린 선 (＋ 선 버튼): {from, to, dir:'one'|'two'}
+function fmLinks() { return JSON.parse(localStorage.getItem('fmLinks_v1') || '[]'); }
+let fmLinkMode = null;          // {dir, first} — 선 그리기 모드
+let fmNavFromMap = false;       // 지도에서 차트로 들어왔는지 (복귀 버튼용)
+const fmDims = {};              // 마지막 렌더의 노드 크기 (선 끝점을 박스 가장자리에 붙이기용)
+
+// from 노드 중심에서 target 방향으로 나가는 박스 가장자리 점
+function fmEdgePoint(n, target) {
+  const { x, y } = fmXY(n);
+  const d = fmDims[n.id] || { w: 110, h: 34 };
+  const dx = target.x - x, dy = target.y - y;
+  if (!dx && !dy) return { x, y };
+  const sx = dx ? (d.w / 2 + 5) / Math.abs(dx) : Infinity;
+  const sy = dy ? (d.h / 2 + 5) / Math.abs(dy) : Infinity;
+  const s = Math.min(sx, sy, 0.48);
+  return { x: x + dx * s, y: y + dy * s };
+}
+
 function fmRender() {
   const svg = document.getElementById('fm-svg');
   const all = fmAllNodes();
   const byId = Object.fromEntries(all.map(n => [n.id, n]));
-  let edges = '', nodes = '';
+  const defs = `<defs><marker id="fm-arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1.5 1.5L8.5 5L1.5 8.5" fill="none" stroke="#79c0ff" stroke-width="1.7" stroke-linecap="round"/></marker></defs>`;
+  let edges = '', nodes = '', links = '';
   all.forEach(n => {
     if (n.p && byId[n.p]) {
       const a = fmXY(n), b = fmXY(byId[n.p]);
       const c = n.dashed ? (n.g === 'todo' ? FM_COLORS.todo : FM_COLORS.bridge) : FM_COLORS[n.g];
-      edges += `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="${c}" stroke-opacity="${n.dashed ? 0.45 : 0.4}" stroke-width="1.2"${n.dashed ? ' stroke-dasharray="5 5"' : ''}/>`;
+      edges += `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="${c}" stroke-opacity="${n.dashed ? 0.4 : 0.32}" stroke-width="1.3"${n.dashed ? ' stroke-dasharray="5 5"' : ''}/>`;
     }
   });
   all.forEach(n => {
@@ -2487,30 +2575,42 @@ function fmRender() {
     const lines = [{ txt: t.label, kind: 'label' }];
     if (t.sub) lines.push({ txt: t.sub, kind: 'sub' });
     if (stats) lines.push({ txt: stats, kind: 'stat' });
-    const w = Math.max(n.center ? 170 : (n.hub ? 100 : 96),
-      fmW(t.label) + 26, fmW(t.sub) + 26, stats ? fmW(stats) * 0.86 + 24 : 0);
-    const h = n.center ? 54 : (lines.length === 3 ? 58 : lines.length === 2 ? 46 : 30);
-    const offs = lines.length === 3 ? [-16, -1, 15] : lines.length === 2 ? [-8, 9] : [0];
-    const rx = n.hub ? Math.min(h / 2, 20) : 8;
-    const fill = n.center ? 'rgba(88,166,255,0.13)'
-      : n.g === 'todo' ? 'rgba(248,81,73,0.10)'
-      : (n.hub ? 'rgba(255,255,255,0.03)' : '#22272e');
+    const w = Math.max(n.center ? 180 : (n.hub ? 104 : 110),
+      fmW(t.label) * 1.1 + 30, fmW(t.sub) + 28, stats ? fmW(stats) * 0.9 + 26 : 0);
+    const h = n.center ? 58 : (lines.length === 3 ? 64 : lines.length === 2 ? 50 : 34);
+    const offs = lines.length === 3 ? [-18, -1, 17] : lines.length === 2 ? [-9, 10] : [0];
+    const rx = n.hub ? Math.min(h / 2, 22) : 9;
+    // 전부 불투명 — 부모 선이 박스를 관통해 보이지 않게
+    const fill = n.center ? '#173152'
+      : n.g === 'todo' ? '#3a1f22'
+      : n.hub ? '#20262e' : '#262d36';
     const dash = n.dashed ? ' stroke-dasharray="5 4"' : '';
+    const picked = fmLinkMode && fmLinkMode.first === n.id;
+    fmDims[n.id] = { w, h };
     const texts = lines.map((L, i) => {
       const fillT = L.kind === 'label'
-        ? (n.g === 'todo' ? FM_COLORS.todo : (n.hub || n.dashed ? color : 'var(--text)'))
-        : L.kind === 'stat' ? '#8b949e' : 'var(--text-muted)';
-      const size = L.kind === 'label' ? (n.center ? 13 : 11.5) : L.kind === 'stat' ? 9.5 : 10;
-      const weight = L.kind === 'label' && (n.center || n.hub || n.g === 'todo') ? 700 : L.kind === 'label' ? 500 : 400;
+        ? (n.g === 'todo' ? '#ff9b95' : (n.hub || n.dashed ? color : '#e6edf3'))
+        : L.kind === 'stat' ? '#9aa4af' : '#a8b3bd';
+      const size = L.kind === 'label' ? (n.center ? 14.5 : 12.5) : L.kind === 'stat' ? 10 : 10.5;
+      const weight = L.kind === 'label' && (n.center || n.hub || n.g === 'todo') ? 700 : L.kind === 'label' ? 600 : 400;
       return `<text x="${x}" y="${y + offs[i]}" text-anchor="middle" dominant-baseline="central" fill="${fillT}" font-size="${size}" font-weight="${weight}">${fmEsc(L.txt)}</text>`;
     }).join('');
     nodes += `<g class="fm-node" data-id="${n.id}">
-      <rect x="${x - w/2}" y="${y - h/2}" width="${w}" height="${h}" rx="${rx}" fill="${fill}" stroke="${color}" stroke-opacity="${n.dashed && n.g !== 'todo' ? 0.55 : 0.85}" stroke-width="${n.center ? 1.6 : n.g === 'todo' ? 1.4 : 1.1}"${dash}/>
+      <rect x="${x - w/2}" y="${y - h/2}" width="${w}" height="${h}" rx="${rx}" fill="${fill}" stroke="${picked ? '#79c0ff' : color}" stroke-opacity="${n.dashed && n.g !== 'todo' ? 0.6 : 0.9}" stroke-width="${picked ? 2.2 : n.center ? 1.8 : n.g === 'todo' ? 1.5 : 1.2}"${dash}/>
       ${texts}
-      ${n.chart ? `<circle cx="${x + w/2 - 7}" cy="${y - h/2 + 7}" r="2.4" fill="${color}"/>` : ''}
+      ${n.chart ? `<circle cx="${x + w/2 - 8}" cy="${y - h/2 + 8}" r="2.6" fill="${color}"/>` : ''}
     </g>`;
   });
-  svg.innerHTML = edges + nodes;
+  // 사용자 선 — 노드 위에 그림. 화살표는 박스 가장자리에서 시작/끝. 더블클릭=삭제.
+  fmLinks().forEach((L, i) => {
+    const a = byId[L.from], b = byId[L.to];
+    if (!a || !b) return;
+    const p1 = fmEdgePoint(a, fmXY(b)), p2 = fmEdgePoint(b, fmXY(a));
+    const mk = L.dir === 'two' ? 'marker-start="url(#fm-arr)" marker-end="url(#fm-arr)"' : 'marker-end="url(#fm-arr)"';
+    links += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="#79c0ff" stroke-opacity="0.85" stroke-width="1.7" ${mk}/>
+      <line class="fm-userlink-hit" data-idx="${i}" x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="rgba(0,0,0,0)" stroke-width="11" style="pointer-events:stroke;cursor:pointer"/>`;
+  });
+  svg.innerHTML = defs + edges + nodes + links;
 }
 
 function showFiscalMap(ind) {
@@ -2563,14 +2663,38 @@ function hideFiscalMap() {
     const { n, moved } = drag;
     drag = null;
     if (moved) return;                    // 드래그였으면 클릭 아님
+    // 선 그리기 모드: 클릭 두 번으로 노드 연결
+    if (fmLinkMode) {
+      if (!fmLinkMode.first) {
+        fmLinkMode.first = n.id;
+        document.getElementById('fm-link').textContent = '선: 둘째 노드 클릭';
+      } else if (fmLinkMode.first !== n.id) {
+        const list = fmLinks();
+        list.push({ from: fmLinkMode.first, to: n.id, dir: fmLinkMode.dir });
+        localStorage.setItem('fmLinks_v1', JSON.stringify(list));
+        fmLinkMode = null;
+        document.getElementById('fm-link').textContent = '＋ 선';
+      }
+      fmRender();
+      return;
+    }
     if (n.chart) {
       const ind = INDICATORS.find(i => i.id === n.chart);
-      if (ind) selectIndicator(ind);      // 노드 → 실데이터 차트
+      if (ind) { fmNavFromMap = true; selectIndicator(ind); }   // 노드 → 차트 (지도로 버튼 활성)
     } else if (n.url) {
       window.open(n.url, '_blank');       // 경매·QRA → 재무부 사이트
     }
   });
   svg.addEventListener('dblclick', e => {
+    // 사용자 선 더블클릭 → 삭제
+    if (e.target.classList && e.target.classList.contains('fm-userlink-hit')) {
+      if (!confirm('이 선을 삭제할까요?')) return;
+      const list = fmLinks();
+      list.splice(+e.target.dataset.idx, 1);
+      localStorage.setItem('fmLinks_v1', JSON.stringify(list));
+      fmRender();
+      return;
+    }
     const g = e.target.closest('.fm-node');
     if (!g) return;
     const n = fmAllNodes().find(m => m.id === g.dataset.id);
@@ -2591,6 +2715,18 @@ function hideFiscalMap() {
     fmStore('fmLabels_v1', lab);
     fmRender();
   });
+  document.getElementById('fm-link').addEventListener('click', () => {
+    if (fmLinkMode) {   // 다시 누르면 취소
+      fmLinkMode = null;
+      document.getElementById('fm-link').textContent = '＋ 선';
+      fmRender();
+      return;
+    }
+    const d = prompt('선 종류 — 1: 일방향(A→B) · 2: 양방향(A↔B)', '1');
+    if (d !== '1' && d !== '2') return;
+    fmLinkMode = { dir: d === '2' ? 'two' : 'one', first: null };
+    document.getElementById('fm-link').textContent = '선: 첫 노드 클릭 (취소=재클릭)';
+  });
   document.getElementById('fm-add').addEventListener('click', () => {
     const label = prompt('새 박스 이름');
     if (!label || !label.trim()) return;
@@ -2606,6 +2742,11 @@ function hideFiscalMap() {
     localStorage.removeItem('fmPos_v1');
     localStorage.removeItem('fmLabels_v1');
     fmRender();
+  });
+  document.getElementById('map-back-btn').addEventListener('click', () => {
+    document.getElementById('map-back-btn').style.display = 'none';
+    const map = INDICATORS.find(i => i.id === 'FISCAL_MAP');
+    if (map) selectIndicator(map);
   });
   const memo = document.getElementById('fm-memo');
   memo.value = localStorage.getItem('fmMemo_v1') || '';
