@@ -2449,14 +2449,14 @@ const FM_NODES = [
   // 중앙 = 미국 경제. 부제(경기 국면 요약)는 더블클릭으로 직접 작성 → localStorage 저장
   { id:'C0',  g:'us', x:660, y:330, center:true, label:'미국 경제 🇺🇸', sub:'경기 국면 요약 — 더블클릭해서 작성' },
   // GDP 4파트 — G 노드 자체가 총지출(클릭=GCE 차트). 나머지는 자리만.
-  { id:'G',   g:'gov',  x:470, y:330, p:'C0', chart:'GCE', label:'정부 G', sub:'총지출 $5.5조' },
+  { id:'G',   g:'gov',  x:470, y:330, p:'C0', chart:'GCE', label:'정부 G', sub:'총지출 · 분기' },
   { id:'C',   g:'part', x:800, y:190, hub:true, p:'C0', dashed:true, label:'소비 C', sub:'예정' },
   { id:'I',   g:'part', x:870, y:330, hub:true, p:'C0', dashed:true, label:'투자 I', sub:'예정' },
   // 순수출 NX — 노드 자체가 무역수지(월간). 연보라 분해 노드는 사용자 요청으로 제거, 상세는 사이드바 무역 카테고리에.
   { id:'NX',  g:'nx', x:810, y:460, p:'C0', chart:'BOPGSTB', label:'순수출 NX', sub:'무역수지 · 월간' },
   { id:'EXP', g:'nx', x:705, y:545, p:'NX', chart:'BOPTEXP', label:'수출' },
   { id:'IMP', g:'nx', x:905, y:545, p:'NX', chart:'BOPTIMP', label:'수입' },
-  { id:'NIIP',g:'nx', x:935, y:385, p:'NX', chart:'IIPUSNETIQ', label:'NIIP −$21조', sub:'대외순자산 · 저량' },
+  { id:'NIIP',g:'nx', x:935, y:385, p:'NX', chart:'IIPUSNETIQ', label:'NIIP', sub:'대외순자산 · 저량' },
   { id:'BR_CA', g:'bridge', x:925, y:285, p:'NIIP', dashed:true, chart:'BOPCA', label:'경상수지', sub:'유량 → NIIP 축적' },
   { id:'BR_DXY',g:'bridge', x:620, y:640, p:'NX', dashed:true, chart:'DTWEXBGS', label:'→ 달러 인덱스', sub:'거주: 국제' },
   // G 직속 — 성장 기여도 · 정부 고용 (연보라 분해 노드는 제거, 사이드바 재정 카테고리에 있음)
@@ -2464,14 +2464,14 @@ const FM_NODES = [
   { id:'GOVEMP',  g:'gov', x:620, y:210, p:'G', chart:'USGOVT', label:'정부 고용자 수', sub:'연방+주·지방 · 월간' },
   // G 렌즈 2 · 현금 흐름 (통장 = TGA)
   { id:'H2',    g:'cash', x:350, y:460, hub:true, p:'G', label:'현금 흐름 · 통장' },
-  { id:'W006',  g:'cash', x:230, y:420, p:'H2',  chart:'W006RC1Q027SBEA', label:'세입 $3.6조' },
+  { id:'W006',  g:'cash', x:230, y:420, p:'H2',  chart:'W006RC1Q027SBEA', label:'세입' },
   { id:'MTS',   g:'cash', x:240, y:530, p:'H2',  chart:'MTSDS133FMS', label:'재정수지 12M 누적' },
-  { id:'TGA',   g:'cash', x:380, y:570, p:'H2',  chart:'WTREGEN', label:'TGA $8,296억' },
+  { id:'TGA',   g:'cash', x:380, y:570, p:'H2',  chart:'WTREGEN', label:'TGA 잔고', sub:'주간' },
   { id:'DTS',   g:'todo', x:75,  y:600, p:'W006', dashed:true, label:'원천징수 트래커', sub:'미완성 · 마지막에' },
   // G 렌즈 3 · 빚 (저량)
   { id:'H3',    g:'debt', x:170, y:330, hub:true, p:'G', label:'빚 · 저량' },
-  { id:'DEBT',  g:'debt', x:85,  y:260, p:'H3',  chart:'GFDEGDQ188S', label:'부채/GDP 122.6%' },
-  { id:'INT',   g:'debt', x:85,  y:400, p:'H3',  chart:'A091RC1Q027SBEA', label:'이자 $1.2조', sub:'국방비 추월' },
+  { id:'DEBT',  g:'debt', x:85,  y:260, p:'H3',  chart:'GFDEGDQ188S', label:'부채/GDP' },
+  { id:'INT',   g:'debt', x:85,  y:400, p:'H3',  chart:'A091RC1Q027SBEA', label:'이자', sub:'국방비 추월' },
   { id:'RATIO', g:'debt', x:90,  y:475, p:'INT', chart:'INT_TAX_RATIO', label:'이자/세입 비율' },
   // 금리 — 10Y와 기간 프리미엄 한 박스 (부제에 실시간 값, 클릭=10Y 차트)
   { id:'RATE',  g:'mkt',  x:560, y:540, p:'G', chart:'DGS10', label:'금리', sub:'10Y · 기간 프리미엄' },
@@ -2522,8 +2522,10 @@ function fmLoadStats() {
         const d = (a - b) / Math.abs(b) * 100;
         return (d >= 0 ? '+' : '') + d.toFixed(1) + '%';
       };
-      fmStatsCache[id] = `YoY ${yPt ? f(last.y, yPt.y) : '—'} · MoM ${mPt ? f(last.y, mPt.y) : '—'}`;
-      if (id === 'FED_LIQUIDITY') fmDynSub.BR_FED = `$${last.y.toFixed(2)}조 · 자산−TGA−역레포`;
+      // 최신값을 통계줄 맨 앞에 — 라벨에 손으로 박은 수치가 낡는 문제 해결
+      // (RATE 박스는 부제에 10Y·프리미엄 값이 이미 있어 중복 방지로 생략)
+      const prefix = id === 'DGS10' ? '' : fmVal(last.y, ind.unit) + ' · ';
+      fmStatsCache[id] = `${prefix}Y ${yPt ? f(last.y, yPt.y) : '—'} · M ${mPt ? f(last.y, mPt.y) : '—'}`;
       rerender();
     }).catch(() => {});
   });
@@ -2535,6 +2537,19 @@ function fmLoadStats() {
 }
 // 노드별 동적 부제 (실시간 계산값이 기본 부제를 덮어씀 — 사용자가 이름을 직접 수정한 경우는 예외)
 const fmDynSub = {};
+
+// 최신값을 단위에 맞게 한국식 표기로 (B$=십억, M$=백만, T$=조, K=천 명)
+function fmVal(v, unit) {
+  const sign = v < 0 ? '-' : '';
+  const a = Math.abs(v);
+  if (unit === 'B$') return a >= 1000 ? `${sign}$${(a / 1000).toFixed(2)}조` : `${sign}$${Math.round(a * 10).toLocaleString()}억`;
+  if (unit === 'M$') return a >= 1e6 ? `${sign}$${(a / 1e6).toFixed(2)}조` : `${sign}$${Math.round(a / 100).toLocaleString()}억`;
+  if (unit === 'T$') return `${sign}$${a.toFixed(2)}조`;
+  if (unit === '%p') return `${v >= 0 ? '+' : '-'}${a.toFixed(2)}%p`;
+  if (unit === '%')  return `${v.toFixed(2)}%`;
+  if (unit === 'K')  return a >= 1000 ? `${sign}${Math.round(a / 10).toLocaleString()}만` : `${sign}${(a / 10).toFixed(1)}만`;
+  return v.toLocaleString(undefined, { maximumFractionDigits: 1 });
+}
 
 const fmStore = (k, v) => v === undefined
   ? JSON.parse(localStorage.getItem(k) || '{}')
