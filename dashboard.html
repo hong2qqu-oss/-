@@ -829,6 +829,8 @@ const INDICATORS = [
 
   // 무역 — 순수출 NX 상자 (월간 무역수지가 헤드라인, NIIP은 저량)
   { id:'BOPGSTB',    name:'무역수지 (상품+서비스)', unit:'M$', category:'무역 / TRADE', country:'US' },
+  { id:'BOPGTB',     name:'상품수지 (Goods)',       unit:'M$', category:'무역 / TRADE', country:'US' },
+  { id:'BOPSTB',     name:'서비스수지 (Services)',  unit:'M$', category:'무역 / TRADE', country:'US' },
   { id:'BOPTEXP',    name:'수출 (상품+서비스)',     unit:'M$', category:'무역 / TRADE', country:'US' },
   { id:'BOPTIMP',    name:'수입 (상품+서비스)',     unit:'M$', category:'무역 / TRADE', country:'US' },
   { id:'IIPUSNETIQ', name:'대외순자산 (NIIP)',      unit:'M$', category:'무역 / TRADE', country:'US', noStats:true },
@@ -2447,7 +2449,7 @@ const FM_NODES = [
   // 중앙 = 미국 경제. 부제(경기 국면 요약)는 더블클릭으로 직접 작성 → localStorage 저장
   { id:'C0',  g:'us', x:660, y:330, center:true, label:'미국 경제 🇺🇸', sub:'경기 국면 요약 — 더블클릭해서 작성' },
   // GDP 4파트 — G 노드 자체가 총지출(클릭=GCE 차트). 나머지는 자리만.
-  { id:'G',   g:'gov',  x:470, y:330, p:'C0', chart:'GCE', label:'정부 G', sub:'총지출 $5.4조' },
+  { id:'G',   g:'gov',  x:470, y:330, p:'C0', chart:'GCE', label:'정부 G', sub:'총지출 $5.5조' },
   { id:'C',   g:'part', x:800, y:190, hub:true, p:'C0', dashed:true, label:'소비 C', sub:'예정' },
   { id:'I',   g:'part', x:870, y:330, hub:true, p:'C0', dashed:true, label:'투자 I', sub:'예정' },
   // 순수출 NX — 노드 자체가 무역수지(월간). 연보라 분해 노드는 사용자 요청으로 제거, 상세는 사이드바 무역 카테고리에.
@@ -2476,7 +2478,7 @@ const FM_NODES = [
   { id:'QRA',   g:'todo', x:790, y:610, p:'RATE', dashed:true, label:'⚠ 경매 · QRA 미완성', sub:'출처: 재무부 사이트 · 클릭',
     url:'https://www.treasurydirect.gov/auctions/announcements-data-results/' },
   // 다리 (점선) — 지표의 거주지는 상대 상자
-  { id:'BR_C',  g:'bridge', x:800, y:60,  p:'C',   dashed:true, label:'이전지출 (PCTR)', sub:'G→C 다리 · $5.1조' },
+  { id:'BR_C',  g:'bridge', x:800, y:60,  p:'C',   dashed:true, label:'이전지출 (PCTR)', sub:'G→C 다리 · $5.2조' },
   { id:'BR_EMP',g:'bridge', x:915, y:105, p:'C',   dashed:true, chart:'ICSA', label:'→ 고용', sub:'실업수당 · 신규청구' },
   // TGA 딸린 파생 지표 — 시계열 계산이라 차트·YoY/MoM 전부 지원
   { id:'BR_FED',g:'cash', x:390, y:640, p:'TGA', chart:'FED_LIQUIDITY', label:'연준 유동성', sub:'자산−TGA−역레포' },
