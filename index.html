@@ -2458,7 +2458,7 @@ const FM_NODES = [
   { id:'IMP', g:'nx', x:905, y:545, p:'NX', chart:'BOPTIMP', label:'수입' },
   { id:'NIIP',g:'nx', x:935, y:385, p:'NX', chart:'IIPUSNETIQ', label:'NIIP', sub:'대외순자산 · 저량' },
   { id:'BR_CA', g:'bridge', x:925, y:285, p:'NIIP', dashed:true, chart:'BOPCA', label:'경상수지', sub:'유량 → NIIP 축적' },
-  { id:'BR_DXY',g:'bridge', x:620, y:640, p:'NX', dashed:true, chart:'DTWEXBGS', label:'→ 달러 인덱스', sub:'거주: 국제' },
+  { id:'BR_DXY',g:'nx', x:620, y:640, p:'NX', chart:'DTWEXBGS', label:'달러 인덱스' },
   // G 직속 — 성장 기여도 · 정부 고용 (연보라 분해 노드는 제거, 사이드바 재정 카테고리에 있음)
   { id:'CONTRIB', g:'gov', x:330, y:220, p:'G', chart:'A822RY2Q224SBEA', label:'성장 기여도 %p' },
   { id:'GOVEMP',  g:'gov', x:620, y:210, p:'G', chart:'USGOVT', label:'정부 고용자 수', sub:'연방+주·지방 · 월간' },
