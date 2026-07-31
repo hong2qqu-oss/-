@@ -2489,7 +2489,8 @@ function fmCustoms() { return JSON.parse(localStorage.getItem('fmCustom_v1') || 
 function fmAllNodes() { return FM_NODES.concat(fmCustoms().map(c => ({ ...c, g:'custom', custom:true }))); }
 
 // 실시간 YoY/MoM 캐시 — 지도 첫 오픈 때 FRED에서 한 번만 받아옴
-const fmStatsCache = {};
+const fmStatsCache = {};   // 노드별 YoY/MoM 줄
+const fmValCache = {};     // 노드별 최신값 볼드 줄
 let fmStatsLoaded = false;
 function fmLoadStats() {
   if (fmStatsLoaded || !apiKey) return;
@@ -2522,10 +2523,10 @@ function fmLoadStats() {
         const d = (a - b) / Math.abs(b) * 100;
         return (d >= 0 ? '+' : '') + d.toFixed(1) + '%';
       };
-      // 최신값을 통계줄 맨 앞에 — 라벨에 손으로 박은 수치가 낡는 문제 해결
-      // (RATE 박스는 부제에 10Y·프리미엄 값이 이미 있어 중복 방지로 생략)
-      const prefix = id === 'DGS10' ? '' : fmVal(last.y, ind.unit) + ' · ';
-      fmStatsCache[id] = `${prefix}Y ${yPt ? f(last.y, yPt.y) : '—'} · M ${mPt ? f(last.y, mPt.y) : '—'}`;
+      // 최신값은 제목 아래 볼드 전용 줄(fmValCache), 변화율은 그 아래 YoY/MoM 줄
+      // (RATE 박스는 부제에 10Y·프리미엄 값이 이미 있어 값 줄 생략)
+      if (id !== 'DGS10') fmValCache[id] = fmVal(last.y, ind.unit);
+      fmStatsCache[id] = `YoY ${yPt ? f(last.y, yPt.y) : '—'} · MoM ${mPt ? f(last.y, mPt.y) : '—'}`;
       rerender();
     }).catch(() => {});
   });
@@ -2612,15 +2613,17 @@ function fmRender() {
     const t = fmText(n);
     const color = FM_COLORS[n.g];
     const stats = n.chart ? fmStatsCache[n.chart] : null;
-    // 줄 구성: 이름 / 부제(선택) / YoY·MoM(선택)
+    const val = n.chart ? fmValCache[n.chart] : null;
+    // 줄 구성: 제목(볼드) / 최신값(볼드·강조) / 부제 / YoY·MoM
     const lines = [{ txt: t.label, kind: 'label' }];
+    if (val) lines.push({ txt: val, kind: 'val' });
     if (t.sub) lines.push({ txt: t.sub, kind: 'sub' });
     if (stats) lines.push({ txt: stats, kind: 'stat' });
-    // 4파트 확장 대비 컴팩트 사이즈 (사용자 요청)
     const w = Math.max(n.center ? 150 : (n.hub ? 88 : 90),
-      fmW(t.label) * 1.02 + 24, fmW(t.sub) * 0.92 + 22, stats ? fmW(stats) * 0.82 + 20 : 0);
-    const h = n.center ? 50 : (lines.length === 3 ? 54 : lines.length === 2 ? 42 : 28);
-    const offs = lines.length === 3 ? [-15, -1, 14] : lines.length === 2 ? [-8, 9] : [0];
+      fmW(t.label) * 1.02 + 24, val ? fmW(val) * 1.05 + 26 : 0,
+      fmW(t.sub) * 0.92 + 22, stats ? fmW(stats) * 0.82 + 20 : 0);
+    const h = n.center ? 50 : [0, 28, 42, 54, 68][lines.length];
+    const offs = [[0], [0], [-8, 9], [-16, 0, 16], [-24, -8, 7, 21]][lines.length];
     const rx = n.hub ? Math.min(h / 2, 18) : 8;
     // 전부 불투명 — 부모 선이 박스를 관통해 보이지 않게
     const fill = n.center ? '#173152'
@@ -2632,9 +2635,12 @@ function fmRender() {
     const texts = lines.map((L, i) => {
       const fillT = L.kind === 'label'
         ? (n.g === 'todo' ? '#ff9b95' : (n.hub || n.dashed ? color : '#e6edf3'))
+        : L.kind === 'val' ? color
         : L.kind === 'stat' ? '#9aa4af' : '#a8b3bd';
-      const size = L.kind === 'label' ? (n.center ? 13 : 11.5) : L.kind === 'stat' ? 9.5 : 10;
-      const weight = L.kind === 'label' && (n.center || n.hub || n.g === 'todo') ? 700 : L.kind === 'label' ? 600 : 400;
+      const size = L.kind === 'label' ? (n.center ? 13 : 11.5) : L.kind === 'val' ? 13 : 9.5;
+      const weight = L.kind === 'val' ? 700
+        : L.kind === 'label' && (n.center || n.hub || n.g === 'todo') ? 700
+        : L.kind === 'label' ? 600 : 400;
       return `<text x="${x}" y="${y + offs[i]}" text-anchor="middle" dominant-baseline="central" fill="${fillT}" font-size="${size}" font-weight="${weight}">${fmEsc(L.txt)}</text>`;
     }).join('');
     nodes += `<g class="fm-node" data-id="${n.id}">
