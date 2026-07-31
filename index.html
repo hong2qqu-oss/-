@@ -2454,11 +2454,12 @@ const FM_NODES = [
   { id:'I',   g:'part', x:870, y:330, hub:true, p:'C0', dashed:true, label:'투자 I', sub:'예정' },
   // 순수출 NX — 노드 자체가 무역수지(월간). 연보라 분해 노드는 사용자 요청으로 제거, 상세는 사이드바 무역 카테고리에.
   { id:'NX',  g:'nx', x:810, y:460, p:'C0', chart:'BOPGSTB', label:'순수출 NX', sub:'무역수지 · 월간' },
-  { id:'EXP', g:'nx', x:705, y:545, p:'NX', chart:'BOPTEXP', label:'수출' },
-  { id:'IMP', g:'nx', x:905, y:545, p:'NX', chart:'BOPTIMP', label:'수입' },
+  // 아래 세 개는 수출 → 수입 → 달러인덱스 왼→오 순서 (사용자 지정)
+  { id:'EXP', g:'nx', x:650, y:560, p:'NX', chart:'BOPTEXP', label:'수출' },
+  { id:'IMP', g:'nx', x:795, y:560, p:'NX', chart:'BOPTIMP', label:'수입' },
   { id:'NIIP',g:'nx', x:935, y:385, p:'NX', chart:'IIPUSNETIQ', label:'NIIP', sub:'대외순자산 · 저량' },
   { id:'BR_CA', g:'bridge', x:925, y:285, p:'NIIP', dashed:true, chart:'BOPCA', label:'경상수지', sub:'유량 → NIIP 축적' },
-  { id:'BR_DXY',g:'nx', x:620, y:640, p:'NX', chart:'DTWEXBGS', label:'달러 인덱스' },
+  { id:'BR_DXY',g:'nx', x:930, y:560, p:'NX', chart:'DTWEXBGS', label:'달러 인덱스' },
   // G 직속 — 성장 기여도 · 정부 고용 (연보라 분해 노드는 제거, 사이드바 재정 카테고리에 있음)
   { id:'CONTRIB', g:'gov', x:330, y:220, p:'G', chart:'A822RY2Q224SBEA', label:'성장 기여도 %p' },
   { id:'GOVEMP',  g:'gov', x:620, y:210, p:'G', chart:'USGOVT', label:'정부 고용자 수', sub:'연방+주·지방 · 월간' },
@@ -2475,7 +2476,7 @@ const FM_NODES = [
   { id:'RATIO', g:'debt', x:90,  y:475, p:'INT', chart:'INT_TAX_RATIO', label:'이자/세입 비율' },
   // 금리 — 10Y와 기간 프리미엄 한 박스 (부제에 실시간 값, 클릭=10Y 차트)
   { id:'RATE',  g:'mkt',  x:560, y:540, p:'G', chart:'DGS10', label:'금리', sub:'10Y · 기간 프리미엄' },
-  { id:'QRA',   g:'todo', x:790, y:610, p:'RATE', dashed:true, label:'⚠ 경매 · QRA 미완성', sub:'출처: 재무부 사이트 · 클릭',
+  { id:'QRA',   g:'todo', x:790, y:645, p:'RATE', dashed:true, label:'⚠ 경매 · QRA 미완성', sub:'출처: 재무부 사이트 · 클릭',
     url:'https://www.treasurydirect.gov/auctions/announcements-data-results/' },
   // 다리 (점선) — 지표의 거주지는 상대 상자
   { id:'BR_C',  g:'bridge', x:800, y:60,  p:'C',   dashed:true, label:'이전지출 (PCTR)', sub:'G→C 다리 · $5.2조' },
