@@ -2635,11 +2635,10 @@ function fmRender() {
     const texts = lines.map((L, i) => {
       const fillT = L.kind === 'label'
         ? (n.g === 'todo' ? '#ff9b95' : (n.hub || n.dashed ? color : '#e6edf3'))
-        : L.kind === 'val' ? color
+        : L.kind === 'val' ? '#e6edf3'
         : L.kind === 'stat' ? '#9aa4af' : '#a8b3bd';
-      const size = L.kind === 'label' ? (n.center ? 13 : 11.5) : L.kind === 'val' ? 13 : 9.5;
-      const weight = L.kind === 'val' ? 700
-        : L.kind === 'label' && (n.center || n.hub || n.g === 'todo') ? 700
+      const size = L.kind === 'label' ? (n.center ? 13 : 11.5) : L.kind === 'val' ? 10.5 : 9.5;
+      const weight = L.kind === 'label' && (n.center || n.hub || n.g === 'todo') ? 700
         : L.kind === 'label' ? 600 : 400;
       return `<text x="${x}" y="${y + offs[i]}" text-anchor="middle" dominant-baseline="central" fill="${fillT}" font-size="${size}" font-weight="${weight}">${fmEsc(L.txt)}</text>`;
     }).join('');
