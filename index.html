@@ -835,17 +835,27 @@ const INDICATORS = [
   // 기타 고빈도
   { id:'TSA_CHECKPOINT', name:'TSA 공항 검색대 (일간)', unit:'명',  category:'기타 / OTHER', country:'US', source:'tsa' },
 
-  // 투자 — GPDI = PNFI + PRFI + CBI (항등식). 월간 쪽지시험은 주문·허가·재고비율.
-  { id:'GPDI',    name:'총투자 (GPDI)',        unit:'B$', category:'투자 / INVESTMENT', country:'US' },
-  { id:'PNFI',    name:'비주거 고정투자',       unit:'B$', category:'투자 / INVESTMENT', country:'US' },
-  { id:'PRFI',    name:'주거투자',             unit:'B$', category:'투자 / INVESTMENT', country:'US' },
-  { id:'CBI',     name:'재고변동',             unit:'B$', category:'투자 / INVESTMENT', country:'US', noStats:true },
-  // 비주거 3분해 — 검증: 설비 1872.6 + 건축물 878.7 + 지식재산 1872.4 = PNFI 4623.7 ✓
-  { id:'Y033RC1Q027SBEA', name:'└ 설비 (장비)',      unit:'B$', category:'투자 / INVESTMENT', country:'US' },
-  { id:'B009RC1Q027SBEA', name:'└ 건축물 (구조물)',   unit:'B$', category:'투자 / INVESTMENT', country:'US' },
-  { id:'Y001RC1Q027SBEA', name:'└ 지식재산 (SW·R&D)', unit:'B$', category:'투자 / INVESTMENT', country:'US' },
-  { id:'A679RC1Q027SBEA', name:'정보처리장비+SW (AI capex)', unit:'B$', category:'투자 / INVESTMENT', country:'US' },
-  { id:'B935RC1Q027SBEA', name:'└ 컴퓨터·주변기기',   unit:'B$', category:'투자 / INVESTMENT', country:'US' },
+  // 투자 — 사이클 판정은 실질(2017년 달러)로. 지도 노드가 쓰는 게 이 실질 시리즈들.
+  { id:'GPDIC1',  name:'총투자 (실질)',         unit:'B$', category:'투자 / INVESTMENT', country:'US' },
+  { id:'PNFIC1',  name:'비주거 고정투자 (실질)', unit:'B$', category:'투자 / INVESTMENT', country:'US' },
+  { id:'PRFIC1',  name:'주거투자 (실질)',       unit:'B$', category:'투자 / INVESTMENT', country:'US' },
+  { id:'CBIC1',   name:'재고변동 (실질)',       unit:'B$', category:'투자 / INVESTMENT', country:'US', noStats:true },
+  { id:'Y033RX1Q020SBEA', name:'└ 설비 (실질)',       unit:'B$', category:'투자 / INVESTMENT', country:'US' },
+  { id:'B009RX1Q020SBEA', name:'└ 건축물 (실질)',     unit:'B$', category:'투자 / INVESTMENT', country:'US' },
+  { id:'Y001RX1Q020SBEA', name:'└ 지식재산 (실질)',   unit:'B$', category:'투자 / INVESTMENT', country:'US' },
+  { id:'A679RX1Q020SBEA', name:'정보처리+SW (실질·AI capex)', unit:'B$', category:'투자 / INVESTMENT', country:'US' },
+  { id:'B935RX1Q020SBEA', name:'└ 컴퓨터·주변기기 (실질)', unit:'B$', category:'투자 / INVESTMENT', country:'US' },
+  // 명목 — 항등식 검증용으로 보존 (실질은 연쇄가중이라 덧셈이 안 맞음)
+  // 검증: 설비 1872.6 + 건축물 878.7 + 지식재산 1872.4 = PNFI 4623.7 ✓
+  { id:'GPDI',    name:'총투자 (명목)',        unit:'B$', category:'투자 / INVESTMENT', country:'US' },
+  { id:'PNFI',    name:'비주거 고정투자 (명목)', unit:'B$', category:'투자 / INVESTMENT', country:'US' },
+  { id:'PRFI',    name:'주거투자 (명목)',       unit:'B$', category:'투자 / INVESTMENT', country:'US' },
+  { id:'CBI',     name:'재고변동 (명목)',       unit:'B$', category:'투자 / INVESTMENT', country:'US', noStats:true },
+  { id:'Y033RC1Q027SBEA', name:'└ 설비 (명목)',      unit:'B$', category:'투자 / INVESTMENT', country:'US' },
+  { id:'B009RC1Q027SBEA', name:'└ 건축물 (명목)',    unit:'B$', category:'투자 / INVESTMENT', country:'US' },
+  { id:'Y001RC1Q027SBEA', name:'└ 지식재산 (명목)',  unit:'B$', category:'투자 / INVESTMENT', country:'US' },
+  { id:'A679RC1Q027SBEA', name:'정보처리+SW (명목)', unit:'B$', category:'투자 / INVESTMENT', country:'US' },
+  { id:'B935RC1Q027SBEA', name:'└ 컴퓨터·주변기기 (명목)', unit:'B$', category:'투자 / INVESTMENT', country:'US' },
   { id:'NEWORDER',name:'핵심 자본재 주문',      unit:'M$', category:'투자 / INVESTMENT', country:'US' },
   { id:'DGORDER', name:'내구재 주문',           unit:'M$', category:'투자 / INVESTMENT', country:'US' },
   // 투자의 산소·체온계 — SLOOS는 침체 선행성이 재고보다 우수, 0 위=은행이 대출 조이는 중
@@ -2513,23 +2523,24 @@ const FM_NODES = [
   { id:'G',   g:'gov',  x:420, y:400, p:'C0', chart:'GCE', label:'정부 G', sub:'총지출 · 분기' },
   { id:'C',   g:'part', x:620, y:150, hub:true, p:'C0', dashed:true, label:'소비 C', sub:'예정' },
   // 투자 — 사이클 민감도가 가장 높은 파트라 모든 노드에 최근 18개월 시그마 위치를 표시(sig:true)
-  { id:'I',   g:'inv',  x:790, y:330, p:'C0', chart:'GPDI', label:'투자 I', sig:true, sub:'총투자 · 분기' },
-  // GPDI = 비주거 + 주거 + 재고 (항등식)
-  { id:'PNFI', g:'inv', x:930, y:250, p:'I', chart:'PNFI', label:'비주거', sig:true },
-  // 비주거 3분해 — 설비 + 건축물 + 지식재산 (덧셈 검증됨)
-  { id:'EQP',  g:'inv', x:1070, y:180, p:'PNFI', chart:'Y033RC1Q027SBEA', label:'설비', sig:true },
-  { id:'STR',  g:'inv', x:1070, y:255, p:'PNFI', chart:'B009RC1Q027SBEA', label:'건축물', sig:true },
-  { id:'IPP',  g:'inv', x:1070, y:330, p:'PNFI', chart:'Y001RC1Q027SBEA', label:'지식재산', sig:true },
-  { id:'AICAP',g:'inv', x:1215, y:110, p:'EQP', chart:'A679RC1Q027SBEA', label:'정보처리+SW', sig:true },
+  // 지도 노드는 전부 실질(2017년 달러) — 가격 변동을 빼야 사이클이 제대로 보임
+  { id:'I',   g:'inv',  x:790, y:330, p:'C0', chart:'GPDIC1', label:'투자 I', sig:true, sub:'실질 총투자 · 분기' },
+  // GPDI = 비주거 + 주거 + 재고 (항등식은 명목 기준, 사이드바에서 검증)
+  { id:'PNFI', g:'inv', x:930, y:250, p:'I', chart:'PNFIC1', label:'비주거', sig:true },
+  // 비주거 3분해 — 설비 + 건축물 + 지식재산
+  { id:'EQP',  g:'inv', x:1070, y:180, p:'PNFI', chart:'Y033RX1Q020SBEA', label:'설비', sig:true },
+  { id:'STR',  g:'inv', x:1070, y:255, p:'PNFI', chart:'B009RX1Q020SBEA', label:'건축물', sig:true },
+  { id:'IPP',  g:'inv', x:1070, y:330, p:'PNFI', chart:'Y001RX1Q020SBEA', label:'지식재산', sig:true },
+  { id:'AICAP',g:'inv', x:1215, y:110, p:'EQP', chart:'A679RX1Q020SBEA', label:'정보처리+SW', sig:true },
   // 월간 쪽지시험: 내구재 주문(헤드라인) → 핵심 자본재(항공기·국방 뺀 판정짝)
   { id:'DGO',  g:'inv', x:1215, y:190, p:'PNFI', chart:'DGORDER',  label:'내구재 주문', sig:true },
   { id:'NEWO', g:'inv', x:1215, y:265, p:'DGO',  chart:'NEWORDER', label:'핵심 자본재', sig:true },
-  { id:'PRFI', g:'inv', x:930, y:400, p:'I', chart:'PRFI', label:'주거', sig:true },
+  { id:'PRFI', g:'inv', x:930, y:400, p:'I', chart:'PRFIC1', label:'주거', sig:true },
   // 주거의 선행 사슬: 허가(서류) → 착공(삽) → 신규주택 판매
   { id:'PERM', g:'inv', x:1215, y:345, p:'PRFI', chart:'PERMIT', label:'건축허가', sig:true },
   { id:'HOUS', g:'inv', x:1215, y:420, p:'PERM', chart:'HOUST',  label:'주택착공', sig:true },
   { id:'HSN',  g:'inv', x:1215, y:495, p:'HOUS', chart:'HSN1F',  label:'신규주택 판매', sig:true },
-  { id:'CBI',  g:'inv', x:930, y:475, p:'I', chart:'CBI',  label:'재고 변동', sig:true },
+  { id:'CBI',  g:'inv', x:930, y:475, p:'I', chart:'CBIC1',  label:'재고 변동', sig:true },
   // 재고/판매는 레벨이 아니라 12개월 변화로 본다 (2008년 침체가 '타이트' 레벨에서 시작했으므로)
   { id:'ISRC', g:'inv', x:1070, y:475, p:'CBI', chart:'ISRATIO_CHG12', label:'재고/판매 YoY', sig:true },
   // 투자의 산소(대출태도)와 체온계(가동률)
