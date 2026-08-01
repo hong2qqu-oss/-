@@ -840,8 +840,18 @@ const INDICATORS = [
   { id:'PNFI',    name:'비주거 고정투자',       unit:'B$', category:'투자 / INVESTMENT', country:'US' },
   { id:'PRFI',    name:'주거투자',             unit:'B$', category:'투자 / INVESTMENT', country:'US' },
   { id:'CBI',     name:'재고변동',             unit:'B$', category:'투자 / INVESTMENT', country:'US', noStats:true },
+  // 비주거 3분해 — 검증: 설비 1872.6 + 건축물 878.7 + 지식재산 1872.4 = PNFI 4623.7 ✓
+  { id:'Y033RC1Q027SBEA', name:'└ 설비 (장비)',      unit:'B$', category:'투자 / INVESTMENT', country:'US' },
+  { id:'B009RC1Q027SBEA', name:'└ 건축물 (구조물)',   unit:'B$', category:'투자 / INVESTMENT', country:'US' },
+  { id:'Y001RC1Q027SBEA', name:'└ 지식재산 (SW·R&D)', unit:'B$', category:'투자 / INVESTMENT', country:'US' },
+  { id:'A679RC1Q027SBEA', name:'정보처리장비+SW (AI capex)', unit:'B$', category:'투자 / INVESTMENT', country:'US' },
+  { id:'B935RC1Q027SBEA', name:'└ 컴퓨터·주변기기',   unit:'B$', category:'투자 / INVESTMENT', country:'US' },
   { id:'NEWORDER',name:'핵심 자본재 주문',      unit:'M$', category:'투자 / INVESTMENT', country:'US' },
   { id:'DGORDER', name:'내구재 주문',           unit:'M$', category:'투자 / INVESTMENT', country:'US' },
+  // 투자의 산소·체온계 — SLOOS는 침체 선행성이 재고보다 우수, 0 위=은행이 대출 조이는 중
+  { id:'DRTSCILM',name:'은행 대출태도 (SLOOS)', unit:'%',  category:'투자 / INVESTMENT', country:'US', noStats:true, lineRaw:true,
+    refLines:[ {y:0, color:'#8b949e', label:'0 = 중립'} ] },
+  { id:'TCU',     name:'설비가동률',            unit:'%',  category:'투자 / INVESTMENT', country:'US', noStats:true },
   // 밴드는 2012년~현재(코로나 이상치 제외) 분포에서 산출: 평균 1.36, 표준편차 0.053 → ±1σ, +2σ
   // 레벨만으로 침체를 못 잡는다(2008년 침체는 1.27에서 시작). 판정은 아래 12개월 변화로.
   { id:'ISRATIO', name:'재고/판매 비율',        unit:'배', category:'투자 / INVESTMENT', country:'US', noStats:true, lineRaw:true,
@@ -2497,21 +2507,30 @@ const FM_NODES = [
   { id:'C0',  g:'us', x:600, y:400, center:true, label:'미국 경제 🇺🇸', sub:'경기 국면 요약 — 더블클릭해서 작성' },
   // GDP 4파트 — 각 노드 자체가 그 파트의 총액 차트. C만 아직 미착수.
   { id:'G',   g:'gov',  x:420, y:400, p:'C0', chart:'GCE', label:'정부 G', sub:'총지출 · 분기' },
-  { id:'C',   g:'part', x:740, y:230, hub:true, p:'C0', dashed:true, label:'소비 C', sub:'예정' },
-  { id:'I',   g:'inv',  x:820, y:350, p:'C0', chart:'GPDI', label:'투자 I', sub:'총투자 · 분기' },
-  // I 조각 — GPDI = 비주거 + 주거 + 재고 (항등식). 월간 지표는 사이드바 투자·주택 카테고리에.
-  { id:'PNFI', g:'inv', x:980, y:290, p:'I', chart:'PNFI', label:'비주거', sub:'설비 · 건물 · IP' },
-  // 비주거의 월간 쪽지시험: 내구재 주문(헤드라인) → 핵심 자본재(항공기·국방 뺀 판정짝)
-  { id:'DGO',  g:'inv', x:1140, y:230, p:'PNFI', chart:'DGORDER',  label:'내구재 주문' },
-  { id:'NEWO', g:'inv', x:1280, y:175, p:'DGO',  chart:'NEWORDER', label:'핵심 자본재', sub:'항공기·국방 제외' },
-  { id:'PRFI', g:'inv', x:980, y:375, p:'I', chart:'PRFI', label:'주거', sub:'신축 · 리모델링' },
+  { id:'C',   g:'part', x:620, y:150, hub:true, p:'C0', dashed:true, label:'소비 C', sub:'예정' },
+  // 투자 — 사이클 민감도가 가장 높은 파트라 모든 노드에 최근 18개월 시그마 위치를 표시(sig:true)
+  { id:'I',   g:'inv',  x:790, y:330, p:'C0', chart:'GPDI', label:'투자 I', sig:true, sub:'총투자 · 분기' },
+  // GPDI = 비주거 + 주거 + 재고 (항등식)
+  { id:'PNFI', g:'inv', x:930, y:250, p:'I', chart:'PNFI', label:'비주거', sig:true },
+  // 비주거 3분해 — 설비 + 건축물 + 지식재산 (덧셈 검증됨)
+  { id:'EQP',  g:'inv', x:1070, y:180, p:'PNFI', chart:'Y033RC1Q027SBEA', label:'설비', sig:true },
+  { id:'STR',  g:'inv', x:1070, y:255, p:'PNFI', chart:'B009RC1Q027SBEA', label:'건축물', sig:true },
+  { id:'IPP',  g:'inv', x:1070, y:330, p:'PNFI', chart:'Y001RC1Q027SBEA', label:'지식재산', sig:true },
+  { id:'AICAP',g:'inv', x:1215, y:110, p:'EQP', chart:'A679RC1Q027SBEA', label:'정보처리+SW', sig:true },
+  // 월간 쪽지시험: 내구재 주문(헤드라인) → 핵심 자본재(항공기·국방 뺀 판정짝)
+  { id:'DGO',  g:'inv', x:1215, y:190, p:'PNFI', chart:'DGORDER',  label:'내구재 주문', sig:true },
+  { id:'NEWO', g:'inv', x:1215, y:265, p:'DGO',  chart:'NEWORDER', label:'핵심 자본재', sig:true },
+  { id:'PRFI', g:'inv', x:930, y:400, p:'I', chart:'PRFI', label:'주거', sig:true },
   // 주거의 선행 사슬: 허가(서류) → 착공(삽) → 신규주택 판매
-  { id:'PERM', g:'inv', x:1140, y:330, p:'PRFI', chart:'PERMIT', label:'건축허가', sub:'가장 선행' },
-  { id:'HOUS', g:'inv', x:1280, y:300, p:'PERM', chart:'HOUST',  label:'주택착공' },
-  { id:'HSN',  g:'inv', x:1280, y:400, p:'HOUS', chart:'HSN1F',  label:'신규주택 판매' },
-  { id:'CBI',  g:'inv', x:980, y:460, p:'I', chart:'CBI',  label:'재고 변동' },
-  { id:'ISR',  g:'inv', x:1130, y:440, p:'CBI', chart:'ISRATIO', label:'재고/판매', sub:'평균 1.36 · +2σ 1.47' },
-  { id:'ISRC', g:'inv', x:1130, y:520, p:'ISR', chart:'ISRATIO_CHG12', label:'12개월 변화', sub:'+0.10↑ 적체 경보' },
+  { id:'PERM', g:'inv', x:1215, y:345, p:'PRFI', chart:'PERMIT', label:'건축허가', sig:true },
+  { id:'HOUS', g:'inv', x:1215, y:420, p:'PERM', chart:'HOUST',  label:'주택착공', sig:true },
+  { id:'HSN',  g:'inv', x:1215, y:495, p:'HOUS', chart:'HSN1F',  label:'신규주택 판매', sig:true },
+  { id:'CBI',  g:'inv', x:930, y:475, p:'I', chart:'CBI',  label:'재고 변동', sig:true },
+  // 재고/판매는 레벨이 아니라 12개월 변화로 본다 (2008년 침체가 '타이트' 레벨에서 시작했으므로)
+  { id:'ISRC', g:'inv', x:1070, y:475, p:'CBI', chart:'ISRATIO_CHG12', label:'재고/판매 YoY', sig:true },
+  // 투자의 산소(대출태도)와 체온계(가동률)
+  { id:'SLOOS',g:'inv', x:790, y:230, p:'I', chart:'DRTSCILM', label:'은행 대출태도', sig:true },
+  { id:'TCU',  g:'inv', x:650, y:250, p:'I', chart:'TCU', label:'설비가동률', sig:true },
   // 순수출 NX — 노드 자체가 무역수지(월간). 연보라 분해 노드는 사용자 요청으로 제거, 상세는 사이드바 무역 카테고리에.
   { id:'NX',  g:'nx', x:740, y:520, p:'C0', chart:'BOPGSTB', label:'순수출 NX', sub:'무역수지 · 월간' },
   // 아래 세 개는 수출 → 수입 → 달러인덱스 왼→오 순서 (사용자 지정)
@@ -2522,7 +2541,7 @@ const FM_NODES = [
   { id:'NIIP',g:'nx', x:890, y:560, p:'NX', chart:'IIPUSNETIQ', label:'NIIP', sub:'대외순자산 · 저량' },
   { id:'BR_CA', g:'bridge', x:1010, y:745, p:'NIIP', chart:'IEABC', label:'경상수지', sub:'유량 → NIIP 축적' },
   { id:'ASSET', g:'nx', x:1150, y:600, p:'NIIP', chart:'IIPASSEQ', label:'자산', sub:'미국인의 해외 보유' },
-  { id:'PORTA', g:'nx', x:1290, y:530, p:'ASSET', chart:'IIPPORTAQ', label:'증권투자' },
+  { id:'PORTA', g:'nx', x:1290, y:600, p:'ASSET', chart:'IIPPORTAQ', label:'증권투자' },
   { id:'LIAB',  g:'nx', x:1150, y:700, p:'NIIP', chart:'IIPLIABQ', label:'부채', sub:'외국인의 미국 보유' },
   { id:'PORTL', g:'nx', x:1290, y:690, p:'LIAB', chart:'IIPPORTLQ', label:'증권투자' },
   // G 직속 — 성장 기여도 · 정부 고용 (연보라 분해 노드는 제거, 사이드바 재정 카테고리에 있음)
@@ -2544,8 +2563,8 @@ const FM_NODES = [
   { id:'QRA',   g:'todo', x:500, y:755, p:'RATE', dashed:true, label:'⚠ 경매 · QRA 미완성', sub:'출처: 재무부 사이트 · 클릭',
     url:'https://www.treasurydirect.gov/auctions/announcements-data-results/' },
   // 다리 (점선) — 지표의 거주지는 상대 상자
-  { id:'BR_C',  g:'bridge', x:620, y:130, p:'C',   dashed:true, label:'이전지출 (PCTR)', sub:'G→C 다리 · $5.2조' },
-  { id:'BR_EMP',g:'bridge', x:900, y:95,  p:'C',   dashed:true, chart:'ICSA', label:'→ 고용', sub:'실업수당 · 신규청구' },
+  { id:'BR_C',  g:'bridge', x:450, y:120, p:'C',   dashed:true, label:'이전지출 (PCTR)', sub:'G→C 다리 · $5.2조' },
+  { id:'BR_EMP',g:'bridge', x:620, y:60,  p:'C',   dashed:true, chart:'ICSA', label:'→ 고용', sub:'실업수당 · 신규청구' },
   // TGA 딸린 파생 지표 — 시계열 계산이라 차트·YoY/MoM 전부 지원
   { id:'BR_FED',g:'cash', x:310, y:745, p:'TGA', chart:'FED_LIQUIDITY', label:'연준 유동성', sub:'자산−TGA−역레포' },
 ];
@@ -2556,8 +2575,23 @@ function fmAllNodes() { return FM_NODES.concat(fmCustoms().map(c => ({ ...c, g:'
 
 // 실시간 YoY/MoM 캐시 — 지도 첫 오픈 때 FRED에서 한 번만 받아옴
 const fmStatsCache = {};   // 노드별 YoY/MoM 줄
-const fmValCache = {};     // 노드별 최신값 볼드 줄
+const fmValCache = {};     // 노드별 최신값 줄
+const fmSigCache = {};     // 노드별 시그마 위치 (최근 18개월 기준)
 let fmStatsLoaded = false;
+
+// 최근 18개월 분포에서 현재값이 몇 σ에 있는지 — 사이클 국면 판정용
+// (분기 시리즈면 6개 관측치, 월간이면 18개. 관측치 4개 미만이면 생략)
+function fmSigma(raw) {
+  const last = raw[raw.length - 1];
+  const cut = new Date(last.x); cut.setMonth(cut.getMonth() - 18);
+  const win = raw.filter(p => new Date(p.x) >= cut);
+  if (win.length < 4) return null;
+  const m = win.reduce((a, b) => a + b.y, 0) / win.length;
+  const sd = Math.sqrt(win.reduce((a, b) => a + (b.y - m) ** 2, 0) / win.length);
+  if (!sd) return null;
+  const z = (last.y - m) / sd;
+  return `18M 기준 ${z >= 0 ? '+' : ''}${z.toFixed(1)}σ`;
+}
 function fmLoadStats() {
   if (fmStatsLoaded || !apiKey) return;
   fmStatsLoaded = true;
@@ -2568,7 +2602,8 @@ function fmLoadStats() {
     if (!ind) return;
     // FRED 직접 + 계산 소스(fredratio, fedliq)만 — Yahoo류는 제외
     const fetcher = !ind.source ? () => fetchFRED(ind.id, ind.freq)
-      : (ind.source === 'fredratio' || ind.source === 'fedliq') ? () => LINE_SOURCES[ind.source](ind)
+      : (ind.source === 'fredratio' || ind.source === 'fedliq' || ind.source === 'fredchg')
+        ? () => LINE_SOURCES[ind.source](ind)
       : null;
     if (!fetcher) return;
     fetcher().then(raw => {
@@ -2593,6 +2628,8 @@ function fmLoadStats() {
       // (RATE 박스는 부제에 10Y·프리미엄 값이 이미 있어 값 줄 생략)
       if (id !== 'DGS10') fmValCache[id] = fmVal(last.y, ind.unit);
       fmStatsCache[id] = `YoY ${yPt ? f(last.y, yPt.y) : '—'} · MoM ${mPt ? f(last.y, mPt.y) : '—'}`;
+      const sg = fmSigma(raw);
+      if (sg) fmSigCache[id] = sg;
       rerender();
     }).catch(() => {});
   });
@@ -2629,9 +2666,11 @@ function fmXY(n) {
 function fmText(n) {
   const lab = fmStore('fmLabels_v1');
   const userSub = lab[n.id] && lab[n.id].sub !== undefined ? lab[n.id].sub : null;
+  // sig:true 노드는 최근 18개월 시그마 위치를 부제로 (사이클 국면 판정)
+  const auto = (n.sig && n.chart && fmSigCache[n.chart]) || fmDynSub[n.id] || n.sub;
   return {
     label: (lab[n.id] && lab[n.id].label) || n.label,
-    sub: userSub !== null ? userSub : (fmDynSub[n.id] || n.sub),
+    sub: userSub !== null ? userSub : auto,
   };
 }
 // 한글/기호 폭 추정 (11px 기준) — 노드 박스 크기 자동 산출용
