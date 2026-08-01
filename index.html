@@ -737,7 +737,7 @@
         <button id="fm-reset" title="노드 배치와 이름을 기본값으로 되돌림 (커스텀 박스·선·메모는 유지)">↺ 배치 초기화</button>
       </div>
     </div>
-    <div id="fm-svg-wrap"><svg id="fm-svg" viewBox="0 0 1000 680" preserveAspectRatio="xMidYMid meet"></svg></div>
+    <div id="fm-svg-wrap"><svg id="fm-svg" viewBox="0 0 1160 720" preserveAspectRatio="xMidYMid meet"></svg></div>
     <textarea id="fm-memo" placeholder="메모 — 이 브라우저에만 저장됨 (예: 다음 할 일, 해석 노트)"></textarea>
   </div>
 </main>
@@ -798,6 +798,9 @@ const INDICATORS = [
   { id:'T10YIE',      name:'10년 기대인플레 (BEI)',   unit:'%',     category:'금리 & 스프레드',  country:'US', freq:'w', noStats:true },
   { id:'T10Y2Y',      name:'장단기 스프레드 (10Y-2Y)',unit:'%p',    category:'금리 & 스프레드',  country:'US', freq:'m' },
   { id:'BAMLH0A0HYM2',name:'하이일드 스프레드',       unit:'%p',    category:'금리 & 스프레드',  country:'US', freq:'m' },
+  // 스프레드(국채 대비 가산금리) vs 유효수익률(실제 조달 금리) — 같이 봐야 기업 자금조달 비용이 보임
+  { id:'BAMLC0A0CMEY',  name:'투자등급 회사채 수익률', unit:'%',   category:'금리 & 스프레드',  country:'US', freq:'w', noStats:true },
+  { id:'BAMLH0A0HYM2EY',name:'하이일드 회사채 수익률', unit:'%',   category:'금리 & 스프레드',  country:'US', freq:'w', noStats:true },
   // 미-일 실질금리차 = US TIPS(DFII10) − 일본 10년 물가연동채. 엔/달러의 근본 동인.
   // 일본쪽 데이터가 2023-12부터라 이 지표도 그 이후만 나온다.
   { id:'SPREAD_USJP_REAL', name:'미-일 실질금리차 (10Y)', unit:'%p', category:'금리 & 스프레드', country:'US',
@@ -833,7 +836,14 @@ const INDICATORS = [
   { id:'BOPSTB',     name:'서비스수지 (Services)',  unit:'M$', category:'무역 / TRADE', country:'US' },
   { id:'BOPTEXP',    name:'수출 (상품+서비스)',     unit:'M$', category:'무역 / TRADE', country:'US' },
   { id:'BOPTIMP',    name:'수입 (상품+서비스)',     unit:'M$', category:'무역 / TRADE', country:'US' },
+  // NIIP = 자산 − 부채 (파생상품 제외분 차이로 소액 오차). 조각별로 보면 적자의 정체가 증권투자임이 드러남
   { id:'IIPUSNETIQ', name:'대외순자산 (NIIP)',      unit:'M$', category:'무역 / TRADE', country:'US', noStats:true },
+  { id:'IIPASSEQ',   name:'해외에 가진 자산 (총)',   unit:'M$', category:'무역 / TRADE', country:'US', noStats:true },
+  { id:'IIPLIABQ',   name:'외국인이 가진 미국자산',  unit:'M$', category:'무역 / TRADE', country:'US', noStats:true },
+  { id:'IIPPORTAQ',  name:'└ 증권투자 (자산)',      unit:'M$', category:'무역 / TRADE', country:'US', noStats:true },
+  { id:'IIPPORTLQ',  name:'└ 증권투자 (부채)',      unit:'M$', category:'무역 / TRADE', country:'US', noStats:true },
+  { id:'IIPDIREAMVQ',name:'└ 직접투자 (자산)',      unit:'M$', category:'무역 / TRADE', country:'US', noStats:true },
+  { id:'IIPDIRELMVQ',name:'└ 직접투자 (부채)',      unit:'M$', category:'무역 / TRADE', country:'US', noStats:true },
 
   // 재정 — US 사이드바 맨 아래 (사용자 지정). 거주지 원칙: PCTR은 소비, W825RC1은 고용 거주.
   { id:'GCE',    name:'정부지출 G (총액)',    unit:'B$', category:'재정 / FISCAL', country:'US' },
@@ -2451,21 +2461,26 @@ const FM_NODES = [
   // GDP 4파트 — G 노드 자체가 총지출(클릭=GCE 차트). 나머지는 자리만.
   { id:'G',   g:'gov',  x:470, y:330, p:'C0', chart:'GCE', label:'정부 G', sub:'총지출 · 분기' },
   { id:'C',   g:'part', x:800, y:190, hub:true, p:'C0', dashed:true, label:'소비 C', sub:'예정' },
-  { id:'I',   g:'part', x:870, y:330, hub:true, p:'C0', dashed:true, label:'투자 I', sub:'예정' },
+  { id:'I',   g:'part', x:820, y:285, hub:true, p:'C0', dashed:true, label:'투자 I', sub:'예정' },
   // 순수출 NX — 노드 자체가 무역수지(월간). 연보라 분해 노드는 사용자 요청으로 제거, 상세는 사이드바 무역 카테고리에.
-  { id:'NX',  g:'nx', x:810, y:460, p:'C0', chart:'BOPGSTB', label:'순수출 NX', sub:'무역수지 · 월간' },
+  { id:'NX',  g:'nx', x:760, y:470, p:'C0', chart:'BOPGSTB', label:'순수출 NX', sub:'무역수지 · 월간' },
   // 아래 세 개는 수출 → 수입 → 달러인덱스 왼→오 순서 (사용자 지정)
-  { id:'EXP', g:'nx', x:650, y:560, p:'NX', chart:'BOPTEXP', label:'수출' },
-  { id:'IMP', g:'nx', x:795, y:560, p:'NX', chart:'BOPTIMP', label:'수입' },
-  { id:'NIIP',g:'nx', x:935, y:385, p:'NX', chart:'IIPUSNETIQ', label:'NIIP', sub:'대외순자산 · 저량' },
-  { id:'BR_CA', g:'bridge', x:925, y:285, p:'NIIP', dashed:true, chart:'BOPCA', label:'경상수지', sub:'유량 → NIIP 축적' },
-  { id:'BR_DXY',g:'nx', x:930, y:560, p:'NX', chart:'DTWEXBGS', label:'달러 인덱스' },
+  { id:'EXP', g:'nx', x:700, y:585, p:'NX', chart:'BOPTEXP', label:'수출' },
+  { id:'IMP', g:'nx', x:830, y:585, p:'NX', chart:'BOPTIMP', label:'수입' },
+  { id:'BR_DXY',g:'nx', x:960, y:585, p:'NX', chart:'DTWEXBGS', label:'달러 인덱스' },
+  // NIIP 서브트리 — 자산/부채로 갈라 보면 적자의 정체가 증권투자임이 드러남
+  { id:'NIIP',g:'nx', x:930, y:440, p:'NX', chart:'IIPUSNETIQ', label:'NIIP', sub:'대외순자산 · 저량' },
+  { id:'BR_CA', g:'bridge', x:930, y:330, p:'NIIP', dashed:true, chart:'BOPCA', label:'경상수지', sub:'유량 → NIIP 축적' },
+  { id:'ASSET', g:'nx', x:1075, y:415, p:'NIIP', chart:'IIPASSEQ', label:'자산', sub:'미국인의 해외 보유' },
+  { id:'PORTA', g:'nx', x:1085, y:305, p:'ASSET', chart:'IIPPORTAQ', label:'증권투자' },
+  { id:'LIAB',  g:'nx', x:1075, y:510, p:'NIIP', chart:'IIPLIABQ', label:'부채', sub:'외국인의 미국 보유' },
+  { id:'PORTL', g:'nx', x:1085, y:650, p:'LIAB', chart:'IIPPORTLQ', label:'증권투자' },
   // G 직속 — 성장 기여도 · 정부 고용 (연보라 분해 노드는 제거, 사이드바 재정 카테고리에 있음)
   { id:'CONTRIB', g:'gov', x:330, y:220, p:'G', chart:'A822RY2Q224SBEA', label:'성장 기여도 %p' },
   { id:'GOVEMP',  g:'gov', x:620, y:210, p:'G', chart:'USGOVT', label:'정부 고용자 수', sub:'연방+주·지방 · 월간' },
   // G 렌즈 2 · 현금 흐름 (통장 = TGA)
-  { id:'H2',    g:'cash', x:350, y:460, hub:true, p:'G', label:'현금 흐름 · 통장' },
-  { id:'W006',  g:'cash', x:230, y:420, p:'H2',  chart:'W006RC1Q027SBEA', label:'세입' },
+  { id:'H2',    g:'cash', x:375, y:468, hub:true, p:'G', label:'현금 흐름 · 통장' },
+  { id:'W006',  g:'cash', x:215, y:405, p:'H2',  chart:'W006RC1Q027SBEA', label:'세입' },
   { id:'MTS',   g:'cash', x:240, y:530, p:'H2',  chart:'MTSDS133FMS', label:'재정수지 12M 누적' },
   { id:'TGA',   g:'cash', x:380, y:570, p:'H2',  chart:'WTREGEN', label:'TGA 잔고', sub:'주간' },
   { id:'DTS',   g:'todo', x:75,  y:600, p:'W006', dashed:true, label:'원천징수 트래커', sub:'미완성 · 마지막에' },
@@ -2476,11 +2491,11 @@ const FM_NODES = [
   { id:'RATIO', g:'debt', x:90,  y:475, p:'INT', chart:'INT_TAX_RATIO', label:'이자/세입 비율' },
   // 금리 — 10Y와 기간 프리미엄 한 박스 (부제에 실시간 값, 클릭=10Y 차트)
   { id:'RATE',  g:'mkt',  x:560, y:540, p:'G', chart:'DGS10', label:'금리', sub:'10Y · 기간 프리미엄' },
-  { id:'QRA',   g:'todo', x:790, y:645, p:'RATE', dashed:true, label:'⚠ 경매 · QRA 미완성', sub:'출처: 재무부 사이트 · 클릭',
+  { id:'QRA',   g:'todo', x:590, y:680, p:'RATE', dashed:true, label:'⚠ 경매 · QRA 미완성', sub:'출처: 재무부 사이트 · 클릭',
     url:'https://www.treasurydirect.gov/auctions/announcements-data-results/' },
   // 다리 (점선) — 지표의 거주지는 상대 상자
   { id:'BR_C',  g:'bridge', x:800, y:60,  p:'C',   dashed:true, label:'이전지출 (PCTR)', sub:'G→C 다리 · $5.2조' },
-  { id:'BR_EMP',g:'bridge', x:915, y:105, p:'C',   dashed:true, chart:'ICSA', label:'→ 고용', sub:'실업수당 · 신규청구' },
+  { id:'BR_EMP',g:'bridge', x:945, y:125, p:'C',   dashed:true, chart:'ICSA', label:'→ 고용', sub:'실업수당 · 신규청구' },
   // TGA 딸린 파생 지표 — 시계열 계산이라 차트·YoY/MoM 전부 지원
   { id:'BR_FED',g:'cash', x:390, y:640, p:'TGA', chart:'FED_LIQUIDITY', label:'연준 유동성', sub:'자산−TGA−역레포' },
 ];
