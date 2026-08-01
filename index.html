@@ -842,11 +842,18 @@ const INDICATORS = [
   { id:'CBI',     name:'재고변동',             unit:'B$', category:'투자 / INVESTMENT', country:'US', noStats:true },
   { id:'NEWORDER',name:'핵심 자본재 주문',      unit:'M$', category:'투자 / INVESTMENT', country:'US' },
   { id:'DGORDER', name:'내구재 주문',           unit:'M$', category:'투자 / INVESTMENT', country:'US' },
-  // 기준선은 1992년 이후 실측 분포에서 산출: 중앙값 1.38, 상위10% 1.47, 침체기(01·08년) 피크 1.45~1.48
+  // 밴드는 2012년~현재(코로나 이상치 제외) 분포에서 산출: 평균 1.36, 표준편차 0.053 → ±1σ, +2σ
+  // 레벨만으로 침체를 못 잡는다(2008년 침체는 1.27에서 시작). 판정은 아래 12개월 변화로.
   { id:'ISRATIO', name:'재고/판매 비율',        unit:'배', category:'투자 / INVESTMENT', country:'US', noStats:true, lineRaw:true,
-    refLines:[ {y:1.45, color:'#f85149', label:'1.45 침체권'},
-               {y:1.38, color:'#8b949e', label:'1.38 중앙값'},
-               {y:1.27, color:'#7ee787', label:'1.27 타이트'} ] },
+    refLines:[ {y:1.466, color:'#f85149', label:'+2σ 1.47 적체'},
+               {y:1.413, color:'#e3b341', label:'+1σ 1.41'},
+               {y:1.36,  color:'#8b949e', label:'평균 1.36'},
+               {y:1.307, color:'#7ee787', label:'−1σ 1.31 타이트'} ] },
+  // 12개월 변화 — 임계 +0.10 신호의 절반이 실제 침체 구간(정밀도 50%, 레벨 기준보다 우월)
+  { id:'ISRATIO_CHG12', name:'재고/판매 12개월 변화', unit:'p', category:'투자 / INVESTMENT', country:'US',
+    source:'fredchg', fredId:'ISRATIO', noStats:true, lineRaw:true,
+    refLines:[ {y:0.10, color:'#f85149', label:'+0.10 적체 경보'},
+               {y:0,    color:'#8b949e', label:'0'} ] },
 
   // 무역 — 순수출 NX 상자 (월간 무역수지가 헤드라인, NIIP은 저량)
   { id:'BOPGSTB',    name:'무역수지 (상품+서비스)', unit:'M$', category:'무역 / TRADE', country:'US' },
@@ -1535,6 +1542,14 @@ async function fetchFedLiquidity() {
   }).filter(Boolean);
 }
 
+// FRED 시리즈의 12개월 절대 변화 — 레벨에 추세가 있어 수준 기준이 무의미한 지표용(재고/판매 등)
+async function fetchFredChg12(ind) {
+  const raw = await fetchFRED(ind.fredId, ind.freq);
+  const out = [];
+  for (let i = 12; i < raw.length; i++) out.push({ x: raw[i].x, y: +(raw[i].y - raw[i - 12].y).toFixed(3) });
+  return out;
+}
+
 // 라인 차트로 그리는 소스들 (FRED/TSA는 별도 경로)
 const LINE_SOURCES = {
   price:  ind => fetchYahooWeekly(ind.yf, 'max'),
@@ -1544,11 +1559,13 @@ const LINE_SOURCES = {
   spread: ()  => fetchUSJPRealSpread(),
   fredratio: ind => fetchFredRatio(ind),
   fedliq: () => fetchFedLiquidity(),
+  fredchg: ind => fetchFredChg12(ind),
 };
 
 const SOURCE_LABEL = {
   price:'Yahoo', ratio:'Yahoo', cnn:'CNN Fear&Greed', cot:'CFTC COT',
-  tsa:'TSA', jpreal:'日本相互証券', spread:'FRED + 日本相互証券', fredratio:'FRED (계산)', fedliq:'FRED (계산)',
+  tsa:'TSA', jpreal:'日本相互証券', spread:'FRED + 日本相互証券',
+  fredratio:'FRED (계산)', fedliq:'FRED (계산)', fredchg:'FRED (계산)',
 };
 
 // ─── CHART ────────────────────────────────────────────────────────────────────
@@ -2484,9 +2501,17 @@ const FM_NODES = [
   { id:'I',   g:'inv',  x:820, y:350, p:'C0', chart:'GPDI', label:'투자 I', sub:'총투자 · 분기' },
   // I 조각 — GPDI = 비주거 + 주거 + 재고 (항등식). 월간 지표는 사이드바 투자·주택 카테고리에.
   { id:'PNFI', g:'inv', x:980, y:290, p:'I', chart:'PNFI', label:'비주거', sub:'설비 · 건물 · IP' },
+  // 비주거의 월간 쪽지시험: 내구재 주문(헤드라인) → 핵심 자본재(항공기·국방 뺀 판정짝)
+  { id:'DGO',  g:'inv', x:1140, y:230, p:'PNFI', chart:'DGORDER',  label:'내구재 주문' },
+  { id:'NEWO', g:'inv', x:1280, y:175, p:'DGO',  chart:'NEWORDER', label:'핵심 자본재', sub:'항공기·국방 제외' },
   { id:'PRFI', g:'inv', x:980, y:375, p:'I', chart:'PRFI', label:'주거', sub:'신축 · 리모델링' },
+  // 주거의 선행 사슬: 허가(서류) → 착공(삽) → 신규주택 판매
+  { id:'PERM', g:'inv', x:1140, y:330, p:'PRFI', chart:'PERMIT', label:'건축허가', sub:'가장 선행' },
+  { id:'HOUS', g:'inv', x:1280, y:300, p:'PERM', chart:'HOUST',  label:'주택착공' },
+  { id:'HSN',  g:'inv', x:1280, y:400, p:'HOUS', chart:'HSN1F',  label:'신규주택 판매' },
   { id:'CBI',  g:'inv', x:980, y:460, p:'I', chart:'CBI',  label:'재고 변동' },
-  { id:'ISR',  g:'inv', x:1130, y:440, p:'CBI', chart:'ISRATIO', label:'재고/판매', sub:'1.45↑ 침체권' },
+  { id:'ISR',  g:'inv', x:1130, y:440, p:'CBI', chart:'ISRATIO', label:'재고/판매', sub:'평균 1.36 · +2σ 1.47' },
+  { id:'ISRC', g:'inv', x:1130, y:520, p:'ISR', chart:'ISRATIO_CHG12', label:'12개월 변화', sub:'+0.10↑ 적체 경보' },
   // 순수출 NX — 노드 자체가 무역수지(월간). 연보라 분해 노드는 사용자 요청으로 제거, 상세는 사이드바 무역 카테고리에.
   { id:'NX',  g:'nx', x:740, y:520, p:'C0', chart:'BOPGSTB', label:'순수출 NX', sub:'무역수지 · 월간' },
   // 아래 세 개는 수출 → 수입 → 달러인덱스 왼→오 순서 (사용자 지정)
@@ -2495,11 +2520,11 @@ const FM_NODES = [
   { id:'BR_DXY',g:'nx', x:890, y:665, p:'NX', chart:'DTWEXBGS', label:'달러 인덱스' },
   // NIIP 서브트리 — 자산/부채로 갈라 보면 적자의 정체가 증권투자임이 드러남
   { id:'NIIP',g:'nx', x:890, y:560, p:'NX', chart:'IIPUSNETIQ', label:'NIIP', sub:'대외순자산 · 저량' },
-  { id:'BR_CA', g:'bridge', x:1020, y:740, p:'NIIP', chart:'IEABC', label:'경상수지', sub:'유량 → NIIP 축적' },
-  { id:'ASSET', g:'nx', x:1150, y:555, p:'NIIP', chart:'IIPASSEQ', label:'자산', sub:'미국인의 해외 보유' },
-  { id:'PORTA', g:'nx', x:1275, y:450, p:'ASSET', chart:'IIPPORTAQ', label:'증권투자' },
-  { id:'LIAB',  g:'nx', x:1150, y:665, p:'NIIP', chart:'IIPLIABQ', label:'부채', sub:'외국인의 미국 보유' },
-  { id:'PORTL', g:'nx', x:1265, y:745, p:'LIAB', chart:'IIPPORTLQ', label:'증권투자' },
+  { id:'BR_CA', g:'bridge', x:1010, y:745, p:'NIIP', chart:'IEABC', label:'경상수지', sub:'유량 → NIIP 축적' },
+  { id:'ASSET', g:'nx', x:1150, y:600, p:'NIIP', chart:'IIPASSEQ', label:'자산', sub:'미국인의 해외 보유' },
+  { id:'PORTA', g:'nx', x:1290, y:530, p:'ASSET', chart:'IIPPORTAQ', label:'증권투자' },
+  { id:'LIAB',  g:'nx', x:1150, y:700, p:'NIIP', chart:'IIPLIABQ', label:'부채', sub:'외국인의 미국 보유' },
+  { id:'PORTL', g:'nx', x:1290, y:690, p:'LIAB', chart:'IIPPORTLQ', label:'증권투자' },
   // G 직속 — 성장 기여도 · 정부 고용 (연보라 분해 노드는 제거, 사이드바 재정 카테고리에 있음)
   { id:'CONTRIB', g:'gov', x:280, y:310, p:'G', chart:'A822RY2Q224SBEA', label:'성장 기여도 %p' },
   { id:'GOVEMP',  g:'gov', x:420, y:290, p:'G', chart:'USGOVT', label:'정부 고용자 수', sub:'연방+주·지방 · 월간' },
