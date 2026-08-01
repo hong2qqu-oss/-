@@ -2547,7 +2547,7 @@ const FM_NODES = [
   { id:'SLOOS',g:'inv', x:790, y:230, p:'I', chart:'DRTSCILM', label:'은행 대출태도', sig:true },
   { id:'TCU',  g:'inv', x:650, y:250, p:'I', chart:'TCU', label:'설비가동률', sig:true },
   // 기업이익 — 지출 4파트가 아니라 소득 쪽 항목이라 점선 다리로 (투자의 재원)
-  { id:'PROF', g:'bridge', x:930, y:150, p:'I', dashed:true, chart:'CPATAX', label:'법인이익', sub:'투자의 재원 · 소득 쪽' },
+  { id:'PROF', g:'bridge', x:930, y:150, p:'I', chart:'CPATAX', label:'법인이익', sig:true, sub:'투자의 재원 · 소득 쪽' },
   // 순수출 NX — 노드 자체가 무역수지(월간). 연보라 분해 노드는 사용자 요청으로 제거, 상세는 사이드바 무역 카테고리에.
   { id:'NX',  g:'nx', x:740, y:520, p:'C0', chart:'BOPGSTB', label:'순수출 NX', sub:'무역수지 · 월간' },
   // 아래 세 개는 수출 → 수입 → 달러인덱스 왼→오 순서 (사용자 지정)
