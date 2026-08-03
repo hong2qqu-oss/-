@@ -935,6 +935,12 @@ const INDICATORS = [
   { id:'WTREGEN', name:'TGA 잔고 (정부 통장)', unit:'M$', category:'재정 / FISCAL', country:'US', freq:'w', noStats:true, lineRaw:true },
   { id:'FED_LIQUIDITY', name:'연준 유동성 (자산−TGA−역레포)', unit:'T$', category:'재정 / FISCAL', country:'US', source:'fedliq', noStats:true },
   { id:'THREEFYTP10', name:'기간 프리미엄 (10Y)', unit:'%', category:'재정 / FISCAL', country:'US', freq:'w', noStats:true },
+  // 재무부 FiscalData API 직결 (FRED 키 불필요) — 헤지펀드식 실시간 트래커 2종
+  { id:'DTS_WITHHELD', name:'원천징수 세수 (4주 누적)', unit:'B$', category:'재정 / FISCAL', country:'US', source:'dts', noStats:true },
+  // 기준선은 2015년 이후 211회 경매 분포에서 산출
+  { id:'AUCTION_BTC10', name:'10년물 경매 응찰배율',   unit:'배', category:'재정 / FISCAL', country:'US', source:'auction', noStats:true, lineRaw:true,
+    refLines:[ {y:2.47, color:'#8b949e', label:'평균 2.47'},
+               {y:2.30, color:'#f85149', label:'2.30 약세 (하위 10%)'} ] },
 
   // ── 📐 센티먼트 / 포지셔닝 (Yahoo 주간) ──────────────────────────────────────
   // 변동성 & 헤지 수요
@@ -1595,6 +1601,46 @@ async function fetchFredChg12(ind) {
   return out;
 }
 
+// ─── 재무부 FiscalData API (무료·키 불필요·CORS 허용) ────────────────────────
+const FISCAL_API = 'https://api.fiscaldata.treasury.gov/services/api/fiscal_service';
+
+// 원천징수 세수 — 전국 고용주가 월급날마다 떼서 보내는 소득세+FICA의 일간 입금액.
+// 요일·월중 납부 패턴이 심해서 4주(28일) 굴림합으로 뭉갠다. 백만$ → 십억$.
+// 이 4주합의 YoY = "고용자 수 × 임금"의 실시간 프록시 → 비농업고용보다 빠른 선행 지표.
+async function fetchDTSWithheld() {
+  const url = FISCAL_API + '/v1/accounting/dts/deposits_withdrawals_operating_cash'
+    + '?fields=record_date,transaction_today_amt'
+    + '&filter=record_date:gte:2018-06-01,transaction_catg:in:(' + encodeURIComponent('Taxes - Withheld Individual/FICA') + ')'
+    + '&page[size]=10000&sort=record_date';
+  const r = await fetch(url);
+  if (!r.ok) throw new Error('재무부 DTS API 오류: ' + r.status);
+  const rows = (await r.json()).data.map(d => ({ x: d.record_date, y: +d.transaction_today_amt }));
+  const out = [];
+  for (let i = 0; i < rows.length; i++) {
+    const cut = new Date(rows[i].x); cut.setDate(cut.getDate() - 28);
+    let s = 0;
+    for (let k = i; k >= 0 && new Date(rows[k].x) > cut; k--) s += rows[k].y;
+    out.push({ x: rows[i].x, y: +(s / 1000).toFixed(1) });
+  }
+  // 굴림합 워밍업 제거 — 이 API 테이블은 2023-02부터라(재무부 개편) 시작일 기준 상대로 자른다
+  if (!rows.length) return [];
+  const warm = new Date(rows[0].x); warm.setDate(warm.getDate() + 28);
+  return out.filter(p => new Date(p.x) >= warm);
+}
+
+// 10년물 국채 경매 응찰배율 — 발행량 대비 들어온 주문 배수. 분포(2015~): 평균 2.47 · 하위10% 2.30.
+async function fetchAuctionBTC() {
+  const url = FISCAL_API + '/v1/accounting/od/auctions_query'
+    + '?fields=auction_date,bid_to_cover_ratio'
+    + '&filter=security_type:eq:Note,original_security_term:eq:10-Year,auction_date:gte:2015-01-01'
+    + '&page[size]=1000&sort=auction_date';
+  const r = await fetch(url);
+  if (!r.ok) throw new Error('재무부 경매 API 오류: ' + r.status);
+  return (await r.json()).data
+    .filter(d => d.bid_to_cover_ratio && d.bid_to_cover_ratio !== 'null')
+    .map(d => ({ x: d.auction_date, y: +d.bid_to_cover_ratio }));
+}
+
 // 라인 차트로 그리는 소스들 (FRED/TSA는 별도 경로)
 const LINE_SOURCES = {
   price:  ind => fetchYahooWeekly(ind.yf, 'max'),
@@ -1605,12 +1651,15 @@ const LINE_SOURCES = {
   fredratio: ind => fetchFredRatio(ind),
   fedliq: () => fetchFedLiquidity(),
   fredchg: ind => fetchFredChg12(ind),
+  dts: () => fetchDTSWithheld(),
+  auction: () => fetchAuctionBTC(),
 };
 
 const SOURCE_LABEL = {
   price:'Yahoo', ratio:'Yahoo', cnn:'CNN Fear&Greed', cot:'CFTC COT',
   tsa:'TSA', jpreal:'日本相互証券', spread:'FRED + 日本相互証券',
   fredratio:'FRED (계산)', fedliq:'FRED (계산)', fredchg:'FRED (계산)',
+  dts:'재무부 DTS (일간)', auction:'재무부 경매',
 };
 
 // ─── CHART ────────────────────────────────────────────────────────────────────
@@ -2637,7 +2686,8 @@ const FM_NODES = [
   { id:'W006',  g:'cash', x:225, y:600, p:'H2',  chart:'W006RC1Q027SBEA', label:'세입' },
   { id:'MTS',   g:'cash', x:525, y:600, p:'H2',  chart:'MTSDS133FMS', label:'재정수지 12M 누적' },
   { id:'TGA',   g:'cash', x:375, y:600, p:'H2',  chart:'WTREGEN', label:'TGA 잔고', sub:'주간' },
-  { id:'DTS',   g:'todo', x:75,  y:690, p:'W006', dashed:true, label:'원천징수 트래커', sub:'미완성 · 마지막에' },
+  // 헤지펀드식 실시간 고용 프록시 — 재무부 일간 입금에서 직접 계산 (완성!)
+  { id:'DTS',   g:'cash', x:75,  y:690, p:'W006', chart:'DTS_WITHHELD', label:'원천징수 4주합', sig:true, sub:'일간 · 비농업고용 선행' },
   // G 렌즈 3 · 빚 (저량) — 가계 부채도 같은 노란색 계열
   { id:'H3',    g:'debt', x:225, y:510, hub:true, p:'G', label:'빚 · 저량' },
   { id:'DEBT',  g:'debt', x:75,  y:420, p:'H3',  chart:'GFDEGDQ188S', label:'부채/GDP' },
@@ -2645,8 +2695,8 @@ const FM_NODES = [
   { id:'RATIO', g:'debt', x:75,  y:600, p:'INT', chart:'INT_TAX_RATIO', label:'이자/세입 비율' },
   // 금리 — 10Y와 기간 프리미엄 한 박스 (부제에 실시간 값, 클릭=10Y 차트)
   { id:'RATE',  g:'mkt',  x:525, y:510, p:'G', chart:'DGS10', label:'금리', sub:'10Y · 기간 프리미엄' },
-  { id:'QRA',   g:'todo', x:375, y:780, p:'RATE', dashed:true, label:'⚠ 경매 · QRA 미완성', sub:'출처: 재무부 사이트 · 클릭',
-    url:'https://www.treasurydirect.gov/auctions/announcements-data-results/' },
+  // 국채 수요의 직접 계측 — 경매마다 갱신 (완성!)
+  { id:'QRA',   g:'mkt', x:375, y:780, p:'RATE', chart:'AUCTION_BTC10', label:'10Y 경매 응찰배율', sig:true, sub:'2.30↓ 약세 경계' },
   // 다리 — 지표의 거주지는 상대 상자
   { id:'BR_C',  g:'bridge', x:225, y:690, p:'G',  chart:'PCTR', label:'이전지출', sub:'G → C 다리' },
   // TGA 딸린 파생 지표 — 시계열 계산이라 차트·YoY/MoM 전부 지원
@@ -2692,16 +2742,18 @@ function fmYoYSeries(raw) {
   return out;
 }
 function fmLoadStats() {
-  if (fmStatsLoaded || !apiKey) return;
+  if (fmStatsLoaded) return;
   fmStatsLoaded = true;
   const rerender = () => { if (document.getElementById('fiscal-panel').classList.contains('show')) fmRender(); };
   const ids = [...new Set(fmAllNodes().filter(n => n.chart).map(n => n.chart))];
   ids.forEach(id => {
     const ind = INDICATORS.find(i => i.id === id);
     if (!ind) return;
-    // FRED 직접 + 계산 소스(fredratio, fedliq)만 — Yahoo류는 제외
+    // FRED 직접 + 계산 소스만 — Yahoo류는 제외. 재무부 소스(dts·auction)는 FRED 키 없이도 로딩.
+    const needsFredKey = !ind.source || ['fredratio', 'fedliq', 'fredchg'].includes(ind.source);
+    if (needsFredKey && !apiKey) return;
     const fetcher = !ind.source ? () => fetchFRED(ind.id, ind.freq)
-      : (ind.source === 'fredratio' || ind.source === 'fedliq' || ind.source === 'fredchg')
+      : ['fredratio', 'fedliq', 'fredchg', 'dts', 'auction'].includes(ind.source)
         ? () => LINE_SOURCES[ind.source](ind)
       : null;
     if (!fetcher) return;
@@ -2735,7 +2787,8 @@ function fmLoadStats() {
       rerender();
     }).catch(() => {});
   });
-  // 금리 박스: 10Y + 기간 프리미엄 실시간 값을 부제에 합쳐 표시
+  // 금리 박스: 10Y + 기간 프리미엄 실시간 값을 부제에 합쳐 표시 (FRED 키 필요)
+  if (!apiKey) return;
   Promise.all([fetchFRED('DGS10', 'w'), fetchFRED('THREEFYTP10', 'w')]).then(([dg, tp]) => {
     fmDynSub.RATE = `10Y ${dg[dg.length - 1].y.toFixed(2)}% · 프리미엄 ${tp[tp.length - 1].y.toFixed(2)}%`;
     rerender();
