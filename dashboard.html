@@ -2684,8 +2684,9 @@ const FM_NODES = [
   { id:'W006',  g:'cash', x:225, y:600, p:'H2',  chart:'W006RC1Q027SBEA', label:'세입' },
   { id:'MTS',   g:'cash', x:525, y:600, p:'H2',  chart:'MTSDS133FMS', label:'재정수지 12M 누적' },
   { id:'TGA',   g:'cash', x:375, y:600, p:'H2',  chart:'WTREGEN', label:'TGA 잔고', sub:'주간' },
-  // 헤지펀드식 실시간 고용 프록시 — 재무부 일간 입금에서 직접 계산 (완성!)
-  { id:'DTS',   g:'cash', x:75,  y:690, p:'W006', chart:'DTS_WITHHELD', label:'원천징수 4주합', sig:true, sub:'일간 · 비농업고용 선행' },
+  // 헤지펀드식 실시간 고용 프록시 — 재무부 일간 입금에서 직접 계산.
+  // MoM은 분기예납 달력 노이즈라 YoY만 흰색 강조 + 임금−징수 갭(고용 증감의 그림자) 표시
+  { id:'DTS',   g:'cash', x:75,  y:690, p:'W006', chart:'DTS_WITHHELD', label:'원천징수 4주합', yoyOnly:true, sigLine:true },
   // G 렌즈 3 · 빚 (저량) — 가계 부채도 같은 노란색 계열
   { id:'H3',    g:'debt', x:225, y:510, hub:true, p:'G', label:'빚 · 저량' },
   { id:'DEBT',  g:'debt', x:75,  y:420, p:'H3',  chart:'GFDEGDQ188S', label:'부채/GDP' },
@@ -2693,8 +2694,8 @@ const FM_NODES = [
   { id:'RATIO', g:'debt', x:75,  y:600, p:'INT', chart:'INT_TAX_RATIO', label:'이자/세입 비율' },
   // 금리 — 10Y와 기간 프리미엄 한 박스 (부제에 실시간 값, 클릭=10Y 차트)
   { id:'RATE',  g:'mkt',  x:525, y:510, p:'G', chart:'DGS10', label:'금리', sub:'10Y · 기간 프리미엄' },
-  // 국채 수요의 직접 계측 — 경매마다 갱신 (완성!)
-  { id:'QRA',   g:'mkt', x:375, y:780, p:'RATE', chart:'AUCTION_BTC10', label:'10Y 경매 응찰배율', sig:true, sub:'2.30↓ 약세 경계' },
+  // 국채 수요의 직접 계측 — 경매마다 갱신. 기준선(2015~ 211회 분포)을 박스에 상시 표기.
+  { id:'QRA',   g:'mkt', x:375, y:780, p:'RATE', chart:'AUCTION_BTC10', label:'10Y 경매 응찰배율', hideStats:true, sigLine:true, sub:'평균 2.47 · 2.30↓ 약세' },
   // 다리 — 지표의 거주지는 상대 상자
   { id:'BR_C',  g:'bridge', x:225, y:690, p:'G',  chart:'PCTR', label:'이전지출', sub:'G → C 다리' },
   // TGA 딸린 파생 지표 — 시계열 계산이라 차트·YoY/MoM 전부 지원
@@ -2709,6 +2710,7 @@ function fmAllNodes() { return FM_NODES.concat(fmCustoms().map(c => ({ ...c, g:'
 const fmStatsCache = {};   // 노드별 YoY/MoM 줄
 const fmValCache = {};     // 노드별 최신값 줄
 const fmSigCache = {};     // 노드별 시그마 위치 (최근 18개월 기준)
+const fmExtraCache = {};   // 노드별 특수 계산 줄 (임금−징수 갭 등)
 let fmStatsLoaded = false;
 
 // 최근 18개월 분포에서 현재값이 몇 σ에 있는지 — 사이클 국면 판정용
@@ -2789,6 +2791,22 @@ function fmLoadStats() {
   if (!apiKey) return;
   Promise.all([fetchFRED('DGS10', 'w'), fetchFRED('THREEFYTP10', 'w')]).then(([dg, tp]) => {
     fmDynSub.RATE = `10Y ${dg[dg.length - 1].y.toFixed(2)}% · 프리미엄 ${tp[tp.length - 1].y.toFixed(2)}%`;
+    rerender();
+  }).catch(() => {});
+  // 임금−징수 갭: 원천징수 YoY ≈ 고용증감 + 임금상승. 임금YoY가 징수YoY보다 크면
+  // 임금 오른 만큼도 세수가 못 늘었다는 뜻 = 사람(고용·근로시간)이 줄고 있다는 신호.
+  Promise.all([fetchFRED('CES0500000003', 'm'), fetchDTSWithheld()]).then(([w, d]) => {
+    const yoy = arr => {
+      const last = arr[arr.length - 1];
+      const t = new Date(last.x); t.setFullYear(t.getFullYear() - 1);
+      for (let i = arr.length - 1; i >= 0; i--) if (new Date(arr[i].x) <= t) return (last.y - arr[i].y) / arr[i].y * 100;
+      return null;
+    };
+    const gw = yoy(w), gd = yoy(d);
+    if (gw === null || gd === null) return;
+    const gap = gw - gd;
+    const read = gap > 0.3 ? '고용 축소 방향' : gap < -0.3 ? '고용 확장 방향' : '고용 정체권';
+    fmExtraCache['DTS_WITHHELD'] = `임금−징수 ${gap >= 0 ? '+' : ''}${gap.toFixed(1)}%p · ${read}`;
     rerender();
   }).catch(() => {});
 }
@@ -2881,14 +2899,23 @@ function fmRender() {
       if (psg) lines.push({ txt: psg, kind: 'stat' });
     } else {
       if (val) lines.push({ txt: val, kind: 'val' });
+      // yoyOnly(트래커류): MoM은 달력 노이즈라 YoY만 흰색으로 강조
+      if (n.yoyOnly && stats) lines.push({ txt: stats.split(' · ')[0], kind: 'val' });
       if (t.sub) lines.push({ txt: t.sub, kind: 'sub' });
-      if (stats) lines.push({ txt: stats, kind: 'stat' });
+      const ex = n.chart && fmExtraCache[n.chart];
+      if (ex) lines.push({ txt: ex, kind: 'sub' });
+      if (!n.yoyOnly && !n.hideStats && stats) lines.push({ txt: stats, kind: 'stat' });
+      // sigLine: 부제를 유지한 채 시그마를 별도 줄로
+      if (n.sigLine) {
+        const sg = n.chart && fmSigCache[n.chart];
+        if (sg) lines.push({ txt: sg, kind: 'stat' });
+      }
     }
     const w = Math.max(n.center ? 140 : (n.hub ? 80 : 84),
       fmW(t.label) * 0.98 + 22, val ? fmW(val) * 0.95 + 22 : 0,
       fmW(t.sub) * 0.86 + 20, stats ? fmW(stats) * 0.78 + 18 : 0);
-    const h = n.center ? 46 : [0, 26, 38, 50, 62][lines.length];
-    const offs = [[0], [0], [-7, 8], [-14, 0, 14], [-22, -8, 6, 20]][lines.length];
+    const h = n.center ? 46 : [0, 26, 38, 50, 62, 76][lines.length];
+    const offs = [[0], [0], [-7, 8], [-14, 0, 14], [-22, -8, 6, 20], [-28, -15, -2, 11, 25]][lines.length];
     const rx = n.hub ? Math.min(h / 2, 18) : 8;
     // 전부 불투명 — 부모 선이 박스를 관통해 보이지 않게
     const fill = n.center ? '#173152'
