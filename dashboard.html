@@ -824,6 +824,10 @@ const INDICATORS = [
   { id:'PCEND',       name:'└ 비내구재',             unit:'B$',    category:'소비 / CONSUMER',  country:'US' },
   { id:'PCESV',       name:'└ 서비스',               unit:'B$',    category:'소비 / CONSUMER',  country:'US' },
   { id:'PCESVC96',    name:'└ 서비스 (실질)',         unit:'B$',    category:'소비 / CONSUMER',  country:'US' },
+  // 서비스 재량/필수 분해 (전부 실질·분기) — 재량(외식·숙박)이 서비스 안의 카나리아
+  { id:'DFSARX1Q020SBEA', name:'└└ 재량: 외식·숙박 (실질)', unit:'B$', category:'소비 / CONSUMER', country:'US' },
+  { id:'DHUTRX1Q020SBEA', name:'└└ 필수: 주거·유틸 (실질)', unit:'B$', category:'소비 / CONSUMER', country:'US' },
+  { id:'DHLCRX1Q020SBEA', name:'└└ 필수: 의료 (실질)',     unit:'B$', category:'소비 / CONSUMER', country:'US' },
   // 월간 쪽지시험 — 헤드라인(RSAFS)의 판정짝 둘: 자동차 제외 · 실질
   { id:'RSAFS',       name:'소매판매',               unit:'% YoY', category:'소비 / CONSUMER',  country:'US', transform:'yoy' },
   { id:'RSFSXMV',     name:'└ 소매판매 (자동차 제외)', unit:'% YoY', category:'소비 / CONSUMER',  country:'US', transform:'yoy' },
@@ -2601,6 +2605,9 @@ const FM_NODES = [
   { id:'DUR',  g:'con', x:375, y:60, p:'CH1', chart:'PCEDG', label:'내구재', sig:true },
   { id:'NDUR', g:'con', x:525, y:60, p:'CH1', chart:'PCEND', label:'비내구재', sig:true },
   { id:'SERV', g:'con', x:675, y:60, p:'CH1', chart:'PCESVC96', label:'서비스', sig:true, sub:'소비의 69%' },
+  // 서비스 재량/필수 분해 — 재량이 먼저 꺾인다 (서비스 안의 카나리아)
+  { id:'SDISC', g:'con', x:1275, y:510, p:'SERV', chart:'DFSARX1Q020SBEA', label:'재량: 외식·숙박', sig:true, sub:'서비스의 카나리아' },
+  { id:'SESS',  g:'con', x:1275, y:600, p:'SERV', chart:'DHUTRX1Q020SBEA', label:'필수: 주거·유틸', sig:true, sub:'끝까지 안 꺾임' },
   // C 직속 · 월간 속보 — 소매판매 + 판정짝 둘(자동차 제외 · 실질)
   { id:'RETL', g:'con', x:375, y:150, p:'C', chart:'RSAFS', label:'소매판매', pct:true },
   { id:'RETX', g:'con', x:225, y:150, p:'RETL', chart:'RSFSXMV', label:'자동차 제외', pct:true },
