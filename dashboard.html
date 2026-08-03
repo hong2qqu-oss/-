@@ -2656,8 +2656,6 @@ const FM_NODES = [
   { id:'TCU',  g:'inv', x:525, y:330, p:'IH2', chart:'TCU', label:'설비가동률', sig:true },
   // 기업이익 — 지출 4파트가 아니라 소득 쪽 항목이라 회색 다리로 (투자의 재원)
   { id:'PROF', g:'bridge', x:975, y:60, p:'I', chart:'CPATAX', label:'법인이익', sig:true, sub:'투자의 재원 · 소득 쪽' },
-  // ISM PMI는 유료화로 FRED에서 사라짐 → 필라델피아 연준 서베이가 무료 대체재
-  { id:'SURV', g:'bridge', x:975, y:330, p:'PROF', chart:'MFGPHLX', label:'제조업 서베이', sig:true, sub:'필라 연준 · PMI 대용' },
   // ── 물가 (빨강 계열) — 소매판매 소속 (사용자 지정). 상류(PPI) → 소비자(CPI) → 연준 기준(PCE) → 판정짝(트림드민)
   // pct:true = 본수치(지수) 대신 YoY·MoM 흰색 두 줄 + 시그마만 표시
   { id:'INFH', g:'inf', x:375, y:870, hub:true, p:'RETL', label:'물가 · 인플레' },
