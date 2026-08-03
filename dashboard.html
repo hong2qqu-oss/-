@@ -737,7 +737,7 @@
         <button id="fm-reset" title="노드 배치와 이름을 기본값으로 되돌림 (커스텀 박스·선·메모는 유지)">↺ 배치 초기화</button>
       </div>
     </div>
-    <div id="fm-svg-wrap"><svg id="fm-svg" viewBox="0 0 1360 850" preserveAspectRatio="xMidYMid meet"></svg></div>
+    <div id="fm-svg-wrap"><svg id="fm-svg" viewBox="0 0 1520 940" preserveAspectRatio="xMidYMid meet"></svg></div>
     <textarea id="fm-memo" placeholder="메모 — 이 브라우저에만 저장됨 (예: 다음 할 일, 해석 노트)"></textarea>
   </div>
 </main>
@@ -2538,7 +2538,7 @@ document.querySelectorAll('.sup-subtab').forEach(btn => {
 // 위치(fmPos)·이름(fmLabels)·메모(fmMemo)는 localStorage 저장이라 코드와 무관하게 편집 가능.
 // 색 = 의미. 파랑 정부 · 보라 투자 · 청록 무역 · 분홍 소비 · 주황 현금 · 노랑 빚(정부·가계 공통) · 초록 금리 · 빨강 미완성
 const FM_COLORS = { us:'#58a6ff', gov:'#58a6ff', gdp:'#d2a8ff', inv:'#d2a8ff', cash:'#ffa657', debt:'#e3b341',
-  mkt:'#7ee787', nx:'#56d4dd', con:'#f778ba', inc:'#a5d6ff', bridge:'#8b949e', part:'#8b949e', todo:'#f85149', custom:'#79c0ff' };
+  mkt:'#7ee787', nx:'#56d4dd', con:'#f778ba', inc:'#a5d6ff', inf:'#ff7b72', bridge:'#8b949e', part:'#8b949e', todo:'#f85149', custom:'#79c0ff' };
 // 격자 배치 — 열 x = 75 + 150*i, 행 y = 60 + 90*j (박스 최대 128×68이라 22px 여백 보장)
 const FM_NODES = [
   // 중앙 = 미국 경제. 부제(경기 국면 요약)는 더블클릭으로 직접 작성 → localStorage 저장
@@ -2569,9 +2569,16 @@ const FM_NODES = [
   // ── 고용 (하늘 = 가계·노동 계열) — 메인은 실업률, 참가율이 분모 판정짝
   { id:'EMP',  g:'inc', x:825, y:60, p:'C', chart:'UNRATE', label:'고용 · 실업률', sig:true, sub:'소득의 원천 → C의 연료' },
   { id:'PART', g:'inc', x:675, y:150, p:'EMP', chart:'CIVPART', label:'참가율', sig:true, sub:'분모 판정짝' },
-  { id:'NFP',  g:'inc', x:825, y:150, p:'EMP', chart:'PAYEMS', label:'NFP 고용', sig:true, sub:'월간 대표선수' },
+  { id:'NFP',  g:'inc', x:825, y:150, p:'EMP', chart:'PAYEMS', label:'비농업 고용', sig:true, sub:'월간 대표선수' },
   { id:'CLAIM',g:'inc', x:975, y:150, p:'EMP', chart:'ICSA', label:'신규 실업청구', sig:true, sub:'주간 · 최속보' },
+  { id:'CCLAIM',g:'inc', x:1425, y:60, p:'CLAIM', chart:'CCSA', label:'연속 실업청구', sig:true, sub:'재취업 난이도' },
   { id:'WAGE', g:'inc', x:1125, y:60, p:'NFP', chart:'CES0500000003', label:'시간당 임금', sig:true, sub:'→ 물가 다리' },
+  // 고용 유량 4인방 — JOLTS (구인 → 채용 / 해고 / 퇴직)
+  { id:'JH',   g:'inc', x:1425, y:150, hub:true, p:'EMP', label:'유량 · JOLTS' },
+  { id:'JOPEN',g:'inc', x:1425, y:240, p:'JH', chart:'JTSJOL', label:'구인 공고', sig:true },
+  { id:'JHIRE',g:'inc', x:1425, y:330, p:'JH', chart:'JTSHIL', label:'채용', sig:true },
+  { id:'JLAY', g:'inc', x:1425, y:420, p:'JH', chart:'JTSLDL', label:'해고', sig:true },
+  { id:'JQUIT',g:'inc', x:1425, y:510, p:'JH', chart:'JTSQUL', label:'자발적 퇴직', sig:true, sub:'사표 = 자신감' },
   // 투자 — 사이클 민감도가 가장 높은 파트라 모든 노드에 최근 18개월 시그마 위치를 표시(sig:true)
   // 지도 노드는 전부 실질(2017년 달러) — 가격 변동을 빼야 사이클이 제대로 보임
   { id:'I',   g:'inv',  x:825, y:330, p:'C0', chart:'GPDIC1', label:'투자 I', sig:true, sub:'실질 총투자 · 분기' },
@@ -2600,6 +2607,14 @@ const FM_NODES = [
   { id:'TCU',  g:'inv', x:525, y:330, p:'IH2', chart:'TCU', label:'설비가동률', sig:true },
   // 기업이익 — 지출 4파트가 아니라 소득 쪽 항목이라 회색 다리로 (투자의 재원)
   { id:'PROF', g:'bridge', x:975, y:60, p:'I', chart:'CPATAX', label:'법인이익', sig:true, sub:'투자의 재원 · 소득 쪽' },
+  // ISM PMI는 유료화로 FRED에서 사라짐 → 필라델피아 연준 서베이가 무료 대체재
+  { id:'SURV', g:'bridge', x:975, y:330, p:'PROF', chart:'MFGPHLX', label:'제조업 서베이', sig:true, sub:'필라 연준 · PMI 대용' },
+  // ── 물가 (빨강 계열) — 상류(PPI) → 소비자(CPI) → 연준 기준(PCE) → 판정짝(트림드민)
+  { id:'INFH', g:'inf', x:375, y:870, hub:true, p:'C0', label:'물가 · 인플레' },
+  { id:'PPIN', g:'inf', x:525, y:870, p:'INFH', chart:'PPIFIS', label:'PPI', sig:true, sub:'상류 · 파이프라인' },
+  { id:'CPIN', g:'inf', x:675, y:870, p:'INFH', chart:'CPIAUCSL', label:'CPI', sig:true, sub:'체감 물가' },
+  { id:'PCEN', g:'inf', x:825, y:870, p:'INFH', chart:'PCEPI', label:'PCE 물가', sig:true, sub:'연준 공식 기준' },
+  { id:'TRIM', g:'inf', x:975, y:870, p:'PCEN', chart:'PCETRIM12M159SFRBDAL', label:'트림드민 PCE', sig:true, sub:'노이즈 제거 판정짝' },
   // 순수출 NX — 노드 자체가 무역수지(월간). 상세는 사이드바 무역 카테고리에.
   { id:'NX',  g:'nx', x:675, y:510, p:'C0', chart:'BOPGSTB', label:'순수출 NX', sub:'무역수지 · 월간' },
   // 아래 세 개는 수출 → 수입 → 달러인덱스 왼→오 순서 (사용자 지정)
@@ -2649,7 +2664,8 @@ let fmStatsLoaded = false;
 
 // 최근 18개월 분포에서 현재값이 몇 σ에 있는지 — 사이클 국면 판정용
 // (분기 시리즈면 6개 관측치, 월간이면 18개. 관측치 4개 미만이면 생략)
-function fmSigma(raw) {
+function fmSigma(raw, tag) {
+  if (!raw || !raw.length) return null;
   const last = raw[raw.length - 1];
   const cut = new Date(last.x); cut.setMonth(cut.getMonth() - 18);
   const win = raw.filter(p => new Date(p.x) >= cut);
@@ -2658,7 +2674,21 @@ function fmSigma(raw) {
   const sd = Math.sqrt(win.reduce((a, b) => a + (b.y - m) ** 2, 0) / win.length);
   if (!sd) return null;
   const z = (last.y - m) / sd;
-  return `18M 기준 ${z >= 0 ? '+' : ''}${z.toFixed(1)}σ`;
+  return `${tag ? tag + ' ' : ''}18M ${z >= 0 ? '+' : ''}${z.toFixed(1)}σ`;
+}
+
+// 레벨이 추세를 타는 지표(순자산·임금·NFP 등)는 레벨 σ가 항상 +로 나와 무의미 —
+// YoY 증가율 시계열을 만들어 그 분포에서 σ를 잰다 (기준값이 0 이하인 구간은 제외)
+function fmYoYSeries(raw) {
+  const out = [];
+  let j = 0;
+  for (let i = 0; i < raw.length; i++) {
+    const target = new Date(raw[i].x); target.setFullYear(target.getFullYear() - 1);
+    while (j + 1 < raw.length && new Date(raw[j + 1].x) <= target) j++;
+    if (new Date(raw[j].x) <= target && raw[j].y > 0)
+      out.push({ x: raw[i].x, y: (raw[i].y - raw[j].y) / raw[j].y * 100 });
+  }
+  return out;
 }
 function fmLoadStats() {
   if (fmStatsLoaded || !apiKey) return;
@@ -2696,7 +2726,10 @@ function fmLoadStats() {
       // (RATE 박스는 부제에 10Y·프리미엄 값이 이미 있어 값 줄 생략)
       if (id !== 'DGS10') fmValCache[id] = fmVal(last.y, ind.unit);
       fmStatsCache[id] = `YoY ${yPt ? f(last.y, yPt.y) : '—'} · MoM ${mPt ? f(last.y, mPt.y) : '—'}`;
-      const sg = fmSigma(raw);
+      // 추세 타는 레벨(금액·yoy변환·diffMode)은 YoY σ, 비율·지수는 레벨 σ.
+      // YoY 계산이 안 되면(부호 교차 등) 레벨로 폴백.
+      const useYoY = ind.transform === 'yoy' || ind.diffMode || ['B$', 'M$', 'T$', '$'].includes(ind.unit);
+      const sg = (useYoY ? fmSigma(fmYoYSeries(raw), 'YoY') : null) || fmSigma(raw, '');
       if (sg) fmSigCache[id] = sg;
       rerender();
     }).catch(() => {});
@@ -2792,11 +2825,11 @@ function fmRender() {
     if (val) lines.push({ txt: val, kind: 'val' });
     if (t.sub) lines.push({ txt: t.sub, kind: 'sub' });
     if (stats) lines.push({ txt: stats, kind: 'stat' });
-    const w = Math.max(n.center ? 150 : (n.hub ? 88 : 90),
-      fmW(t.label) * 1.02 + 24, val ? fmW(val) * 1.05 + 26 : 0,
-      fmW(t.sub) * 0.92 + 22, stats ? fmW(stats) * 0.82 + 20 : 0);
-    const h = n.center ? 50 : [0, 28, 42, 54, 68][lines.length];
-    const offs = [[0], [0], [-8, 9], [-16, 0, 16], [-24, -8, 7, 21]][lines.length];
+    const w = Math.max(n.center ? 140 : (n.hub ? 80 : 84),
+      fmW(t.label) * 0.98 + 22, val ? fmW(val) * 0.95 + 22 : 0,
+      fmW(t.sub) * 0.86 + 20, stats ? fmW(stats) * 0.78 + 18 : 0);
+    const h = n.center ? 46 : [0, 26, 38, 50, 62][lines.length];
+    const offs = [[0], [0], [-7, 8], [-14, 0, 14], [-22, -8, 6, 20]][lines.length];
     const rx = n.hub ? Math.min(h / 2, 18) : 8;
     // 전부 불투명 — 부모 선이 박스를 관통해 보이지 않게
     const fill = n.center ? '#173152'
@@ -2810,7 +2843,7 @@ function fmRender() {
         ? (n.g === 'todo' ? '#ff9b95' : (n.hub || n.dashed ? color : '#e6edf3'))
         : L.kind === 'val' ? '#e6edf3'
         : L.kind === 'stat' ? '#9aa4af' : '#a8b3bd';
-      const size = L.kind === 'label' ? (n.center ? 13 : 11.5) : L.kind === 'val' ? 10.5 : 9.5;
+      const size = L.kind === 'label' ? (n.center ? 12.5 : 11) : L.kind === 'val' ? 10 : 9;
       const weight = L.kind === 'label' && (n.center || n.hub || n.g === 'todo') ? 700
         : L.kind === 'label' ? 600 : 400;
       return `<text x="${x}" y="${y + offs[i]}" text-anchor="middle" dominant-baseline="central" fill="${fillT}" font-size="${size}" font-weight="${weight}">${fmEsc(L.txt)}</text>`;
