@@ -2609,18 +2609,19 @@ const FM_NODES = [
   { id:'PROF', g:'bridge', x:975, y:60, p:'I', chart:'CPATAX', label:'법인이익', sig:true, sub:'투자의 재원 · 소득 쪽' },
   // ISM PMI는 유료화로 FRED에서 사라짐 → 필라델피아 연준 서베이가 무료 대체재
   { id:'SURV', g:'bridge', x:975, y:330, p:'PROF', chart:'MFGPHLX', label:'제조업 서베이', sig:true, sub:'필라 연준 · PMI 대용' },
-  // ── 물가 (빨강 계열) — 상류(PPI) → 소비자(CPI) → 연준 기준(PCE) → 판정짝(트림드민)
-  { id:'INFH', g:'inf', x:375, y:870, hub:true, p:'C0', label:'물가 · 인플레' },
-  { id:'PPIN', g:'inf', x:525, y:870, p:'INFH', chart:'PPIFIS', label:'PPI', sig:true, sub:'상류 · 파이프라인' },
-  { id:'CPIN', g:'inf', x:675, y:870, p:'INFH', chart:'CPIAUCSL', label:'CPI', sig:true, sub:'체감 물가' },
-  { id:'PCEN', g:'inf', x:825, y:870, p:'INFH', chart:'PCEPI', label:'PCE 물가', sig:true, sub:'연준 공식 기준' },
+  // ── 물가 (빨강 계열) — 소매판매 소속 (사용자 지정). 상류(PPI) → 소비자(CPI) → 연준 기준(PCE) → 판정짝(트림드민)
+  // pct:true = 본수치(지수) 대신 YoY·MoM 흰색 두 줄 + 시그마만 표시
+  { id:'INFH', g:'inf', x:375, y:870, hub:true, p:'RETL', label:'물가 · 인플레' },
+  { id:'PPIN', g:'inf', x:525, y:870, p:'INFH', chart:'PPIFIS', label:'PPI', pct:true },
+  { id:'CPIN', g:'inf', x:675, y:870, p:'INFH', chart:'CPIAUCSL', label:'CPI', pct:true },
+  { id:'PCEN', g:'inf', x:825, y:870, p:'INFH', chart:'PCEPI', label:'PCE 물가', pct:true },
   { id:'TRIM', g:'inf', x:975, y:870, p:'PCEN', chart:'PCETRIM12M159SFRBDAL', label:'트림드민 PCE', sig:true, sub:'노이즈 제거 판정짝' },
   // 순수출 NX — 노드 자체가 무역수지(월간). 상세는 사이드바 무역 카테고리에.
   { id:'NX',  g:'nx', x:675, y:510, p:'C0', chart:'BOPGSTB', label:'순수출 NX', sub:'무역수지 · 월간' },
   // 아래 세 개는 수출 → 수입 → 달러인덱스 왼→오 순서 (사용자 지정)
-  { id:'EXP', g:'nx', x:525, y:690, p:'NX', chart:'BOPTEXP', label:'수출' },
-  { id:'IMP', g:'nx', x:675, y:690, p:'NX', chart:'BOPTIMP', label:'수입' },
-  { id:'BR_DXY',g:'nx', x:825, y:690, p:'NX', chart:'DTWEXBGS', label:'달러 인덱스' },
+  { id:'EXP', g:'nx', x:525, y:690, p:'NX', chart:'BOPTEXP', label:'수출', sig:true },
+  { id:'IMP', g:'nx', x:675, y:690, p:'NX', chart:'BOPTIMP', label:'수입', sig:true },
+  { id:'BR_DXY',g:'nx', x:825, y:690, p:'NX', chart:'DTWEXBGS', label:'달러 인덱스', sig:true },
   // NIIP 서브트리 — 자산/부채로 갈라 보면 적자의 정체가 증권투자임이 드러남
   { id:'NIIP',g:'nx', x:825, y:510, p:'NX', chart:'IIPUSNETIQ', label:'NIIP', sub:'대외순자산 · 저량' },
   { id:'BR_CA', g:'bridge', x:825, y:600, p:'NIIP', chart:'IEABC', label:'경상수지', sub:'유량 → NIIP 축적' },
@@ -2819,12 +2820,19 @@ function fmRender() {
     const t = fmText(n);
     const color = FM_COLORS[n.g];
     const stats = n.chart ? fmStatsCache[n.chart] : null;
-    const val = n.chart ? fmValCache[n.chart] : null;
-    // 줄 구성: 제목(볼드) / 최신값(볼드·강조) / 부제 / YoY·MoM
+    const val = n.chart && !n.pct ? fmValCache[n.chart] : null;
+    // 줄 구성: 제목 / 최신값 / 부제 / YoY·MoM
+    // pct 노드(물가류)는 지수 본수치가 무의미 → YoY·MoM 흰색 두 줄 + 시그마만
     const lines = [{ txt: t.label, kind: 'label' }];
-    if (val) lines.push({ txt: val, kind: 'val' });
-    if (t.sub) lines.push({ txt: t.sub, kind: 'sub' });
-    if (stats) lines.push({ txt: stats, kind: 'stat' });
+    if (n.pct) {
+      if (stats) stats.split(' · ').forEach(s => lines.push({ txt: s, kind: 'val' }));
+      const psg = n.chart && fmSigCache[n.chart];
+      if (psg) lines.push({ txt: psg, kind: 'stat' });
+    } else {
+      if (val) lines.push({ txt: val, kind: 'val' });
+      if (t.sub) lines.push({ txt: t.sub, kind: 'sub' });
+      if (stats) lines.push({ txt: stats, kind: 'stat' });
+    }
     const w = Math.max(n.center ? 140 : (n.hub ? 80 : 84),
       fmW(t.label) * 0.98 + 22, val ? fmW(val) * 0.95 + 22 : 0,
       fmW(t.sub) * 0.86 + 20, stats ? fmW(stats) * 0.78 + 18 : 0);
