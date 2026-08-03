@@ -781,6 +781,8 @@ const INDICATORS = [
   { id:'JTSHIL',      name:'JOLTS 고용건수',         unit:'K',     category:'고용 / EMPLOYMENT' },
   { id:'JTSLDL',      name:'JOLTS 해고건수',         unit:'K',     category:'고용 / EMPLOYMENT' },
   { id:'JTSQUL',      name:'JOLTS 퇴직건수',         unit:'K',     category:'고용 / EMPLOYMENT' },
+  // 고용→물가 다리 — 임금이 오르면 서비스 물가로 전이
+  { id:'CES0500000003', name:'평균 시간당 임금',       unit:'% YoY', category:'고용 / EMPLOYMENT', transform:'yoy' },
 
   // 성장
   { id:'GDPC1',       name:'실질 GDP',              unit:'% YoY', category:'성장 / GROWTH', transform:'yoy' },
@@ -833,6 +835,8 @@ const INDICATORS = [
   { id:'TDSP',        name:'가계 부채상환비율',        unit:'%',     category:'소비 / CONSUMER',  country:'US', noStats:true },
   { id:'DRCCLACBS',   name:'신용카드 연체율',          unit:'%',     category:'소비 / CONSUMER',  country:'US', noStats:true },
   { id:'REVOLSL',     name:'리볼빙 신용잔액',          unit:'M$',    category:'소비 / CONSUMER',  country:'US' },
+  { id:'TNWBSHNO',    name:'가계 순자산',             unit:'M$',    category:'소비 / CONSUMER',  country:'US' },
+  { id:'DRSFRMACBS',  name:'모기지 연체율',            unit:'%',     category:'소비 / CONSUMER',  country:'US', noStats:true },
   { id:'UMCSENT',     name:'미시간 소비자심리',        unit:'Index', category:'소비 / CONSUMER',  country:'US' },
   // G→C 다리 — 정부 이전지출이 가계 소득이 되어 소비로. 거주지는 소비 상자.
   { id:'PCTR',        name:'이전지출 (정부→가계)',     unit:'B$',    category:'소비 / CONSUMER',  country:'US' },
@@ -2548,13 +2552,26 @@ const FM_NODES = [
   { id:'DUR',  g:'con', x:375, y:60, p:'CH1', chart:'PCEDG', label:'내구재', sig:true },
   { id:'NDUR', g:'con', x:525, y:60, p:'CH1', chart:'PCEND', label:'비내구재', sig:true },
   { id:'SERV', g:'con', x:675, y:60, p:'CH1', chart:'PCESVC96', label:'서비스', sig:true, sub:'소비의 69%' },
-  // C 직속 · 월간 속보
-  { id:'RETL', g:'con', x:675, y:240, p:'C', chart:'RSAFS', label:'소매판매', sig:true, sub:'월간 쪽지시험' },
-  // C 부문 2 · 가계 여력 — 저축률(하늘) → 부채상환 → 연체율(노랑, 정부 빚과 같은 색)
+  // C 직속 · 월간 속보 — 소매판매 + 판정짝 둘(자동차 제외 · 실질)
+  { id:'RETL', g:'con', x:375, y:150, p:'C', chart:'RSAFS', label:'소매판매', sig:true, sub:'월간 쪽지시험' },
+  { id:'RETX', g:'con', x:225, y:150, p:'RETL', chart:'RSFSXMV', label:'자동차 제외', sig:true },
+  { id:'RRS',  g:'con', x:75,  y:60,  p:'RETL', chart:'RRSFS', label:'실질 소매판매', sig:true },
+  // C 직속 · 심리
+  { id:'SENT', g:'con', x:225, y:330, p:'C', chart:'UMCSENT', label:'소비 심리', sig:true },
+  // C 부문 2 · 가계 여력 — 소득·저축·순자산(하늘) / 부담·연체(노랑, 정부 빚과 같은 색)
   { id:'CH2',  g:'inc', x:375, y:240, hub:true, p:'C', label:'가계 여력' },
+  { id:'INC',  g:'inc', x:675, y:240, p:'CH2', chart:'DSPIC96', label:'실질 가처분소득', sig:true },
   { id:'SAVE', g:'inc', x:225, y:240, p:'CH2', chart:'PSAVERT', label:'가계 저축률', sig:true },
+  { id:'NW',   g:'inc', x:225, y:60, p:'SAVE', chart:'TNWBSHNO', label:'가계 순자산', sig:true, sub:'저축의 저량' },
   { id:'DSR',  g:'debt', x:75, y:240, p:'SAVE', chart:'TDSP', label:'부채상환비율', sig:true },
   { id:'DELQ', g:'debt', x:75, y:150, p:'DSR', chart:'DRCCLACBS', label:'카드 연체율', sig:true },
+  { id:'MDELQ',g:'debt', x:75, y:330, p:'DSR', chart:'DRSFRMACBS', label:'모기지 연체율', sig:true },
+  // ── 고용 (하늘 = 가계·노동 계열) — 메인은 실업률, 참가율이 분모 판정짝
+  { id:'EMP',  g:'inc', x:825, y:60, p:'C', chart:'UNRATE', label:'고용 · 실업률', sig:true, sub:'소득의 원천 → C의 연료' },
+  { id:'PART', g:'inc', x:675, y:150, p:'EMP', chart:'CIVPART', label:'참가율', sig:true, sub:'분모 판정짝' },
+  { id:'NFP',  g:'inc', x:825, y:150, p:'EMP', chart:'PAYEMS', label:'NFP 고용', sig:true, sub:'월간 대표선수' },
+  { id:'CLAIM',g:'inc', x:975, y:150, p:'EMP', chart:'ICSA', label:'신규 실업청구', sig:true, sub:'주간 · 최속보' },
+  { id:'WAGE', g:'inc', x:1125, y:60, p:'NFP', chart:'CES0500000003', label:'시간당 임금', sig:true, sub:'→ 물가 다리' },
   // 투자 — 사이클 민감도가 가장 높은 파트라 모든 노드에 최근 18개월 시그마 위치를 표시(sig:true)
   // 지도 노드는 전부 실질(2017년 달러) — 가격 변동을 빼야 사이클이 제대로 보임
   { id:'I',   g:'inv',  x:825, y:330, p:'C0', chart:'GPDIC1', label:'투자 I', sig:true, sub:'실질 총투자 · 분기' },
@@ -2615,8 +2632,7 @@ const FM_NODES = [
   { id:'QRA',   g:'todo', x:375, y:780, p:'RATE', dashed:true, label:'⚠ 경매 · QRA 미완성', sub:'출처: 재무부 사이트 · 클릭',
     url:'https://www.treasurydirect.gov/auctions/announcements-data-results/' },
   // 다리 — 지표의 거주지는 상대 상자
-  { id:'BR_C',  g:'bridge', x:225, y:330, p:'G',  chart:'PCTR', label:'이전지출', sub:'G → C 다리' },
-  { id:'BR_EMP',g:'bridge', x:825, y:60,  p:'C',  chart:'ICSA', label:'→ 고용', sub:'실업수당 · 신규청구' },
+  { id:'BR_C',  g:'bridge', x:225, y:690, p:'G',  chart:'PCTR', label:'이전지출', sub:'G → C 다리' },
   // TGA 딸린 파생 지표 — 시계열 계산이라 차트·YoY/MoM 전부 지원
   { id:'BR_FED',g:'cash', x:225, y:780, p:'TGA', chart:'FED_LIQUIDITY', label:'연준 유동성', sub:'자산−TGA−역레포' },
 ];
