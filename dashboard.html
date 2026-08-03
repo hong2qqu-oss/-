@@ -2541,19 +2541,26 @@ const FM_NODES = [
   { id:'C0',  g:'us', x:600, y:420, center:true, label:'미국 경제 🇺🇸', sub:'경기 국면 요약 — 더블클릭해서 작성' },
   // GDP 4파트 — 각 노드 자체가 그 파트의 총액 차트
   { id:'G',   g:'gov',  x:375, y:420, p:'C0', chart:'GCE', label:'정부 G', sub:'총지출 · 분기' },
-  // ── 소비 C (분홍) — PCE = 내구재 + 비내구재 + 서비스, 서비스가 69%
+  // ── 소비 C (분홍) — G와 같은 방식으로 부문 허브(알약)에 묶는다
   { id:'C',    g:'con', x:525, y:240, p:'C0', chart:'PCEC96', label:'소비 C', sig:true, sub:'실질 총소비 · 월간' },
-  { id:'DUR',  g:'con', x:375, y:150, p:'C', chart:'PCEDG', label:'내구재', sig:true },
-  { id:'NDUR', g:'con', x:525, y:150, p:'C', chart:'PCEND', label:'비내구재', sig:true },
-  { id:'SERV', g:'con', x:675, y:150, p:'C', chart:'PCESVC96', label:'서비스', sig:true, sub:'소비의 69%' },
+  // C 부문 1 · 구성 (분기) — PCE = 내구재 + 비내구재 + 서비스, 서비스가 69%
+  { id:'CH1',  g:'con', x:525, y:150, hub:true, p:'C', label:'구성 · 분기' },
+  { id:'DUR',  g:'con', x:375, y:60, p:'CH1', chart:'PCEDG', label:'내구재', sig:true },
+  { id:'NDUR', g:'con', x:525, y:60, p:'CH1', chart:'PCEND', label:'비내구재', sig:true },
+  { id:'SERV', g:'con', x:675, y:60, p:'CH1', chart:'PCESVC96', label:'서비스', sig:true, sub:'소비의 69%' },
+  // C 직속 · 월간 속보
   { id:'RETL', g:'con', x:675, y:240, p:'C', chart:'RSAFS', label:'소매판매', sig:true, sub:'월간 쪽지시험' },
-  // 가계 재무 — 저축률(하늘)은 소비 여력의 저량
-  { id:'SAVE', g:'inc', x:375, y:240, p:'C', chart:'PSAVERT', label:'가계 저축률', sig:true },
+  // C 부문 2 · 가계 여력 — 저축률(하늘) → 부채상환 → 연체율(노랑, 정부 빚과 같은 색)
+  { id:'CH2',  g:'inc', x:375, y:240, hub:true, p:'C', label:'가계 여력' },
+  { id:'SAVE', g:'inc', x:225, y:240, p:'CH2', chart:'PSAVERT', label:'가계 저축률', sig:true },
+  { id:'DSR',  g:'debt', x:75, y:240, p:'SAVE', chart:'TDSP', label:'부채상환비율', sig:true },
+  { id:'DELQ', g:'debt', x:75, y:150, p:'DSR', chart:'DRCCLACBS', label:'카드 연체율', sig:true },
   // 투자 — 사이클 민감도가 가장 높은 파트라 모든 노드에 최근 18개월 시그마 위치를 표시(sig:true)
   // 지도 노드는 전부 실질(2017년 달러) — 가격 변동을 빼야 사이클이 제대로 보임
   { id:'I',   g:'inv',  x:825, y:330, p:'C0', chart:'GPDIC1', label:'투자 I', sig:true, sub:'실질 총투자 · 분기' },
-  // GPDI = 비주거 + 주거 + 재고 (항등식은 명목 기준, 사이드바에서 검증)
-  { id:'PNFI', g:'inv', x:975, y:240, p:'I', chart:'PNFIC1', label:'비주거', sig:true },
+  // I 부문 1 · 구성 (분기) — GPDI = 비주거 + 주거 + 재고 (항등식은 명목 기준, 사이드바에서 검증)
+  { id:'IH1',  g:'inv', x:825, y:420, hub:true, p:'I', label:'구성 · 분기' },
+  { id:'PNFI', g:'inv', x:975, y:240, p:'IH1', chart:'PNFIC1', label:'비주거', sig:true },
   // 비주거 3분해 — 설비 + 건축물 + 지식재산
   { id:'EQP',  g:'inv', x:1125, y:150, p:'PNFI', chart:'Y033RX1Q020SBEA', label:'설비', sig:true },
   { id:'STR',  g:'inv', x:1125, y:240, p:'PNFI', chart:'B009RX1Q020SBEA', label:'건축물', sig:true },
@@ -2562,17 +2569,18 @@ const FM_NODES = [
   // 월간 쪽지시험: 내구재 주문(헤드라인) → 핵심 자본재(항공기·국방 뺀 판정짝)
   { id:'DGO',  g:'inv', x:1275, y:150, p:'PNFI', chart:'DGORDER',  label:'내구재 주문', sig:true },
   { id:'NEWO', g:'inv', x:1275, y:240, p:'DGO',  chart:'NEWORDER', label:'핵심 자본재', sig:true },
-  { id:'PRFI', g:'inv', x:975, y:420, p:'I', chart:'PRFIC1', label:'주거', sig:true },
+  { id:'PRFI', g:'inv', x:975, y:420, p:'IH1', chart:'PRFIC1', label:'주거', sig:true },
   // 주거의 선행 사슬: 허가(서류) → 착공(삽) → 신규주택 판매
   { id:'PERM', g:'inv', x:1125, y:420, p:'PRFI', chart:'PERMIT', label:'건축허가', sig:true },
   { id:'HOUS', g:'inv', x:1275, y:420, p:'PERM', chart:'HOUST',  label:'주택착공', sig:true },
   { id:'HSN',  g:'inv', x:1275, y:330, p:'HOUS', chart:'HSN1F',  label:'신규주택 판매', sig:true },
-  { id:'CBI',  g:'inv', x:975, y:510, p:'I', chart:'CBIC1',  label:'재고 변동', sig:true },
+  { id:'CBI',  g:'inv', x:975, y:510, p:'IH1', chart:'CBIC1',  label:'재고 변동', sig:true },
   // 재고/판매는 레벨이 아니라 12개월 변화로 본다 (2008년 침체가 '타이트' 레벨에서 시작했으므로)
   { id:'ISRC', g:'inv', x:1125, y:510, p:'CBI', chart:'ISRATIO_CHG12', label:'재고/판매 YoY', sig:true },
-  // 투자의 산소(대출태도)와 체온계(가동률)
-  { id:'SLOOS',g:'inv', x:825, y:240, p:'I', chart:'DRTSCILM', label:'은행 대출태도', sig:true },
-  { id:'TCU',  g:'inv', x:675, y:330, p:'I', chart:'TCU', label:'설비가동률', sig:true },
+  // I 부문 2 · 여건 — 투자의 산소(대출태도)와 체온계(가동률)
+  { id:'IH2',  g:'inv', x:675, y:330, hub:true, p:'I', label:'여건' },
+  { id:'SLOOS',g:'inv', x:825, y:240, p:'IH2', chart:'DRTSCILM', label:'은행 대출태도', sig:true },
+  { id:'TCU',  g:'inv', x:525, y:330, p:'IH2', chart:'TCU', label:'설비가동률', sig:true },
   // 기업이익 — 지출 4파트가 아니라 소득 쪽 항목이라 회색 다리로 (투자의 재원)
   { id:'PROF', g:'bridge', x:975, y:60, p:'I', chart:'CPATAX', label:'법인이익', sig:true, sub:'투자의 재원 · 소득 쪽' },
   // 순수출 NX — 노드 자체가 무역수지(월간). 상세는 사이드바 무역 카테고리에.
@@ -2608,7 +2616,7 @@ const FM_NODES = [
     url:'https://www.treasurydirect.gov/auctions/announcements-data-results/' },
   // 다리 — 지표의 거주지는 상대 상자
   { id:'BR_C',  g:'bridge', x:225, y:330, p:'G',  chart:'PCTR', label:'이전지출', sub:'G → C 다리' },
-  { id:'BR_EMP',g:'bridge', x:225, y:60,  p:'C',  chart:'ICSA', label:'→ 고용', sub:'실업수당 · 신규청구' },
+  { id:'BR_EMP',g:'bridge', x:825, y:60,  p:'C',  chart:'ICSA', label:'→ 고용', sub:'실업수당 · 신규청구' },
   // TGA 딸린 파생 지표 — 시계열 계산이라 차트·YoY/MoM 전부 지원
   { id:'BR_FED',g:'cash', x:225, y:780, p:'TGA', chart:'FED_LIQUIDITY', label:'연준 유동성', sub:'자산−TGA−역레포' },
 ];
