@@ -983,29 +983,52 @@ const INDICATORS = [
   { id:'COT_BTC',     name:'비트코인',     unit:'계약', category:'암호화폐 / CRYPTO',  country:'COT', source:'cot', cotName:'BITCOIN', yf:'BTC-USD' },
 
   // ── 🇰🇷 KOREA ──────────────────────────────────────────────────────────────
-  // CTGYM = 이미 전년동월비(YoY %) → transform 불필요
-  { id:'KORCPALTT01CTGYM', name:'CPI (전체)',          unit:'%',     category:'물가 / INFLATION',   country:'KR' },
-  // PPDMMINMEI = 지수 수준 → YoY 변환 필요
-  { id:'KORPPDMMINMEI',    name:'PPI (제조업)',         unit:'% YoY', category:'물가 / INFLATION',   country:'KR', transform:'yoy' },
-  { id:'LRUNTTTTKRM156S',  name:'실업률',              unit:'%',     category:'고용 / EMPLOYMENT',  country:'KR' },
-  // GDP = 실질 지수 수준 → YoY 변환
-  { id:'KORGDPRQPSMEI',    name:'실질 GDP',            unit:'% YoY', category:'성장 / GROWTH',      country:'KR', transform:'yoy' },
-  // PROINDMISMEI = 산업생산 지수 → YoY 변환
-  { id:'KORPROINDMISMEI',  name:'산업생산 (제조업)',    unit:'% YoY', category:'성장 / GROWTH',      country:'KR', transform:'yoy' },
-  { id:'KORB6BLTT02STSAQ', name:'경상수지',            unit:'USD B', category:'국제수지 / BOP',     country:'KR' },
+  // 2026-08 전면 정비: FRED의 OECD 소스 정리로 죽은 시리즈(CPI 2025-04·PPI 2022-12·
+  // 산업생산 2024-03·경상수지 2024-10 스톱) 제거. 아래는 전부 fredgraph.csv 실물 검증 완료.
+  // CPI·경상수지·국고채 일간 금리는 ECOS 키 발급 후 복구 예정.
+  { id:'KR_MAP', name:'🗺 한국 경제 지도', unit:'인터랙티브', category:'지도 / MAP', country:'KR', source:'fiscalmap', noStats:true },
+  { id:'KRFX_MAP', name:'🗺 원/달러 지도', unit:'인터랙티브', category:'지도 / MAP', country:'KR', source:'fiscalmap', noStats:true },
+  { id:'DEXKOUS',          name:'원/달러 환율',          unit:'원',   category:'환율 / FX',         country:'KR', freq:'w' },
+  { id:'KR_KOSPI',         name:'KOSPI',                unit:'pt',   category:'주식 / EQUITY',     country:'KR', source:'price', yf:'^KS11', lineRaw:true },
+  // 콜금리(무담보 익일물)는 한은 기준금리에 밀착 — ECOS 키 없이 쓰는 기준금리 프록시
+  { id:'IRSTCI01KRM156N',  name:'콜금리 (기준금리 추적)', unit:'%',   category:'금리 / RATES',      country:'KR', noStats:true, lineRaw:true },
+  { id:'IR3TIB01KRM156N',  name:'CD 3개월',             unit:'%',    category:'금리 / RATES',      country:'KR', noStats:true, lineRaw:true },
+  { id:'IRLTLT01KRM156N',  name:'국고채 10년 (월평균)',   unit:'%',    category:'금리 / RATES',      country:'KR', noStats:true, lineRaw:true },
+  // 미−한 10년 금리차 — 원/달러의 금리 쪽 동인. 한국쪽이 월평균이라 최근 한 달은 비어 보임(정상)
+  { id:'US_KR_10Y_SPREAD', name:'미−한 10년 금리차',     unit:'%p',   category:'금리 / RATES',      country:'KR',
+    source:'freddiff', dfA:'DGS10', dfB:'IRLTLT01KRM156N', freq:'w', dfStale:45, noStats:true, lineRaw:true,
+    refLines:[ {y:0, color:'rgba(230,237,243,0.5)', label:'0'} ] },
+  { id:'XTEXVA01KRM667S',  name:'수출 (월간)',           unit:'US$',  category:'무역 / TRADE',      country:'KR' },
+  { id:'XTIMVA01KRM667S',  name:'수입 (월간)',           unit:'US$',  category:'무역 / TRADE',      country:'KR' },
+  { id:'KR_TRADE_BAL',     name:'무역수지 (수출−수입)',   unit:'US$',  category:'무역 / TRADE',      country:'KR',
+    source:'freddiff', dfA:'XTEXVA01KRM667S', dfB:'XTIMVA01KRM667S', noStats:true },
+  { id:'LRUNTTTTKRM156S',  name:'실업률',                unit:'%',    category:'고용 / EMPLOYMENT', country:'KR' },
+  { id:'LREM64TTKRM156S',  name:'고용률 (15–64)',        unit:'%',    category:'고용 / EMPLOYMENT', country:'KR' },
+  // GDP*RQPSMEI = 이미 전년동기비 성장률(%) — 2020Q2 한국 -2.79로 실물 판별. transform 금지.
+  { id:'KORGDPRQPSMEI',    name:'실질 GDP 성장률 (YoY)',  unit:'%',    category:'성장 / GROWTH',     country:'KR', noStats:true, lineRaw:true },
 
   // ── 🇯🇵 JAPAN ──────────────────────────────────────────────────────────────
-  { id:'JPNCPALTT01CTGYM', name:'CPI (전체)',          unit:'%',     category:'물가 / INFLATION',   country:'JP' },
-  { id:'JPNPPDMMINMEI',    name:'PPI (제조업)',         unit:'% YoY', category:'물가 / INFLATION',   country:'JP', transform:'yoy' },
-  { id:'LRUN64TTJPM156S',  name:'실업률',              unit:'%',     category:'고용 / EMPLOYMENT',  country:'JP' },
-  { id:'JPNGDPRQPSMEI',    name:'실질 GDP',            unit:'% YoY', category:'성장 / GROWTH',      country:'JP', transform:'yoy' },
-  { id:'JPNPROINDMISMEI',  name:'산업생산 (제조업)',    unit:'% YoY', category:'성장 / GROWTH',      country:'JP', transform:'yoy' },
-  { id:'JPNB6BLTT02STSAQ', name:'경상수지',            unit:'USD B', category:'국제수지 / BOP',     country:'JP' },
-  { id:'IRSTCB01JPM156N',  name:'기준금리 (BOJ)',       unit:'%',     category:'금리 / RATES',       country:'JP' },
+  // 2026-08 전면 정비: 죽은 시리즈(CPI 2021-06·PPI 2022-12·산업생산 2024-03·
+  // 경상수지 2024-10·BOJ 기준금리 2023-12 스톱) 제거. CPI·PPI는 e-Stat 키 발급 후 복구 예정.
+  { id:'JP_MAP', name:'🗺 일본 경제 지도', unit:'인터랙티브', category:'지도 / MAP', country:'JP', source:'fiscalmap', noStats:true },
+  { id:'JPFX_MAP', name:'🗺 엔/달러 지도', unit:'인터랙티브', category:'지도 / MAP', country:'JP', source:'fiscalmap', noStats:true },
+  { id:'DEXJPUS',          name:'엔/달러 환율',          unit:'엔',   category:'환율 / FX',         country:'JP', freq:'w' },
+  { id:'NIKKEI225',        name:'닛케이 225',            unit:'pt',   category:'주식 / EQUITY',     country:'JP', freq:'w', lineRaw:true },
+  // 콜금리(무담보 익일물) = BOJ 정책금리 프록시 (공식 기준금리 시리즈는 2023-12 스톱)
+  { id:'IRSTCI01JPM156N',  name:'콜금리 (BOJ 정책 추적)', unit:'%',   category:'금리 / RATES',      country:'JP', noStats:true, lineRaw:true },
+  { id:'IR3TIB01JPM156N',  name:'3개월 금리',            unit:'%',    category:'금리 / RATES',      country:'JP', noStats:true, lineRaw:true },
   // 일본상호증권(BB) 스크랩 → jp_real.json. 생성: python fetch_jp_real.py
   { id:'JPR_REAL', name:'10년 실질금리 (물가연동채)', unit:'%', category:'금리 / RATES', country:'JP', source:'jpreal', jpField:'real', noStats:true, lineRaw:true },
   { id:'JPR_NOM',  name:'10년 국채금리',              unit:'%', category:'금리 / RATES', country:'JP', source:'jpreal', jpField:'nom',  noStats:true, lineRaw:true },
   { id:'JPR_BEI',  name:'10년 기대인플레 (BEI)',      unit:'%', category:'금리 / RATES', country:'JP', source:'jpreal', jpField:'bei',  noStats:true, lineRaw:true },
+  { id:'JPNASSETS',        name:'일본은행 총자산',        unit:'억엔', category:'금리 / RATES',      country:'JP' },
+  { id:'XTEXVA01JPM667S',  name:'수출 (월간)',           unit:'US$',  category:'무역 / TRADE',      country:'JP' },
+  { id:'XTIMVA01JPM667S',  name:'수입 (월간)',           unit:'US$',  category:'무역 / TRADE',      country:'JP' },
+  { id:'XTNTVA01JPM667S',  name:'무역수지',              unit:'US$',  category:'무역 / TRADE',      country:'JP', noStats:true },
+  { id:'LRUN64TTJPM156S',  name:'실업률',                unit:'%',    category:'고용 / EMPLOYMENT', country:'JP' },
+  { id:'LREM64TTJPM156S',  name:'고용률 (15–64)',        unit:'%',    category:'고용 / EMPLOYMENT', country:'JP' },
+  // GDP*RQPSMEI = 이미 전년동기비 성장률(%) — 2020Q2 일본 -9.51로 실물 판별. transform 금지.
+  { id:'JPNGDPRQPSMEI',    name:'실질 GDP 성장률 (YoY)',  unit:'%',    category:'성장 / GROWTH',     country:'JP', noStats:true, lineRaw:true },
 ];
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
@@ -1585,6 +1608,16 @@ async function fetchUSJPRealSpread() {
   return out;
 }
 
+// FRED 두 시리즈의 차 (dfA − dfB) — 무역수지(수출−수입), 미−한 금리차 등.
+// 주기가 달라도 spreadAsOf가 날짜를 정렬한다. dfStale = 한쪽이 끊겼다고 보는 유예일
+// (월간이 끼면 45일로 넉넉히 — 기본 7일이면 월간 쪽이 전부 걸러져 빈 차트가 된다)
+async function fetchFredDiff(ind) {
+  const [a, b] = await Promise.all([fetchFRED(ind.dfA, ind.freq), fetchFRED(ind.dfB, ind.freq)]);
+  const out = spreadAsOf(a, b, ind.dfStale || 45);
+  if (!out.length) throw new Error('겹치는 기간이 없습니다 — 두 시리즈 날짜를 확인하세요.');
+  return out;
+}
+
 // FRED 두 시리즈의 비율(%) — 이자/세입 같은 파생 지표용. 같은 날짜끼리만 나눔.
 async function fetchFredRatio(ind) {
   const [num, den] = await Promise.all([fetchFRED(ind.fredNum, ind.freq), fetchFRED(ind.fredDen, ind.freq)]);
@@ -1704,6 +1737,7 @@ const LINE_SOURCES = {
   dtsyoy: () => fetchDTSYoY(),
   auction: () => fetchAuctionBTC(),
   wagegap: () => fetchWageGap(),
+  freddiff: ind => fetchFredDiff(ind),
 };
 
 const SOURCE_LABEL = {
@@ -1711,6 +1745,7 @@ const SOURCE_LABEL = {
   tsa:'TSA', jpreal:'日本相互証券', spread:'FRED + 日本相互証券',
   fredratio:'FRED (계산)', fedliq:'FRED (계산)', fredchg:'FRED (계산)',
   dts:'재무부 DTS (일간)', dtsyoy:'재무부 DTS (계산)', auction:'재무부 경매', wagegap:'FRED + 재무부 (계산)',
+  freddiff:'FRED (계산)',
 };
 
 // ─── CHART ────────────────────────────────────────────────────────────────────
@@ -2758,16 +2793,135 @@ const FM_NODES = [
   { id:'BR_FED',g:'cash', x:225, y:780, p:'TGA', chart:'FED_LIQUIDITY', label:'연준 유동성', sub:'자산−TGA−역레포' },
 ];
 
-// 커스텀 박스 (＋ 박스 버튼으로 추가, localStorage)
-function fmCustoms() { return JSON.parse(localStorage.getItem('fmCustom_v1') || '[]'); }
-function fmAllNodes() { return FM_NODES.concat(fmCustoms().map(c => ({ ...c, g:'custom', custom:true }))); }
+// ─── 🗺 일본 경제 지도 — 2026-08 신설. 전 지표 fredgraph.csv 실물 검증 완료.
+// 미국 지도와 같은 문법. FRED의 일본 CPI·PPI·경상수지는 죽어서(2021~24 스톱) 빨간 todo —
+// e-Stat 키 발급 후 채운다. 10년 금리는 월간 FRED 대신 자체 일간 jp_real.json 사용.
+const FM_NODES_JP = [
+  { id:'JC0',  g:'us', x:600, y:420, center:true, label:'일본 경제 🇯🇵', sub:'경기 국면 요약 — 더블클릭해서 작성' },
+  // 성장·고용 (위) — GDP*RQPSMEI는 이미 전년동기비 성장률
+  { id:'JGDP', g:'gdp', x:525, y:240, p:'JC0', chart:'JPNGDPRQPSMEI', label:'GDP 성장률', sig:true, sub:'실질 · 전년동기비' },
+  { id:'JUN',  g:'inc', x:675, y:240, p:'JC0', chart:'LRUN64TTJPM156S', label:'실업률', sig:true },
+  { id:'JEMPR',g:'inc', x:825, y:240, p:'JUN', chart:'LREM64TTJPM156S', label:'고용률 15–64', sig:true, sub:'분모 판정짝' },
+  // 물가 (왼쪽) — 시장의 기대(BEI)는 살아있고, 공식 통계는 e-Stat 대기
+  { id:'JINF', g:'inf', x:375, y:420, hub:true, p:'JC0', label:'물가' },
+  { id:'JBEI', g:'inf', x:225, y:420, p:'JINF', chart:'JPR_BEI', label:'기대인플레 BEI', sig:true, sub:'10년 · 시장의 물가 전망' },
+  { id:'JCPI', g:'todo', x:75, y:420, p:'JINF', dashed:true, label:'CPI · PPI', sub:'e-Stat 키 대기' },
+  // 일본은행 · 금리 (오른쪽) — 콜금리가 정책금리 프록시(공식 시리즈는 2023-12 스톱)
+  { id:'JBOJ', g:'mkt', x:825, y:420, hub:true, p:'JC0', label:'일본은행 · 금리' },
+  { id:'JASSET',g:'mkt', x:825, y:330, p:'JBOJ', chart:'JPNASSETS', label:'BOJ 총자산', sig:true, sub:'양적 완화의 저량' },
+  { id:'JCALL',g:'mkt', x:975, y:330, p:'JBOJ', chart:'IRSTCI01JPM156N', label:'콜금리', sig:true, sub:'정책금리 프록시' },
+  { id:'J3M',  g:'mkt', x:975, y:420, p:'JBOJ', chart:'IR3TIB01JPM156N', label:'3개월 금리', sig:true, sub:'인상 기대 체온계' },
+  { id:'JGB10',g:'mkt', x:975, y:510, p:'JBOJ', chart:'JPR_NOM', label:'10년 국채금리', sig:true, sub:'일간 · 日相証' },
+  { id:'JREAL',g:'mkt', x:1125, y:510, p:'JGB10', chart:'JPR_REAL', label:'10년 실질금리', sig:true, sub:'명목 − BEI' },
+  // 무역 (아래 왼쪽) — 무역수지는 월간 원시달러
+  { id:'JNX',  g:'nx', x:375, y:600, p:'JC0', chart:'XTNTVA01JPM667S', label:'무역수지', sigLine:true, hideStats:true, sub:'월간' },
+  { id:'JCA',  g:'todo', x:225, y:600, p:'JNX', dashed:true, label:'경상수지', sub:'e-Stat 키 대기 · 소득수지 포함' },
+  { id:'JEXP', g:'nx', x:225, y:690, p:'JNX', chart:'XTEXVA01JPM667S', label:'수출', sig:true },
+  { id:'JIMP', g:'nx', x:375, y:690, p:'JNX', chart:'XTIMVA01JPM667S', label:'수입', sig:true },
+  // 시장 · 환율 (아래 오른쪽) — 엔/달러의 근본 동인 = 미−일 실질금리차 (US 탭 거주, 점선 다리)
+  { id:'JNIK', g:'gdp', x:675, y:690, p:'JC0', chart:'NIKKEI225', label:'닛케이 225', sig:true },
+  { id:'JFX',  g:'cash', x:825, y:600, p:'JC0', chart:'DEXJPUS', label:'엔/달러', sig:true },
+  { id:'JSPR', g:'bridge', x:975, y:600, p:'JFX', dashed:true, chart:'SPREAD_USJP_REAL', label:'미−일 실질금리차', sig:true, sub:'환율의 근본 동인' },
+];
+
+// ─── 🗺 한국 경제 지도 — 2026-08 신설. 전 지표 fredgraph.csv 실물 검증 완료.
+// FRED의 한국 CPI·PPI·경상수지·반도체 수출은 죽거나 없음 → ECOS·관세청 대기 todo.
+// 콜금리 = 한은 기준금리 프록시 (2.54% ≈ 기준 2.50%). 국고 10년은 월평균만 존재.
+const FM_NODES_KR = [
+  { id:'KC0',  g:'us', x:600, y:420, center:true, label:'한국 경제 🇰🇷', sub:'경기 국면 요약 — 더블클릭해서 작성' },
+  // 성장·고용 (위)
+  { id:'KGDP', g:'gdp', x:525, y:240, p:'KC0', chart:'KORGDPRQPSMEI', label:'GDP 성장률', sig:true, sub:'실질 · 전년동기비' },
+  { id:'KUN',  g:'inc', x:675, y:240, p:'KC0', chart:'LRUNTTTTKRM156S', label:'실업률', sig:true },
+  { id:'KEMPR',g:'inc', x:825, y:240, p:'KUN', chart:'LREM64TTKRM156S', label:'고용률 15–64', sig:true, sub:'분모 판정짝' },
+  // 물가 (왼쪽) — 전부 ECOS 대기
+  { id:'KCPI', g:'todo', x:375, y:420, p:'KC0', dashed:true, label:'물가 CPI · PPI', sub:'ECOS 키 대기' },
+  // 한국은행 · 금리 (오른쪽)
+  { id:'KBOK', g:'mkt', x:825, y:420, hub:true, p:'KC0', label:'한국은행 · 금리' },
+  { id:'KCALL',g:'mkt', x:975, y:330, p:'KBOK', chart:'IRSTCI01KRM156N', label:'콜금리', sig:true, sub:'기준금리 프록시' },
+  { id:'KCD',  g:'mkt', x:975, y:420, p:'KBOK', chart:'IR3TIB01KRM156N', label:'CD 3개월', sig:true, sub:'인하 기대 체온계' },
+  { id:'KTB10',g:'mkt', x:975, y:510, p:'KBOK', chart:'IRLTLT01KRM156N', label:'국고채 10년', sig:true, sub:'월평균 · ECOS로 일간 예정' },
+  // 무역 (아래 왼쪽) — 수지는 수출−수입 자체 계산 (FRED 순수출 시리즈는 2024-12 스톱)
+  { id:'KNX',  g:'nx', x:375, y:600, p:'KC0', chart:'KR_TRADE_BAL', label:'무역수지', sigLine:true, hideStats:true, sub:'수출−수입 계산' },
+  { id:'KCA',  g:'todo', x:375, y:510, p:'KNX', dashed:true, label:'경상수지', sub:'ECOS 키 대기' },
+  { id:'KEXP', g:'nx', x:225, y:690, p:'KNX', chart:'XTEXVA01KRM667S', label:'수출', sig:true, sub:'한국 경제의 엔진' },
+  { id:'KIMP', g:'nx', x:375, y:690, p:'KNX', chart:'XTIMVA01KRM667S', label:'수입', sig:true },
+  { id:'KSEMI',g:'todo', x:75, y:690, p:'KEXP', dashed:true, label:'반도체 수출', sub:'관세청 일간 대기' },
+  // 시장 · 환율 (아래 오른쪽) — 원/달러의 금리 쪽 동인 = 미−한 10년 금리차
+  { id:'KKOSPI',g:'gdp', x:675, y:690, p:'KC0', chart:'KR_KOSPI', label:'KOSPI', sig:true },
+  { id:'KFX',  g:'cash', x:825, y:600, p:'KC0', chart:'DEXKOUS', label:'원/달러', sig:true },
+  { id:'KSPR', g:'bridge', x:975, y:600, p:'KFX', dashed:true, chart:'US_KR_10Y_SPREAD', label:'미−한 10년 금리차', sig:true, sub:'자본 유출입 압력' },
+];
+
+// ─── 🗺 엔/달러 지도 — 환율을 중앙에 놓고 동인을 4갈래로: 금리차(캐리) ·
+// 실수요(무역) · 위험선호(주식·포지션) · 정책(BOJ 대차대조표·개입).
+// 중앙 클릭 = 환율 차트, 더블클릭 = 환율 국면 요약 작성.
+const FM_NODES_JPFX = [
+  { id:'FJ0',  g:'us', x:600, y:420, center:true, chart:'DEXJPUS', label:'엔/달러 🇺🇸🇯🇵', sub:'환율 국면 요약 — 더블클릭해서 작성' },
+  // 금리차 (위) — 실질금리차가 근본 동인. 미국 다리(점선)와 일본 시장금리를 양옆에.
+  { id:'FJSPR', g:'mkt', x:525, y:240, p:'FJ0', chart:'SPREAD_USJP_REAL', label:'미−일 실질금리차', sig:true, sub:'캐리의 근본 동인' },
+  { id:'FJUS10',g:'bridge', x:375, y:150, p:'FJSPR', dashed:true, chart:'DGS10',  label:'미 10Y', sig:true },
+  { id:'FJUSR', g:'bridge', x:375, y:240, p:'FJSPR', dashed:true, chart:'DFII10', label:'미 실질 10Y', sig:true },
+  { id:'FJFFR', g:'bridge', x:225, y:150, p:'FJUS10', dashed:true, chart:'FEDFUNDS', label:'미 기준금리', sig:true },
+  { id:'FJJP10',g:'mkt', x:675, y:150, p:'FJSPR', chart:'JPR_NOM',  label:'일 10Y', sig:true },
+  { id:'FJJPR', g:'mkt', x:675, y:240, p:'FJSPR', chart:'JPR_REAL', label:'일 실질 10Y', sig:true },
+  { id:'FJCALL',g:'mkt', x:825, y:150, p:'FJJP10', chart:'IRSTCI01JPM156N', label:'BOJ 콜금리', sig:true, sub:'인상 사이클 위치' },
+  // 실수요 (아래 왼쪽) — 무역흑자 = 달러 매도 실수요
+  { id:'FJTRD', g:'nx', x:375, y:600, p:'FJ0', chart:'XTNTVA01JPM667S', label:'일본 무역수지', sigLine:true, hideStats:true, sub:'달러 실수요' },
+  { id:'FJCA',  g:'todo', x:225, y:600, p:'FJTRD', dashed:true, label:'경상수지', sub:'e-Stat 키 대기 · 소득수지가 본체' },
+  // 위험선호·포지션 (아래 오른쪽)
+  { id:'FJNIK', g:'gdp', x:825, y:600, p:'FJ0', chart:'NIKKEI225', label:'닛케이 225', sig:true, sub:'위험선호 · 자금 유입' },
+  { id:'FJCOT', g:'bridge', x:975, y:600, p:'FJ0', dashed:true, chart:'COT_JPY', label:'엔 투기 포지션', sub:'CFTC · 시장의 판정' },
+  // 정책 (아래 중앙) — 개입은 공개 소스가 없어 todo
+  { id:'FJBOJ', g:'mkt', x:675, y:690, p:'FJ0', chart:'JPNASSETS', label:'BOJ 총자산', sig:true, sub:'엔 공급의 저량' },
+  { id:'FJINT', g:'todo', x:525, y:690, p:'FJ0', dashed:true, label:'재무성 개입', sub:'속보 소스 미확보' },
+  // 달러 공통 요인 (오른쪽) — 거주지는 미국 지도, 여긴 점선 다리
+  { id:'FJDXY', g:'cash', x:825, y:510, p:'FJ0', dashed:true, chart:'DTWEXBGS', label:'달러 인덱스', sig:true, sub:'달러 공통 요인' },
+];
+
+// ─── 🗺 원/달러 지도 — 같은 4갈래 + 원화 특유의 짝 둘: 엔 동조화 · 반도체 수출.
+const FM_NODES_KRFX = [
+  { id:'FK0',  g:'us', x:600, y:420, center:true, chart:'DEXKOUS', label:'원/달러 🇺🇸🇰🇷', sub:'환율 국면 요약 — 더블클릭해서 작성' },
+  // 금리차 (위) — 한국쪽 10Y가 월평균이라 스프레드도 최근 한 달은 비어 보임(정상)
+  { id:'FKSPR', g:'mkt', x:525, y:240, p:'FK0', chart:'US_KR_10Y_SPREAD', label:'미−한 10Y 금리차', sig:true, sub:'자본 이동 압력' },
+  { id:'FKUS10',g:'bridge', x:375, y:150, p:'FKSPR', dashed:true, chart:'DGS10', label:'미 10Y', sig:true },
+  { id:'FKFFR', g:'bridge', x:225, y:150, p:'FKUS10', dashed:true, chart:'FEDFUNDS', label:'미 기준금리', sig:true },
+  { id:'FKKR10',g:'mkt', x:675, y:150, p:'FKSPR', chart:'IRLTLT01KRM156N', label:'한 10Y', sig:true, sub:'월평균' },
+  { id:'FKCALL',g:'mkt', x:825, y:150, p:'FKKR10', chart:'IRSTCI01KRM156N', label:'한은 콜금리', sig:true, sub:'기준금리 프록시' },
+  // 실수요 (아래 왼쪽) — 수출이 원화의 엔진, 반도체가 그 엔진의 엔진
+  { id:'FKTRD', g:'nx', x:375, y:600, p:'FK0', chart:'KR_TRADE_BAL', label:'무역수지', sigLine:true, hideStats:true, sub:'달러 실수요 · 수출−수입' },
+  { id:'FKEXP', g:'nx', x:225, y:690, p:'FKTRD', chart:'XTEXVA01KRM667S', label:'수출', sig:true, sub:'반도체 사이클 대리' },
+  { id:'FKCA',  g:'todo', x:225, y:600, p:'FKTRD', dashed:true, label:'경상수지', sub:'ECOS 키 대기' },
+  // 위험선호·수급 (아래 오른쪽) — 외국인 순매수는 수급 탭이 거주지
+  { id:'FKKOSPI',g:'gdp', x:825, y:600, p:'FK0', chart:'KR_KOSPI', label:'KOSPI', sig:true, sub:'외국인 위험선호' },
+  { id:'FKSUP', g:'bridge', x:975, y:600, p:'FKKOSPI', dashed:true, label:'외국인 순매수', sub:'거주지: 💹수급 탭' },
+  // 원화의 짝 (아래 중앙) — 원화는 엔에 동조하는 경향 (같은 대미 금리차 구조)
+  { id:'FKJPY', g:'bridge', x:675, y:690, p:'FK0', dashed:true, chart:'DEXJPUS', label:'엔/달러', sig:true, sub:'동조화 짝' },
+  // 달러 공통 요인 (오른쪽)
+  { id:'FKDXY', g:'cash', x:825, y:510, p:'FK0', dashed:true, chart:'DTWEXBGS', label:'달러 인덱스', sig:true, sub:'달러 공통 요인' },
+];
+
+// ── 다중 지도 레지스트리 — 키 = 사이드바 지표 id. ls = localStorage 접미사.
+// 미국 지도는 접미사 없음(기존 fmPos_v1 등 그대로) → 기존 사용자 배치·메모·선 전부 보존.
+const FM_MAPS = {
+  FISCAL_MAP: { nodes: () => FM_NODES,      ls: '' },
+  JP_MAP:     { nodes: () => FM_NODES_JP,   ls: '_JP' },
+  KR_MAP:     { nodes: () => FM_NODES_KR,   ls: '_KR' },
+  JPFX_MAP:   { nodes: () => FM_NODES_JPFX, ls: '_JPFX' },
+  KRFX_MAP:   { nodes: () => FM_NODES_KRFX, ls: '_KRFX' },
+};
+let fmCur = 'FISCAL_MAP';                 // 현재 열린 지도 (showFiscalMap에서 설정)
+const fmLS = base => 'fm' + base + FM_MAPS[fmCur].ls + '_v1';
+
+// 커스텀 박스 (＋ 박스 버튼으로 추가, localStorage · 지도별)
+function fmCustoms() { return JSON.parse(localStorage.getItem(fmLS('Custom')) || '[]'); }
+function fmAllNodes() { return FM_MAPS[fmCur].nodes().concat(fmCustoms().map(c => ({ ...c, g:'custom', custom:true }))); }
 
 // 실시간 YoY/MoM 캐시 — 지도 첫 오픈 때 FRED에서 한 번만 받아옴
 const fmStatsCache = {};   // 노드별 YoY/MoM 줄
 const fmValCache = {};     // 노드별 최신값 줄
 const fmSigCache = {};     // 노드별 시그마 위치 (최근 18개월 기준)
 const fmExtraCache = {};   // 노드별 특수 계산 줄 (임금−징수 갭 등)
-let fmStatsLoaded = false;
+const fmStatsLoadedMaps = new Set();   // 지도별로 세션당 1회만 로딩
 
 // 최근 18개월 분포에서 현재값이 몇 σ에 있는지 — 사이클 국면 판정용
 // (분기 시리즈면 6개 관측치, 월간이면 18개. 관측치 4개 미만이면 생략)
@@ -2798,18 +2952,18 @@ function fmYoYSeries(raw) {
   return out;
 }
 function fmLoadStats() {
-  if (fmStatsLoaded) return;
-  fmStatsLoaded = true;
+  if (fmStatsLoadedMaps.has(fmCur)) return;
+  fmStatsLoadedMaps.add(fmCur);
   const rerender = () => { if (document.getElementById('fiscal-panel').classList.contains('show')) fmRender(); };
   const ids = [...new Set(fmAllNodes().filter(n => n.chart).map(n => n.chart))];
   ids.forEach(id => {
     const ind = INDICATORS.find(i => i.id === id);
     if (!ind) return;
-    // FRED 직접 + 계산 소스만 — Yahoo류는 제외. 재무부 소스(dts·auction)는 FRED 키 없이도 로딩.
-    const needsFredKey = !ind.source || ['fredratio', 'fedliq', 'fredchg', 'wagegap'].includes(ind.source);
+    // FRED 직접 + 계산 소스 + Yahoo(price)·일본금리(jpreal·spread). 재무부 소스는 FRED 키 없이도 로딩.
+    const needsFredKey = !ind.source || ['fredratio', 'fedliq', 'fredchg', 'wagegap', 'freddiff', 'spread'].includes(ind.source);
     if (needsFredKey && !apiKey) return;
     const fetcher = !ind.source ? () => fetchFRED(ind.id, ind.freq)
-      : ['fredratio', 'fedliq', 'fredchg', 'dts', 'auction', 'wagegap'].includes(ind.source)
+      : ['fredratio', 'fedliq', 'fredchg', 'dts', 'auction', 'wagegap', 'freddiff', 'price', 'jpreal', 'spread'].includes(ind.source)
         ? () => LINE_SOURCES[ind.source](ind)
       : null;
     if (!fetcher) return;
@@ -2837,12 +2991,14 @@ function fmLoadStats() {
       fmStatsCache[id] = `YoY ${yPt ? f(last.y, yPt.y) : '—'} · MoM ${mPt ? f(last.y, mPt.y) : '—'}`;
       // 추세 타는 레벨(금액·yoy변환·diffMode)은 YoY σ, 비율·지수는 레벨 σ.
       // YoY 계산이 안 되면(부호 교차 등) 레벨로 폴백.
-      const useYoY = ind.transform === 'yoy' || ind.diffMode || ['B$', 'M$', 'T$', '$'].includes(ind.unit);
+      const useYoY = ind.transform === 'yoy' || ind.diffMode || ['B$', 'M$', 'T$', '$', 'US$', '억엔', 'pt'].includes(ind.unit);
       const sg = (useYoY ? fmSigma(fmYoYSeries(raw), 'YoY') : null) || fmSigma(raw, '');
       if (sg) fmSigCache[id] = sg;
       rerender();
     }).catch(() => {});
   });
+  // ── 이하 미국 지도 전용 동적 부제 (RATE·GAP 노드) ──
+  if (fmCur !== 'FISCAL_MAP') return;
   // 금리 박스: 10Y + 기간 프리미엄 실시간 값을 부제에 합쳐 표시 (FRED 키 필요)
   if (!apiKey) return;
   Promise.all([fetchFRED('DGS10', 'w'), fetchFRED('THREEFYTP10', 'w')]).then(([dg, tp]) => {
@@ -2870,6 +3026,8 @@ function fmVal(v, unit) {
   if (unit === 'T$') return `${sign}$${a.toFixed(2)}조`;
   if (unit === '%p') return `${v >= 0 ? '+' : '-'}${a.toFixed(2)}%p`;
   if (unit === '%')  return `${v.toFixed(2)}%`;
+  if (unit === 'US$') return a >= 1e11 ? `${sign}$${(a / 1e12).toFixed(2)}조` : `${sign}$${Math.round(a / 1e8).toLocaleString()}억`;
+  if (unit === '억엔') return a >= 10000 ? `${sign}${(a / 10000).toFixed(1)}조엔` : `${sign}${Math.round(a).toLocaleString()}억엔`;
   if (unit === 'K')  return a >= 1000 ? `${sign}${Math.round(a / 10).toLocaleString()}만` : `${sign}${(a / 10).toFixed(1)}만`;
   return v.toLocaleString(undefined, { maximumFractionDigits: 1 });
 }
@@ -2879,11 +3037,11 @@ const fmStore = (k, v) => v === undefined
   : localStorage.setItem(k, JSON.stringify(v));
 
 function fmXY(n) {
-  const pos = fmStore('fmPos_v1');
+  const pos = fmStore(fmLS('Pos'));
   return pos[n.id] ? pos[n.id] : { x: n.x, y: n.y };
 }
 function fmText(n) {
-  const lab = fmStore('fmLabels_v1');
+  const lab = fmStore(fmLS('Labels'));
   const userSub = lab[n.id] && lab[n.id].sub !== undefined ? lab[n.id].sub : null;
   // sig:true 노드는 최근 18개월 시그마 위치를 부제로 (사이클 국면 판정)
   const auto = (n.sig && n.chart && fmSigCache[n.chart]) || fmDynSub[n.id] || n.sub;
@@ -2916,10 +3074,11 @@ function fmWrap(s, maxW) {
 }
 
 // 사용자가 그린 선 (＋ 선 버튼): {from, to, dir:'one'|'two'}
-function fmLinks() { return JSON.parse(localStorage.getItem('fmLinks_v1') || '[]'); }
+function fmLinks() { return JSON.parse(localStorage.getItem(fmLS('Links')) || '[]'); }
 let fmLinkMode = null;          // {dir, first} — 선 그리기 모드
 let fmSelLink = null;           // 선택된 사용자 선 인덱스 (클릭 → Del로 삭제)
 let fmNavFromMap = false;       // 지도에서 차트로 들어왔는지 (복귀 버튼용)
+let fmNavMapId = 'FISCAL_MAP';  // 어느 지도에서 들어왔는지 (R키·복귀 버튼이 그 지도로)
 const fmDims = {};              // 마지막 렌더의 노드 크기 (선 끝점을 박스 가장자리에 붙이기용)
 
 // from 노드 중심에서 target 방향으로 나가는 박스 가장자리 점
@@ -3038,15 +3197,18 @@ function fmRender() {
 
 function showFiscalMap(ind) {
   currentIndicator = ind;
+  fmCur = FM_MAPS[ind.id] ? ind.id : 'FISCAL_MAP';   // 어느 지도인지 = 사이드바 지표 id
   document.querySelectorAll('.indicator-item').forEach(el => el.classList.remove('active'));
-  const el = document.querySelector('.indicator-item[data-id="FISCAL_MAP"]');
+  const el = document.querySelector(`.indicator-item[data-id="${ind.id}"]`);
   if (el) el.classList.add('active');
   document.getElementById('topbar').style.display = 'none';
   document.getElementById('chart-area').style.display = 'none';
   document.getElementById('legend-area').style.display = 'none';
   document.getElementById('fiscal-panel').classList.add('show');
+  const memo = document.getElementById('fm-memo');
+  if (memo) memo.value = localStorage.getItem(fmLS('Memo')) || '';   // 지도별 메모
   fmRender();
-  fmLoadStats();   // 실시간 YoY/MoM (FRED, 세션당 1회)
+  fmLoadStats();   // 실시간 YoY/MoM (FRED, 지도별 세션당 1회)
 }
 function hideFiscalMap() {
   document.getElementById('fiscal-panel').classList.remove('show');
@@ -3093,9 +3255,9 @@ function hideFiscalMap() {
     if (!drag.moved) return;
     const p = toVB(e);
     const dx = p.x - drag.px0, dy = p.y - drag.py0;
-    const pos = fmStore('fmPos_v1');
+    const pos = fmStore(fmLS('Pos'));
     drag.starts.forEach(s => { pos[s.id] = { x: Math.round(s.x0 + dx), y: Math.round(s.y0 + dy) }; });
-    fmStore('fmPos_v1', pos);
+    fmStore(fmLS('Pos'), pos);
     fmRender();
   });
   // 더블클릭 직접 감지 — setPointerCapture가 브라우저 dblclick을 svg 바탕으로 보내버려서
@@ -3114,7 +3276,7 @@ function hideFiscalMap() {
       } else if (fmLinkMode.first !== n.id) {
         const list = fmLinks();
         list.push({ from: fmLinkMode.first, to: n.id, dir: fmLinkMode.dir });
-        localStorage.setItem('fmLinks_v1', JSON.stringify(list));
+        localStorage.setItem(fmLS('Links'), JSON.stringify(list));
         fmLinkMode = null;
         document.getElementById('fm-link').textContent = '＋ 선';
       }
@@ -3136,7 +3298,7 @@ function hideFiscalMap() {
         fmTap = { id: null, t: 0, timer: null };
         if (n.chart) {
           const ind = INDICATORS.find(i => i.id === n.chart);
-          if (ind) { fmNavFromMap = true; selectIndicator(ind); }   // 노드 → 차트
+          if (ind) { fmNavFromMap = true; fmNavMapId = fmCur; selectIndicator(ind); }   // 노드 → 차트 (복귀할 지도 기억)
         } else if (n.url) {
           window.open(n.url, '_blank');
         }
@@ -3150,9 +3312,9 @@ function hideFiscalMap() {
       const placeholder = t.sub === n.sub;   // 아직 안내 문구 상태면 빈칸으로 시작
       const s = prompt('경기 국면 요약 — 길게 쓰면 자동 줄바꿈됩니다', placeholder ? '' : t.sub);
       if (s === null) return;
-      const lab = fmStore('fmLabels_v1');
+      const lab = fmStore(fmLS('Labels'));
       lab[n.id] = { label: t.label, sub: s.trim() || n.sub };
-      fmStore('fmLabels_v1', lab);
+      fmStore(fmLS('Labels'), lab);
       fmRender();
       return;
     }
@@ -3160,16 +3322,16 @@ function hideFiscalMap() {
     if (label === null) return;
     if (n.custom && label.trim() === '') {
       // 커스텀 박스 삭제
-      localStorage.setItem('fmCustom_v1', JSON.stringify(fmCustoms().filter(c => c.id !== n.id)));
-      const pos = fmStore('fmPos_v1'); delete pos[n.id]; fmStore('fmPos_v1', pos);
-      const lab = fmStore('fmLabels_v1'); delete lab[n.id]; fmStore('fmLabels_v1', lab);
+      localStorage.setItem(fmLS('Custom'), JSON.stringify(fmCustoms().filter(c => c.id !== n.id)));
+      const pos = fmStore(fmLS('Pos')); delete pos[n.id]; fmStore(fmLS('Pos'), pos);
+      const lab = fmStore(fmLS('Labels')); delete lab[n.id]; fmStore(fmLS('Labels'), lab);
       fmRender();
       return;
     }
     const sub = prompt('부제 (비우면 없음)', t.sub || '');
-    const lab = fmStore('fmLabels_v1');
+    const lab = fmStore(fmLS('Labels'));
     lab[n.id] = { label: label || n.label, sub: sub || '' };
-    fmStore('fmLabels_v1', lab);
+    fmStore(fmLS('Labels'), lab);
     fmRender();
   }
   svg.addEventListener('dblclick', e => {
@@ -3178,7 +3340,7 @@ function hideFiscalMap() {
       if (!confirm('이 선을 삭제할까요?')) return;
       const list = fmLinks();
       list.splice(+e.target.dataset.idx, 1);
-      localStorage.setItem('fmLinks_v1', JSON.stringify(list));
+      localStorage.setItem(fmLS('Links'), JSON.stringify(list));
       fmRender();
     }
   });
@@ -3201,13 +3363,13 @@ function hideFiscalMap() {
     const list = fmCustoms();
     const nextN = list.length ? Math.max(...list.map(c => +c.id.slice(2))) + 1 : 1;
     list.push({ id: 'CU' + nextN, label: label.trim(), sub, x: 640 + (list.length % 5) * 16, y: 430 + (list.length % 5) * 14 });
-    localStorage.setItem('fmCustom_v1', JSON.stringify(list));
+    localStorage.setItem(fmLS('Custom'), JSON.stringify(list));
     fmRender();
   });
   document.getElementById('fm-reset').addEventListener('click', () => {
     if (!confirm('노드 배치와 이름을 기본값으로 되돌릴까요? (커스텀 박스·메모는 유지)')) return;
-    localStorage.removeItem('fmPos_v1');
-    localStorage.removeItem('fmLabels_v1');
+    localStorage.removeItem(fmLS('Pos'));
+    localStorage.removeItem(fmLS('Labels'));
     fmRender();
   });
   // 선 클릭 → 선택(빨강 강조), 다른 곳 클릭 → 해제, Del/Backspace → 삭제
@@ -3228,13 +3390,13 @@ function hideFiscalMap() {
     if (tag === 'TEXTAREA' || tag === 'INPUT') return;   // 메모 입력 중엔 무시
     const list = fmLinks();
     list.splice(fmSelLink, 1);
-    localStorage.setItem('fmLinks_v1', JSON.stringify(list));
+    localStorage.setItem(fmLS('Links'), JSON.stringify(list));
     fmSelLink = null;
     fmRender();
   });
   document.getElementById('map-back-btn').addEventListener('click', () => {
     document.getElementById('map-back-btn').style.display = 'none';
-    const map = INDICATORS.find(i => i.id === 'FISCAL_MAP');
+    const map = INDICATORS.find(i => i.id === fmNavMapId);   // 들어온 지도로 복귀
     if (map) selectIndicator(map);
   });
   // R 키 = 지도로 복귀 (지도에서 들어온 차트에서만 — 복귀 버튼이 보일 때)
@@ -3246,8 +3408,8 @@ function hideFiscalMap() {
     if (btn && btn.style.display !== 'none') btn.click();
   });
   const memo = document.getElementById('fm-memo');
-  memo.value = localStorage.getItem('fmMemo_v1') || '';
-  memo.addEventListener('input', () => localStorage.setItem('fmMemo_v1', memo.value));
+  memo.value = localStorage.getItem(fmLS('Memo')) || '';
+  memo.addEventListener('input', () => localStorage.setItem(fmLS('Memo'), memo.value));
 })();
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
