@@ -941,6 +941,11 @@ const INDICATORS = [
   { id:'THREEFYTP10', name:'기간 프리미엄 (10Y)', unit:'%', category:'재정 / FISCAL', country:'US', freq:'w', noStats:true },
   // 재무부 FiscalData API 직결 (FRED 키 불필요) — 헤지펀드식 실시간 트래커 2종
   { id:'DTS_WITHHELD', name:'원천징수 세수 (4주 누적)', unit:'B$', category:'재정 / FISCAL', country:'US', source:'dts', noStats:true },
+  // 임금YoY − 징수YoY ≈ −(고용 증가율). 양수 = 고용 축소 방향, ±0.3%p 안은 노이즈 밴드
+  { id:'WAGE_DTS_GAP', name:'임금−징수 갭 (고용 그림자)', unit:'%p', category:'재정 / FISCAL', country:'US', source:'wagegap', noStats:true, lineRaw:true,
+    refLines:[ {y:1,  color:'#f85149', label:'+1%p 고용 위축 경보'},
+               {y:0,  color:'#8b949e', label:'0 = 고용 정체'},
+               {y:-1, color:'#7ee787', label:'-1%p 고용 확장'} ] },
   // 기준선은 2015년 이후 211회 경매 분포에서 산출
   { id:'AUCTION_BTC10', name:'10년물 경매 응찰배율',   unit:'배', category:'재정 / FISCAL', country:'US', source:'auction', noStats:true, lineRaw:true,
     refLines:[ {y:2.47, color:'#8b949e', label:'평균 2.47'},
@@ -1645,6 +1650,30 @@ async function fetchAuctionBTC() {
     .map(d => ({ x: d.auction_date, y: +d.bid_to_cover_ratio }));
 }
 
+// 임금−징수 갭 시계열 — 징수YoY ≈ 임금상승률 + 고용증가율이므로,
+// 임금YoY(단가) − 징수YoY(총액) ≈ −(고용 증가율). 양수 = 고용이 줄어드는 방향.
+async function fetchWageGap() {
+  const [w, d] = await Promise.all([fetchFRED('CES0500000003', 'm'), fetchDTSWithheld()]);
+  const yoySeries = arr => {
+    const out = []; let j = 0;
+    for (let i = 0; i < arr.length; i++) {
+      const t = new Date(arr[i].x); t.setFullYear(t.getFullYear() - 1);
+      while (j + 1 < arr.length && new Date(arr[j + 1].x) <= t) j++;
+      if (new Date(arr[j].x) <= t && arr[j].y > 0)
+        out.push({ x: arr[i].x, y: (arr[i].y - arr[j].y) / arr[j].y * 100 });
+    }
+    return out;
+  };
+  const wy = yoySeries(w), dy = yoySeries(d);
+  if (!wy.length || !dy.length) return [];
+  let j = 0; const out = [];
+  for (const p of dy) {
+    while (j + 1 < wy.length && wy[j + 1].x <= p.x) j++;
+    if (wy[j].x <= p.x) out.push({ x: p.x, y: +(wy[j].y - p.y).toFixed(2) });
+  }
+  return out;
+}
+
 // 라인 차트로 그리는 소스들 (FRED/TSA는 별도 경로)
 const LINE_SOURCES = {
   price:  ind => fetchYahooWeekly(ind.yf, 'max'),
@@ -1657,13 +1686,14 @@ const LINE_SOURCES = {
   fredchg: ind => fetchFredChg12(ind),
   dts: () => fetchDTSWithheld(),
   auction: () => fetchAuctionBTC(),
+  wagegap: () => fetchWageGap(),
 };
 
 const SOURCE_LABEL = {
   price:'Yahoo', ratio:'Yahoo', cnn:'CNN Fear&Greed', cot:'CFTC COT',
   tsa:'TSA', jpreal:'日本相互証券', spread:'FRED + 日本相互証券',
   fredratio:'FRED (계산)', fedliq:'FRED (계산)', fredchg:'FRED (계산)',
-  dts:'재무부 DTS (일간)', auction:'재무부 경매',
+  dts:'재무부 DTS (일간)', auction:'재무부 경매', wagegap:'FRED + 재무부 (계산)',
 };
 
 // ─── CHART ────────────────────────────────────────────────────────────────────
@@ -2692,8 +2722,10 @@ const FM_NODES = [
   { id:'MTS',   g:'cash', x:525, y:600, p:'H2',  chart:'MTSDS133FMS', label:'재정수지 12M 누적' },
   { id:'TGA',   g:'cash', x:375, y:600, p:'H2',  chart:'WTREGEN', label:'TGA 잔고', sub:'주간' },
   // 헤지펀드식 실시간 고용 프록시 — 재무부 일간 입금에서 직접 계산.
-  // MoM은 분기예납 달력 노이즈라 YoY만 흰색 강조 + 임금−징수 갭(고용 증감의 그림자) 표시
+  // MoM은 분기예납 달력 노이즈라 YoY만 흰색 강조
   { id:'DTS',   g:'cash', x:75,  y:690, p:'W006', chart:'DTS_WITHHELD', label:'원천징수 4주합', yoyOnly:true, sigLine:true },
+  // 임금−징수 갭 = 고용 증감의 그림자 (하늘색 = 노동 계열). 자체 시계열 차트 보유.
+  { id:'GAP',   g:'inc', x:75,  y:780, p:'DTS', chart:'WAGE_DTS_GAP', label:'임금−징수 갭', hideStats:true, sigLine:true, sub:'양수 = 고용 축소 방향' },
   // G 렌즈 3 · 빚 (저량) — 가계 부채도 같은 노란색 계열
   { id:'H3',    g:'debt', x:225, y:510, hub:true, p:'G', label:'빚 · 저량' },
   { id:'DEBT',  g:'debt', x:75,  y:420, p:'H3',  chart:'GFDEGDQ188S', label:'부채/GDP' },
@@ -2757,10 +2789,10 @@ function fmLoadStats() {
     const ind = INDICATORS.find(i => i.id === id);
     if (!ind) return;
     // FRED 직접 + 계산 소스만 — Yahoo류는 제외. 재무부 소스(dts·auction)는 FRED 키 없이도 로딩.
-    const needsFredKey = !ind.source || ['fredratio', 'fedliq', 'fredchg'].includes(ind.source);
+    const needsFredKey = !ind.source || ['fredratio', 'fedliq', 'fredchg', 'wagegap'].includes(ind.source);
     if (needsFredKey && !apiKey) return;
     const fetcher = !ind.source ? () => fetchFRED(ind.id, ind.freq)
-      : ['fredratio', 'fedliq', 'fredchg', 'dts', 'auction'].includes(ind.source)
+      : ['fredratio', 'fedliq', 'fredchg', 'dts', 'auction', 'wagegap'].includes(ind.source)
         ? () => LINE_SOURCES[ind.source](ind)
       : null;
     if (!fetcher) return;
@@ -2800,20 +2832,12 @@ function fmLoadStats() {
     fmDynSub.RATE = `10Y ${dg[dg.length - 1].y.toFixed(2)}% · 프리미엄 ${tp[tp.length - 1].y.toFixed(2)}%`;
     rerender();
   }).catch(() => {});
-  // 임금−징수 갭: 원천징수 YoY ≈ 고용증감 + 임금상승. 임금YoY가 징수YoY보다 크면
-  // 임금 오른 만큼도 세수가 못 늘었다는 뜻 = 사람(고용·근로시간)이 줄고 있다는 신호.
-  Promise.all([fetchFRED('CES0500000003', 'm'), fetchDTSWithheld()]).then(([w, d]) => {
-    const yoy = arr => {
-      const last = arr[arr.length - 1];
-      const t = new Date(last.x); t.setFullYear(t.getFullYear() - 1);
-      for (let i = arr.length - 1; i >= 0; i--) if (new Date(arr[i].x) <= t) return (last.y - arr[i].y) / arr[i].y * 100;
-      return null;
-    };
-    const gw = yoy(w), gd = yoy(d);
-    if (gw === null || gd === null) return;
-    const gap = gw - gd;
+  // 임금−징수 갭은 이제 자체 노드(GAP, WAGE_DTS_GAP 시계열)가 담당 — 판정 문구는 갭 부호로.
+  fetchWageGap().then(g => {
+    if (!g.length) return;
+    const gap = g[g.length - 1].y;
     const read = gap > 0.3 ? '고용 축소 방향' : gap < -0.3 ? '고용 확장 방향' : '고용 정체권';
-    fmExtraCache['DTS_WITHHELD'] = `임금−징수 ${gap >= 0 ? '+' : ''}${gap.toFixed(1)}%p · ${read}`;
+    fmDynSub.GAP = `${read} · 0.3 안은 노이즈`;
     rerender();
   }).catch(() => {});
 }
