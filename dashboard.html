@@ -2954,9 +2954,10 @@ const FM_NODES = [
   { id:'CPIN', g:'inf', x:675, y:870, p:'INFH', chart:'CPIAUCSL', label:'CPI', pct:true },
   { id:'PCEN', g:'inf', x:825, y:870, p:'INFH', chart:'PCEPI', label:'PCE 물가', pct:true },
   { id:'TRIM', g:'inf', x:975, y:870, p:'PCEN', chart:'PCETRIM12M159SFRBDAL', label:'트림드민 PCE', sig:true, sub:'노이즈 제거 판정짝' },
-  // 시장의 물가 전망 (일간) — 통계는 한 달 지연, BEI는 오늘의 판정. 실질금리 = 명목 10Y − BEI
-  { id:'UBEI', g:'inf', x:1125, y:870, p:'TRIM', chart:'T10YIE', label:'기대인플레 BEI', sig:true, sub:'10년 · 시장의 물가 전망' },
-  { id:'UTIPS',g:'mkt', x:1125, y:780, p:'UBEI', chart:'DFII10', label:'실질금리 TIPS', sig:true, sub:'명목 10Y − BEI' },
+  // 금리 분해 사슬: 명목 10Y(RATE) → 실질(TIPS) → 기대인플레(BEI). 명목 = 실질 + 기대인플레.
+  // 통계 물가는 한 달 지연, BEI는 시장이 매일 매기는 물가 전망 — 물가 행의 일간 판정짝이기도.
+  { id:'UTIPS',g:'mkt', x:525, y:780, p:'RATE',  chart:'DFII10', label:'실질금리 TIPS', sig:true, sub:'명목 − 기대인플레' },
+  { id:'UBEI', g:'mkt', x:675, y:780, p:'UTIPS', chart:'T10YIE', label:'기대인플레 BEI', sig:true, sub:'10년 · 시장의 물가 전망' },
   // 순수출 NX — 노드 자체가 무역수지(월간). 상세는 사이드바 무역 카테고리에.
   { id:'NX',  g:'nx', x:675, y:510, p:'C0', chart:'BOPGSTB', label:'순수출 NX', sub:'무역수지 · 월간' },
   // 아래 세 개는 수출 → 수입 → 달러인덱스 왼→오 순서 (사용자 지정)
