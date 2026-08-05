@@ -1022,6 +1022,27 @@ const INDICATORS = [
     source:'ecos', ecosStat:'404Y014', ecosItem:'*AA', ecosCycle:'M', transform:'yoy' },
   { id:'KR_CA',            name:'경상수지 (월간)',        unit:'US$',  category:'무역 / TRADE',      country:'KR',
     source:'ecos', ecosStat:'301Y013', ecosItem:'000000', ecosCycle:'M', scale:1e6, noStats:true },
+  // GDP 지출 분해 — 200Y102 주요 분기지표 (실질·계절조정·연쇄 2020년), 코드검색 실물 확정
+  { id:'KR_GDP_Q',   name:'실질 GDP (계절조정·분기)', unit:'십억원', category:'성장 / GROWTH', country:'KR',
+    source:'ecos', ecosStat:'200Y102', ecosItem:'10111', ecosCycle:'Q' },
+  { id:'KR_GDP_C',   name:'민간소비 (실질·분기)',     unit:'십억원', category:'성장 / GROWTH', country:'KR',
+    source:'ecos', ecosStat:'200Y102', ecosItem:'10122', ecosCycle:'Q' },
+  { id:'KR_GDP_G',   name:'정부소비 (실질·분기)',     unit:'십억원', category:'성장 / GROWTH', country:'KR',
+    source:'ecos', ecosStat:'200Y102', ecosItem:'10128', ecosCycle:'Q' },
+  { id:'KR_GDP_IF',  name:'설비투자 (실질·분기)',     unit:'십억원', category:'성장 / GROWTH', country:'KR',
+    source:'ecos', ecosStat:'200Y102', ecosItem:'10123', ecosCycle:'Q' },
+  { id:'KR_GDP_IC',  name:'건설투자 (실질·분기)',     unit:'십억원', category:'성장 / GROWTH', country:'KR',
+    source:'ecos', ecosStat:'200Y102', ecosItem:'10124', ecosCycle:'Q' },
+  // 반도체(집적회로) 수출금액지수 — 한국 수출 엔진의 엔진. 403Y001/309112AA 실물 확정
+  { id:'KR_SEMI_EXP', name:'반도체 수출금액지수',      unit:'% YoY', category:'무역 / TRADE',  country:'KR',
+    source:'ecos', ecosStat:'403Y001', ecosItem:'309112AA', ecosCycle:'M', transform:'yoy' },
+  { id:'KR_CCSI',    name:'소비자심리지수 (CCSI)',    unit:'Index', category:'심리 / SENTIMENT', country:'KR',
+    source:'ecos', ecosStat:'511Y002', ecosItem:'FME', ecosCycle:'M', lineRaw:true,
+    refLines:[ {y:100, color:'rgba(230,237,243,0.5)', label:'낙관/비관 경계'} ] },
+  { id:'KR_CORE_CPI', name:'근원 CPI (농산물·석유 제외)', unit:'% YoY', category:'물가 / INFLATION', country:'KR',
+    source:'ecos', ecosStat:'901Y010', ecosItem:'QB', ecosCycle:'M', transform:'yoy' },
+  { id:'KR_HH_CREDIT', name:'가계신용 (부채 잔액)',    unit:'십억원', category:'가계 / HOUSEHOLD', country:'KR',
+    source:'ecos', ecosStat:'151Y001', ecosItem:'1100000', ecosCycle:'Q' },
   { id:'XTEXVA01KRM667S',  name:'수출 (월간)',           unit:'US$',  category:'무역 / TRADE',      country:'KR' },
   { id:'XTIMVA01KRM667S',  name:'수입 (월간)',           unit:'US$',  category:'무역 / TRADE',      country:'KR' },
   { id:'KR_TRADE_BAL',     name:'무역수지 (수출−수입)',   unit:'US$',  category:'무역 / TRADE',      country:'KR',
@@ -1040,6 +1061,11 @@ const INDICATORS = [
     source:'estat', estatId:'0003427113', estatCat:'0001', transform:'yoy' },
   { id:'JP_CPI_CORE', name:'CPI 코어 (신선식품 제외)', unit:'% YoY', category:'물가 / INFLATION', country:'JP',
     source:'estat', estatId:'0003427113', estatCat:'0161', transform:'yoy' },
+  { id:'JP_CPI_CC',   name:'CPI 코어코어 (신선+에너지 제외)', unit:'% YoY', category:'물가 / INFLATION', country:'JP',
+    source:'estat', estatId:'0003427113', estatCat:'0178', transform:'yoy' },
+  // 도쿄도구부 = 전국보다 한 달 빠른 속보 (전국 6월분일 때 도쿄는 7월분)
+  { id:'JP_CPI_TOKYO', name:'도쿄 CPI (속보 · 한 달 빠름)', unit:'% YoY', category:'물가 / INFLATION', country:'JP',
+    source:'estat', estatId:'0003427113', estatCat:'0001', estatArea:'13A01', transform:'yoy' },
   { id:'JPFX_MAP', name:'🗺 엔/달러 지도', unit:'인터랙티브', category:'지도 / MAP', country:'JP', source:'fiscalmap', noStats:true },
   { id:'DEXJPUS',          name:'엔/달러 환율',          unit:'엔',   category:'환율 / FX',         country:'JP', freq:'w' },
   { id:'NIKKEI225',        name:'닛케이 225',            unit:'pt',   category:'주식 / EQUITY',     country:'JP', freq:'w', lineRaw:true },
@@ -1693,6 +1719,8 @@ async function fetchECOS(ind) {
       const endY = Math.min(y + 2, yN);
       rows = rows.concat(await ecosCall(ind, `${y}0101`, endY === yN ? ymd : `${endY}1231`));
     }
+  } else if (ind.ecosCycle === 'Q') {
+    rows = await ecosCall(ind, '1960Q1', `${now.getFullYear()}Q${Math.floor(now.getMonth() / 3) + 1}`);
   } else {
     rows = await ecosCall(ind, '196001', ymd.slice(0, 6));
   }
@@ -1724,7 +1752,7 @@ let estatKey = localStorage.getItem(ESTAT_KEY_STORAGE) || '';
 
 async function fetchEStat(ind) {
   if (!estatKey) throw new Error('e-Stat 앱 ID가 없습니다. 우측 상단 ⚙ 버튼에서 입력하세요.\n발급(무료): e-stat.go.jp 회원가입 → 마이페이지 → API');
-  const cacheKey = `estat_${ind.estatId}_${ind.estatCat}`;
+  const cacheKey = `estat_${ind.estatId}_${ind.estatCat}_${ind.estatArea || '00000'}`;   // 지역 포함 (도쿄/전국 충돌 방지)
   if (cache[cacheKey]) return cache[cacheKey];
   const url = `https://api.e-stat.go.jp/rest/3.0/app/json/getStatsData?appId=${estatKey}`
     + `&statsDataId=${ind.estatId}&cdArea=${ind.estatArea || '00000'}&cdCat01=${ind.estatCat}`
@@ -2474,8 +2502,17 @@ document.getElementById('ecos-test-btn').addEventListener('click', async () => {
     ['기준금리(월)',    { ecosStat:'722Y001', ecosItem:'0101000',   ecosCycle:'M' }],
     ['국고채10년(일)',  { ecosStat:'817Y002', ecosItem:'010210000', ecosCycle:'D' }],
     ['CPI(월)',        { ecosStat:'901Y009', ecosItem:'0',         ecosCycle:'M' }],
+    ['근원CPI(월)',    { ecosStat:'901Y010', ecosItem:'QB',        ecosCycle:'M' }],
     ['PPI(월)',        { ecosStat:'404Y014', ecosItem:'*AA',       ecosCycle:'M' }],
     ['경상수지(월)',    { ecosStat:'301Y013', ecosItem:'000000',    ecosCycle:'M' }],
+    ['실질GDP(분기)',   { ecosStat:'200Y102', ecosItem:'10111',     ecosCycle:'Q' }],
+    ['민간소비(분기)',  { ecosStat:'200Y102', ecosItem:'10122',     ecosCycle:'Q' }],
+    ['정부소비(분기)',  { ecosStat:'200Y102', ecosItem:'10128',     ecosCycle:'Q' }],
+    ['설비투자(분기)',  { ecosStat:'200Y102', ecosItem:'10123',     ecosCycle:'Q' }],
+    ['건설투자(분기)',  { ecosStat:'200Y102', ecosItem:'10124',     ecosCycle:'Q' }],
+    ['반도체수출지수(월)', { ecosStat:'403Y001', ecosItem:'309112AA', ecosCycle:'M' }],
+    ['소비자심리(월)',  { ecosStat:'511Y002', ecosItem:'FME',       ecosCycle:'M' }],
+    ['가계신용(분기)',  { ecosStat:'151Y001', ecosItem:'1100000',   ecosCycle:'Q' }],
   ];
   box.textContent = '테스트 중…';
   const lines = [];
@@ -2502,6 +2539,8 @@ document.getElementById('estat-test-btn').addEventListener('click', async () => 
   const tests = [
     ['일본 CPI 총합',        { estatId:'0003427113', estatCat:'0001' }],
     ['일본 CPI 코어(신선제외)', { estatId:'0003427113', estatCat:'0161' }],
+    ['일본 CPI 코어코어',     { estatId:'0003427113', estatCat:'0178' }],
+    ['도쿄 CPI (속보)',      { estatId:'0003427113', estatCat:'0001', estatArea:'13A01' }],
   ];
   box.textContent = '테스트 중…';
   const lines = [];
@@ -3032,6 +3071,8 @@ const FM_NODES_JP = [
   { id:'JBEI', g:'inf', x:225, y:420, p:'JINF', chart:'JPR_BEI', label:'기대인플레 BEI', sig:true, sub:'10년 · 시장의 물가 전망' },
   { id:'JCPI', g:'inf', x:75, y:420, p:'JINF', chart:'JP_CPI', label:'CPI', pct:true },
   { id:'JCORE',g:'inf', x:75, y:330, p:'JCPI', chart:'JP_CPI_CORE', label:'CPI 코어', pct:true, sub:'BOJ 기준 · 신선 제외' },
+  { id:'JCC',  g:'inf', x:75, y:240, p:'JCORE', chart:'JP_CPI_CC', label:'코어코어', pct:true, sub:'신선+에너지 제외' },
+  { id:'JTOKYO',g:'inf', x:75, y:510, p:'JCPI', chart:'JP_CPI_TOKYO', label:'도쿄 CPI', pct:true, sub:'속보 · 한 달 빠름' },
   { id:'JPPI', g:'todo', x:225, y:330, p:'JINF', dashed:true, label:'PPI (기업물가)', sub:'BOJ 소스 대기' },
   // 일본은행 · 금리 (오른쪽) — 콜금리가 정책금리 프록시(공식 시리즈는 2023-12 스톱)
   { id:'JBOJ', g:'mkt', x:825, y:420, hub:true, p:'JC0', label:'일본은행 · 금리' },
@@ -3060,9 +3101,25 @@ const FM_NODES_KR = [
   { id:'KGDP', g:'gdp', x:525, y:240, p:'KC0', chart:'KORGDPRQPSMEI', label:'GDP 성장률', sig:true, sub:'실질 · 전년동기비' },
   { id:'KUN',  g:'inc', x:675, y:240, p:'KC0', chart:'LRUNTTTTKRM156S', label:'실업률', sig:true },
   { id:'KEMPR',g:'inc', x:825, y:240, p:'KUN', chart:'LREM64TTKRM156S', label:'고용률 15–64', sig:true, sub:'분모 판정짝' },
+  // ── 소비 C (분홍) — 민간소비가 앵커, 심리가 월간 속보. 2026-08 확장 (200Y102 실질 SA)
+  { id:'KCON', g:'con', x:525, y:330, p:'KC0', chart:'KR_GDP_C', label:'민간소비', sig:true, sub:'실질 · 분기' },
+  { id:'KCCSI',g:'con', x:375, y:330, p:'KCON', chart:'KR_CCSI', label:'소비자심리', sig:true, sub:'월간 속보 · 100=중립' },
+  { id:'KRETL',g:'todo', x:75, y:330, p:'KCON', dashed:true, label:'소매판매', sub:'항목코드 확인 대기' },
+  // 가계 여력 — 부채(노랑)와 그 담보(부동산). 한국 가계 순자산의 7할이 부동산.
+  { id:'KHH',  g:'inc', x:375, y:240, hub:true, p:'KCON', label:'가계 여력' },
+  { id:'KHCR', g:'debt', x:225, y:240, p:'KHH', chart:'KR_HH_CREDIT', label:'가계신용(부채)', sig:true, sub:'분기 · 저량' },
+  { id:'KHOUSE',g:'todo', x:75, y:240, p:'KHCR', dashed:true, label:'주택가격', sub:'항목코드 확인 대기' },
+  // ── 투자 I (보라) — 설비(수출 사이클과 동행)와 건설(내수·부동산)의 이중구조
+  { id:'KINV', g:'inv', x:975, y:240, hub:true, p:'KC0', label:'투자 I' },
+  { id:'KIF',  g:'inv', x:975, y:150, p:'KINV', chart:'KR_GDP_IF', label:'설비투자', sig:true, sub:'실질 · 수출과 동행' },
+  { id:'KIC',  g:'inv', x:1125, y:150, p:'KINV', chart:'KR_GDP_IC', label:'건설투자', sig:true, sub:'실질 · 내수·부동산' },
+  { id:'KIP',  g:'todo', x:1125, y:240, p:'KINV', dashed:true, label:'지식재산투자', sub:'항목코드 확인 대기' },
+  // ── 정부 G (파랑)
+  { id:'KGOV', g:'gov', x:525, y:510, p:'KC0', chart:'KR_GDP_G', label:'정부소비', sig:true, sub:'실질 · 분기' },
   // 물가 (왼쪽) — ECOS 직결 (상류 PPI → 소비자 CPI, 미국 지도와 같은 pct 모드)
   { id:'KINF', g:'inf', x:375, y:420, hub:true, p:'KC0', label:'물가' },
   { id:'KCPI', g:'inf', x:225, y:420, p:'KINF', chart:'KR_CPI', label:'CPI', pct:true },
+  { id:'KCORE',g:'inf', x:225, y:330, p:'KCPI', chart:'KR_CORE_CPI', label:'근원 CPI', pct:true, sub:'농산물·석유 제외 판정짝' },
   { id:'KPPI', g:'inf', x:75,  y:420, p:'KINF', chart:'KR_PPI', label:'PPI', pct:true, sub:'상류 물가' },
   // 한국은행 · 금리 (오른쪽) — 기준금리는 ECOS 공식 일별, 콜·CD는 시장의 체감
   { id:'KBOK', g:'mkt', x:825, y:420, hub:true, p:'KC0', label:'한국은행 · 금리' },
@@ -3075,7 +3132,9 @@ const FM_NODES_KR = [
   { id:'KCA',  g:'nx', x:375, y:510, p:'KNX', chart:'KR_CA', label:'경상수지', sigLine:true, hideStats:true, sub:'상품+서비스+소득' },
   { id:'KEXP', g:'nx', x:225, y:690, p:'KNX', chart:'XTEXVA01KRM667S', label:'수출', sig:true, sub:'한국 경제의 엔진' },
   { id:'KIMP', g:'nx', x:375, y:690, p:'KNX', chart:'XTIMVA01KRM667S', label:'수입', sig:true },
-  { id:'KSEMI',g:'todo', x:75, y:690, p:'KEXP', dashed:true, label:'반도체 수출', sub:'관세청 일간 대기' },
+  // 수출 해부 — 반도체(집적회로)가 엔진의 엔진. YoY로 사이클 판독.
+  { id:'KSEMI',g:'nx', x:75, y:690, p:'KEXP', chart:'KR_SEMI_EXP', label:'반도체 수출지수', pct:true, sub:'집적회로 · 월간' },
+  { id:'KCHN', g:'todo', x:75, y:600, p:'KEXP', dashed:true, label:'대중국 수출', sub:'관세청/코드 대기' },
   // 시장 · 환율 (아래 오른쪽) — 원/달러의 금리 쪽 동인 = 미−한 10년 금리차
   { id:'KKOSPI',g:'gdp', x:675, y:690, p:'KC0', chart:'KR_KOSPI', label:'KOSPI', sig:true },
   { id:'KFX',  g:'cash', x:825, y:600, p:'KC0', chart:'DEXKOUS', label:'원/달러', sig:true },
@@ -3221,7 +3280,7 @@ function fmLoadStats() {
       fmStatsCache[id] = `YoY ${yPt ? f(last.y, yPt.y) : '—'} · MoM ${mPt ? f(last.y, mPt.y) : '—'}`;
       // 추세 타는 레벨(금액·yoy변환·diffMode)은 YoY σ, 비율·지수는 레벨 σ.
       // YoY 계산이 안 되면(부호 교차 등) 레벨로 폴백.
-      const useYoY = ind.transform === 'yoy' || ind.diffMode || ['B$', 'M$', 'T$', '$', 'US$', '억엔', 'pt'].includes(ind.unit);
+      const useYoY = ind.transform === 'yoy' || ind.diffMode || ['B$', 'M$', 'T$', '$', 'US$', '억엔', 'pt', '십억원'].includes(ind.unit);
       const sg = (useYoY ? fmSigma(fmYoYSeries(raw), 'YoY') : null) || fmSigma(raw, '');
       if (sg) fmSigCache[id] = sg;
       rerender();
@@ -3258,6 +3317,7 @@ function fmVal(v, unit) {
   if (unit === '%')  return `${v.toFixed(2)}%`;
   if (unit === 'US$') return a >= 1e11 ? `${sign}$${(a / 1e12).toFixed(2)}조` : `${sign}$${Math.round(a / 1e8).toLocaleString()}억`;
   if (unit === '억엔') return a >= 10000 ? `${sign}${(a / 10000).toFixed(1)}조엔` : `${sign}${Math.round(a).toLocaleString()}억엔`;
+  if (unit === '십억원') return a >= 1000 ? `${sign}${(a / 1000).toFixed(1)}조원` : `${sign}${Math.round(a).toLocaleString()}십억원`;
   if (unit === 'K')  return a >= 1000 ? `${sign}${Math.round(a / 10).toLocaleString()}만` : `${sign}${(a / 10).toFixed(1)}만`;
   return v.toLocaleString(undefined, { maximumFractionDigits: 1 });
 }
@@ -3284,7 +3344,7 @@ function fmText(n) {
 function fmW(s) {
   if (!s) return 0;
   let w = 0;
-  for (const ch of s) w += ch.charCodeAt(0) > 0x2500 ? 11.5 : 6.3;
+  for (const ch of s) w += ch.charCodeAt(0) > 0x2500 ? 12.6 : 6.9;   // 폰트 확대(2026-08)에 맞춘 폭
   return w;
 }
 function fmEsc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -3374,10 +3434,10 @@ function fmRender() {
       : Math.max(n.hub ? 80 : 84,
           fmW(t.label) * 0.98 + 22, val ? fmW(val) * 0.95 + 22 : 0,
           fmW(t.sub) * 0.86 + 20, stats ? fmW(stats) * 0.78 + 18 : 0);
-    const h = n.center ? Math.max(46, lines.length * 15 + 16) : [0, 26, 38, 50, 62, 76][lines.length];
+    const h = n.center ? Math.max(50, lines.length * 16.5 + 18) : [0, 29, 43, 56, 70, 85][lines.length];
     const offs = n.center
-      ? lines.map((_, i) => (i - (lines.length - 1) / 2) * 15)
-      : [[0], [0], [-7, 8], [-14, 0, 14], [-22, -8, 6, 20], [-28, -15, -2, 11, 25]][lines.length];
+      ? lines.map((_, i) => (i - (lines.length - 1) / 2) * 16.5)
+      : [[0], [0], [-8, 9], [-15.5, 0, 15.5], [-24, -9, 6.5, 22], [-31, -16.5, -2, 12, 27]][lines.length];
     const rx = n.hub ? Math.min(h / 2, 18) : 8;
     // 전부 불투명 — 부모 선이 박스를 관통해 보이지 않게
     const fill = n.center ? '#173152'
@@ -3391,7 +3451,7 @@ function fmRender() {
         ? (n.g === 'todo' ? '#ff9b95' : (n.hub || n.dashed ? color : '#e6edf3'))
         : L.kind === 'val' ? '#e6edf3'
         : L.kind === 'stat' ? '#9aa4af' : '#a8b3bd';
-      const size = L.kind === 'label' ? (n.center ? 12.5 : 11) : L.kind === 'val' ? 10 : 9;
+      const size = L.kind === 'label' ? (n.center ? 14 : 12) : L.kind === 'val' ? 11 : 10;
       const weight = L.kind === 'label' && (n.center || n.hub || n.g === 'todo') ? 700
         : L.kind === 'label' ? 600 : 400;
       return `<text x="${x}" y="${y + offs[i]}" text-anchor="middle" dominant-baseline="central" fill="${fillT}" font-size="${size}" font-weight="${weight}">${fmEsc(L.txt)}</text>`;
