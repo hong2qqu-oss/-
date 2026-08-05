@@ -1007,8 +1007,9 @@ const INDICATORS = [
   { id:'IR3TIB01KRM156N',  name:'CD 3개월',             unit:'%',    category:'금리 / RATES',      country:'KR', noStats:true, lineRaw:true },
   { id:'IRLTLT01KRM156N',  name:'국고채 10년 (월평균)',   unit:'%',    category:'금리 / RATES',      country:'KR', noStats:true, lineRaw:true },
   // ECOS 직결 시리즈 (2026-08 추가 — 키는 ⚙ 설정, 통계코드는 공식 코드검색 확인)
-  { id:'KR_BASE_RATE',     name:'기준금리 (공식·일별)',   unit:'%',    category:'금리 / RATES',      country:'KR',
-    source:'ecos', ecosStat:'722Y001', ecosItem:'0101000', ecosCycle:'D', noStats:true, lineRaw:true },
+  // 기준금리는 계단형이라 월간으로 충분 — 일간은 413(응답 과대) 리스크만 키움
+  { id:'KR_BASE_RATE',     name:'기준금리 (공식)',        unit:'%',    category:'금리 / RATES',      country:'KR',
+    source:'ecos', ecosStat:'722Y001', ecosItem:'0101000', ecosCycle:'M', noStats:true, lineRaw:true },
   { id:'KR_TB10_D',        name:'국고채 10년 (일간)',     unit:'%',    category:'금리 / RATES',      country:'KR',
     source:'ecos', ecosStat:'817Y002', ecosItem:'010210000', ecosCycle:'D', noStats:true, lineRaw:true },
   // 미−한 10년 금리차 — 원/달러의 금리 쪽 동인. ECOS 일간 국고채로 계산 (일간)
@@ -1664,21 +1665,38 @@ function ecosParseTime(t, cycle) {
   return `${t.slice(0, 4)}-01-01`;
 }
 
+// 한 구간 호출 — corsproxy 무료 티어가 큰 응답에 413을 뱉으므로 일간은 이걸 청크로 돌린다
+async function ecosCall(ind, start, end) {
+  const ecosUrl = `https://ecos.bok.or.kr/api/StatisticSearch/${ecosKey}/json/kr/1/10000/${ind.ecosStat}/${ind.ecosCycle}/${start}/${end}/${ind.ecosItem}`;
+  const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(ecosUrl)}`);
+  if (!res.ok) throw new Error(`ECOS 서버 오류 (HTTP ${res.status}): 잠시 후 다시 시도하세요.`);
+  const json = await res.json();
+  if (json.RESULT) {
+    if (json.RESULT.CODE === 'INFO-200') return [];   // 해당 구간 데이터 없음 — 청크에선 정상
+    throw new Error(`ECOS API 오류: ${json.RESULT.CODE} — ${json.RESULT.MESSAGE}`);
+  }
+  return (json.StatisticSearch && json.StatisticSearch.row) || [];
+}
+
 async function fetchECOS(ind) {
   if (!ecosKey) throw new Error('ECOS API 키가 없습니다. 우측 상단 ⚙ 버튼에서 입력하세요.\n발급(무료): ecos.bok.or.kr/api');
   const cacheKey = `ecos_${ind.ecosStat}_${ind.ecosItem}_${ind.ecosCycle}`;
   if (cache[cacheKey]) return cache[cacheKey];
   const now = new Date();
   const ymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
-  const start = ind.ecosCycle === 'D' ? '19950101' : '196001';
-  const end = ind.ecosCycle === 'D' ? ymd : ymd.slice(0, 6);
-  const ecosUrl = `https://ecos.bok.or.kr/api/StatisticSearch/${ecosKey}/json/kr/1/10000/${ind.ecosStat}/${ind.ecosCycle}/${start}/${end}/${ind.ecosItem}`;
-  const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(ecosUrl)}`);
-  if (!res.ok) throw new Error(`ECOS 서버 오류 (HTTP ${res.status}): 잠시 후 다시 시도하세요.`);
-  const json = await res.json();
-  if (json.RESULT) throw new Error(`ECOS API 오류: ${json.RESULT.CODE} — ${json.RESULT.MESSAGE}`);
-  const rows = (json.StatisticSearch && json.StatisticSearch.row) || [];
-  // 날짜 정렬 + 중복 제거 필수 (지뢰 노트)
+  let rows = [];
+  if (ind.ecosCycle === 'D') {
+    // 일간 전체(1995~)는 한 방에 받으면 413 — 3년 청크(~750행, 월간 응답과 같은 크기)로 순차 수집
+    const y0 = +(ind.ecosStart || 2015);
+    const yN = now.getFullYear();
+    for (let y = y0; y <= yN; y += 3) {
+      const endY = Math.min(y + 2, yN);
+      rows = rows.concat(await ecosCall(ind, `${y}0101`, endY === yN ? ymd : `${endY}1231`));
+    }
+  } else {
+    rows = await ecosCall(ind, '196001', ymd.slice(0, 6));
+  }
+  // 날짜 정렬 + 중복 제거 필수 (지뢰 노트 — 청크 경계 중복도 여기서 걸러짐)
   const seen = new Set();
   const pts = [];
   rows.forEach(r => {
@@ -1738,10 +1756,11 @@ async function fetchEStat(ind) {
   return pts;
 }
 
-// 미−한 10년 금리차 (일간) = FRED DGS10 − ECOS 국고채 10년. 둘 다 일간이라 기본 staleness(7일).
+// 미−한 10년 금리차 = FRED DGS10(주간 집계 — 일간 전체는 응답이 너무 큼) − ECOS 국고채 10년(일간).
+// 주간 점마다 한국쪽 직전 영업일 값을 끌어쓴다(as-of, staleness 7일).
 async function fetchKRSpread() {
   const [us, kr] = await Promise.all([
-    fetchFRED('DGS10'),
+    fetchFRED('DGS10', 'w'),
     fetchECOS({ ecosStat: '817Y002', ecosItem: '010210000', ecosCycle: 'D' }),
   ]);
   const out = spreadAsOf(us, kr);
@@ -2452,7 +2471,7 @@ document.getElementById('ecos-test-btn').addEventListener('click', async () => {
   if (eco) { ecosKey = eco; localStorage.setItem(ECOS_KEY_STORAGE, eco); document.getElementById('ecos-key-input').value = ''; }
   if (!ecosKey) { box.textContent = '❌ ECOS 키를 먼저 입력하세요.'; return; }
   const tests = [
-    ['기준금리(일)',    { ecosStat:'722Y001', ecosItem:'0101000',   ecosCycle:'D' }],
+    ['기준금리(월)',    { ecosStat:'722Y001', ecosItem:'0101000',   ecosCycle:'M' }],
     ['국고채10년(일)',  { ecosStat:'817Y002', ecosItem:'010210000', ecosCycle:'D' }],
     ['CPI(월)',        { ecosStat:'901Y009', ecosItem:'0',         ecosCycle:'M' }],
     ['PPI(월)',        { ecosStat:'404Y014', ecosItem:'*AA',       ecosCycle:'M' }],
@@ -3047,7 +3066,7 @@ const FM_NODES_KR = [
   { id:'KPPI', g:'inf', x:75,  y:420, p:'KINF', chart:'KR_PPI', label:'PPI', pct:true, sub:'상류 물가' },
   // 한국은행 · 금리 (오른쪽) — 기준금리는 ECOS 공식 일별, 콜·CD는 시장의 체감
   { id:'KBOK', g:'mkt', x:825, y:420, hub:true, p:'KC0', label:'한국은행 · 금리' },
-  { id:'KBASE',g:'mkt', x:825, y:330, p:'KBOK', chart:'KR_BASE_RATE', label:'기준금리', sig:true, sub:'공식 · 일별' },
+  { id:'KBASE',g:'mkt', x:825, y:330, p:'KBOK', chart:'KR_BASE_RATE', label:'기준금리', sig:true, sub:'공식 · 한은' },
   { id:'KCALL',g:'mkt', x:975, y:330, p:'KBOK', chart:'IRSTCI01KRM156N', label:'콜금리', sig:true, sub:'익일물 시장금리' },
   { id:'KCD',  g:'mkt', x:975, y:420, p:'KBOK', chart:'IR3TIB01KRM156N', label:'CD 3개월', sig:true, sub:'인하 기대 체온계' },
   { id:'KTB10',g:'mkt', x:975, y:510, p:'KBOK', chart:'KR_TB10_D', label:'국고채 10년', sig:true, sub:'일간 · ECOS' },
