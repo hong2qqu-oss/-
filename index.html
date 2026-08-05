@@ -745,12 +745,18 @@
 <!-- API Key 모달 -->
 <div id="api-modal">
   <div id="api-box">
-    <h2>FRED API Key 설정</h2>
+    <h2>API Key 설정</h2>
     <p>St. Louis Fed FRED API 키를 입력하세요.<br>
        <a href="https://fred.stlouisfed.org/docs/api/api_key.html" target="_blank" style="color:var(--accent)">발급 링크 (무료)</a>
     </p>
-    <input type="text" id="api-key-input" placeholder="예: 5b4992d3d01f61fd0f0be3ade5328568" />
+    <input type="text" id="api-key-input" placeholder="FRED 키 (예: 5b4992d3d01f61…)" />
+    <p style="margin-top:14px">한국은행 ECOS 키 — 한국 CPI·PPI·경상수지·국고채 일간·기준금리<br>
+       <a href="https://ecos.bok.or.kr/api/" target="_blank" style="color:var(--accent)">발급 링크 (무료)</a>
+    </p>
+    <input type="text" id="ecos-key-input" placeholder="ECOS 인증키 (이미 저장했으면 비워두세요)" />
     <button id="save-api-btn">저장</button>
+    <button id="ecos-test-btn" type="button" style="margin-left:8px">ECOS 연결 테스트</button>
+    <div id="ecos-test-result" style="margin-top:10px;font-size:12px;line-height:1.8;color:var(--text-muted);text-align:left;white-space:pre-wrap"></div>
   </div>
 </div>
 
@@ -994,10 +1000,21 @@ const INDICATORS = [
   { id:'IRSTCI01KRM156N',  name:'콜금리 (기준금리 추적)', unit:'%',   category:'금리 / RATES',      country:'KR', noStats:true, lineRaw:true },
   { id:'IR3TIB01KRM156N',  name:'CD 3개월',             unit:'%',    category:'금리 / RATES',      country:'KR', noStats:true, lineRaw:true },
   { id:'IRLTLT01KRM156N',  name:'국고채 10년 (월평균)',   unit:'%',    category:'금리 / RATES',      country:'KR', noStats:true, lineRaw:true },
-  // 미−한 10년 금리차 — 원/달러의 금리 쪽 동인. 한국쪽이 월평균이라 최근 한 달은 비어 보임(정상)
+  // ECOS 직결 시리즈 (2026-08 추가 — 키는 ⚙ 설정, 통계코드는 공식 코드검색 확인)
+  { id:'KR_BASE_RATE',     name:'기준금리 (공식·일별)',   unit:'%',    category:'금리 / RATES',      country:'KR',
+    source:'ecos', ecosStat:'722Y001', ecosItem:'0101000', ecosCycle:'D', noStats:true, lineRaw:true },
+  { id:'KR_TB10_D',        name:'국고채 10년 (일간)',     unit:'%',    category:'금리 / RATES',      country:'KR',
+    source:'ecos', ecosStat:'817Y002', ecosItem:'010210000', ecosCycle:'D', noStats:true, lineRaw:true },
+  // 미−한 10년 금리차 — 원/달러의 금리 쪽 동인. ECOS 일간 국고채로 계산 (일간)
   { id:'US_KR_10Y_SPREAD', name:'미−한 10년 금리차',     unit:'%p',   category:'금리 / RATES',      country:'KR',
-    source:'freddiff', dfA:'DGS10', dfB:'IRLTLT01KRM156N', freq:'w', dfStale:45, noStats:true, lineRaw:true,
+    source:'krspread', noStats:true, lineRaw:true,
     refLines:[ {y:0, color:'rgba(230,237,243,0.5)', label:'0'} ] },
+  { id:'KR_CPI',           name:'CPI (전체)',            unit:'% YoY', category:'물가 / INFLATION',  country:'KR',
+    source:'ecos', ecosStat:'901Y009', ecosItem:'0', ecosCycle:'M', transform:'yoy' },
+  { id:'KR_PPI',           name:'PPI (전체)',            unit:'% YoY', category:'물가 / INFLATION',  country:'KR',
+    source:'ecos', ecosStat:'404Y014', ecosItem:'*AA', ecosCycle:'M', transform:'yoy' },
+  { id:'KR_CA',            name:'경상수지 (월간)',        unit:'US$',  category:'무역 / TRADE',      country:'KR',
+    source:'ecos', ecosStat:'301Y013', ecosItem:'000000', ecosCycle:'M', scale:1e6, noStats:true },
   { id:'XTEXVA01KRM667S',  name:'수출 (월간)',           unit:'US$',  category:'무역 / TRADE',      country:'KR' },
   { id:'XTIMVA01KRM667S',  name:'수입 (월간)',           unit:'US$',  category:'무역 / TRADE',      country:'KR' },
   { id:'KR_TRADE_BAL',     name:'무역수지 (수출−수입)',   unit:'US$',  category:'무역 / TRADE',      country:'KR',
@@ -1618,6 +1635,66 @@ async function fetchFredDiff(ind) {
   return out;
 }
 
+// ─── 한국은행 ECOS ────────────────────────────────────────────────────────────
+// 키는 FRED처럼 localStorage(⚙ 설정에서 입력) — 코드에 하드코딩 금지.
+// ECOS는 CORS 미허용 → corsproxy 경유 (FRED와 동일 패턴).
+// 통계코드는 2026-08-05 ecos.bok.or.kr 공식 통계코드검색으로 확인:
+//   722Y001 한국은행 기준금리 / 901Y009 소비자물가지수 / 404Y014 생산자물가지수(기본분류)
+//   301Y013 국제수지(경상수지 item 000000) / 817Y002 시장금리(일별, 국고채10년 item 010210000)
+// ind 필드: ecosStat(통계표) · ecosItem(항목) · ecosCycle('D'|'M') · scale(단위 환산 배수)
+const ECOS_KEY_STORAGE = 'ecos_api_key';
+let ecosKey = localStorage.getItem(ECOS_KEY_STORAGE) || '';
+
+function ecosParseTime(t, cycle) {
+  t = String(t);
+  if (cycle === 'D') return `${t.slice(0, 4)}-${t.slice(4, 6)}-${t.slice(6, 8)}`;
+  if (cycle === 'M') return `${t.slice(0, 4)}-${t.slice(4, 6)}-01`;
+  if (cycle === 'Q') { const q = +t.replace(/\D/g, '').slice(4); return `${t.slice(0, 4)}-${String((q - 1) * 3 + 1).padStart(2, '0')}-01`; }
+  return `${t.slice(0, 4)}-01-01`;
+}
+
+async function fetchECOS(ind) {
+  if (!ecosKey) throw new Error('ECOS API 키가 없습니다. 우측 상단 ⚙ 버튼에서 입력하세요.\n발급(무료): ecos.bok.or.kr/api');
+  const cacheKey = `ecos_${ind.ecosStat}_${ind.ecosItem}_${ind.ecosCycle}`;
+  if (cache[cacheKey]) return cache[cacheKey];
+  const now = new Date();
+  const ymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+  const start = ind.ecosCycle === 'D' ? '19950101' : '196001';
+  const end = ind.ecosCycle === 'D' ? ymd : ymd.slice(0, 6);
+  const ecosUrl = `https://ecos.bok.or.kr/api/StatisticSearch/${ecosKey}/json/kr/1/10000/${ind.ecosStat}/${ind.ecosCycle}/${start}/${end}/${ind.ecosItem}`;
+  const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(ecosUrl)}`);
+  if (!res.ok) throw new Error(`ECOS 서버 오류 (HTTP ${res.status}): 잠시 후 다시 시도하세요.`);
+  const json = await res.json();
+  if (json.RESULT) throw new Error(`ECOS API 오류: ${json.RESULT.CODE} — ${json.RESULT.MESSAGE}`);
+  const rows = (json.StatisticSearch && json.StatisticSearch.row) || [];
+  // 날짜 정렬 + 중복 제거 필수 (지뢰 노트)
+  const seen = new Set();
+  const pts = [];
+  rows.forEach(r => {
+    const v = parseFloat(r.DATA_VALUE);
+    if (!isFinite(v)) return;
+    const x = ecosParseTime(r.TIME, ind.ecosCycle);
+    if (seen.has(x)) return;
+    seen.add(x);
+    pts.push({ x, y: v * (ind.scale || 1) });
+  });
+  pts.sort((a, b) => (a.x < b.x ? -1 : 1));
+  if (!pts.length) throw new Error('ECOS 응답이 비었습니다 — 통계코드/항목코드를 확인하세요.');
+  cache[cacheKey] = pts;
+  return pts;
+}
+
+// 미−한 10년 금리차 (일간) = FRED DGS10 − ECOS 국고채 10년. 둘 다 일간이라 기본 staleness(7일).
+async function fetchKRSpread() {
+  const [us, kr] = await Promise.all([
+    fetchFRED('DGS10'),
+    fetchECOS({ ecosStat: '817Y002', ecosItem: '010210000', ecosCycle: 'D' }),
+  ]);
+  const out = spreadAsOf(us, kr);
+  if (!out.length) throw new Error('겹치는 기간이 없습니다 — ECOS 국고채 데이터를 확인하세요.');
+  return out;
+}
+
 // FRED 두 시리즈의 비율(%) — 이자/세입 같은 파생 지표용. 같은 날짜끼리만 나눔.
 async function fetchFredRatio(ind) {
   const [num, den] = await Promise.all([fetchFRED(ind.fredNum, ind.freq), fetchFRED(ind.fredDen, ind.freq)]);
@@ -1738,6 +1815,8 @@ const LINE_SOURCES = {
   auction: () => fetchAuctionBTC(),
   wagegap: () => fetchWageGap(),
   freddiff: ind => fetchFredDiff(ind),
+  ecos: ind => fetchECOS(ind),
+  krspread: () => fetchKRSpread(),
 };
 
 const SOURCE_LABEL = {
@@ -1745,7 +1824,7 @@ const SOURCE_LABEL = {
   tsa:'TSA', jpreal:'日本相互証券', spread:'FRED + 日本相互証券',
   fredratio:'FRED (계산)', fedliq:'FRED (계산)', fredchg:'FRED (계산)',
   dts:'재무부 DTS (일간)', dtsyoy:'재무부 DTS (계산)', auction:'재무부 경매', wagegap:'FRED + 재무부 (계산)',
-  freddiff:'FRED (계산)',
+  freddiff:'FRED (계산)', ecos:'한국은행 ECOS', krspread:'FRED + ECOS (계산)',
 };
 
 // ─── CHART ────────────────────────────────────────────────────────────────────
@@ -2289,13 +2368,50 @@ document.getElementById('api-btn').addEventListener('click', () => {
 
 document.getElementById('save-api-btn').addEventListener('click', () => {
   const val = apiKeyInput.value.trim();
+  const eco = document.getElementById('ecos-key-input').value.trim();
+  if (eco) {
+    ecosKey = eco;
+    localStorage.setItem(ECOS_KEY_STORAGE, eco);
+    document.getElementById('ecos-key-input').value = '';
+  }
   if (val) {
     apiKey = val;
     localStorage.setItem(API_KEY_STORAGE, val);
-    cache = {};
+  }
+  if (val || eco) cache = {};
+  if (apiKey) {
     apiModal.classList.remove('show');
     selectIndicator(currentIndicator || INDICATORS[0]);
   }
+});
+
+// ECOS 연결 테스트 — 키 저장 후 전 시리즈의 최신 관측을 바로 보여준다 (코드 검증용)
+document.getElementById('ecos-test-btn').addEventListener('click', async () => {
+  const box = document.getElementById('ecos-test-result');
+  const eco = document.getElementById('ecos-key-input').value.trim();
+  if (eco) { ecosKey = eco; localStorage.setItem(ECOS_KEY_STORAGE, eco); document.getElementById('ecos-key-input').value = ''; }
+  if (!ecosKey) { box.textContent = '❌ ECOS 키를 먼저 입력하세요.'; return; }
+  const tests = [
+    ['기준금리(일)',    { ecosStat:'722Y001', ecosItem:'0101000',   ecosCycle:'D' }],
+    ['국고채10년(일)',  { ecosStat:'817Y002', ecosItem:'010210000', ecosCycle:'D' }],
+    ['CPI(월)',        { ecosStat:'901Y009', ecosItem:'0',         ecosCycle:'M' }],
+    ['PPI(월)',        { ecosStat:'404Y014', ecosItem:'*AA',       ecosCycle:'M' }],
+    ['경상수지(월)',    { ecosStat:'301Y013', ecosItem:'000000',    ecosCycle:'M' }],
+  ];
+  box.textContent = '테스트 중…';
+  const lines = [];
+  for (const [name, cfg] of tests) {
+    try {
+      const pts = await fetchECOS(cfg);
+      const last = pts[pts.length - 1];
+      lines.push(`✅ ${name}: ${last.x} → ${last.y.toLocaleString()}`);
+    } catch (e) {
+      lines.push(`❌ ${name}: ${e.message.split('\n')[0]}`);
+    }
+    box.textContent = lines.join('\n');
+  }
+  lines.push('— 값이 한국은행 공표치와 맞는지 확인하고, 이 결과를 채팅에 붙여넣어 주세요 (키 말고!)');
+  box.textContent = lines.join('\n');
 });
 
 apiModal.addEventListener('click', e => {
@@ -2833,16 +2949,19 @@ const FM_NODES_KR = [
   { id:'KGDP', g:'gdp', x:525, y:240, p:'KC0', chart:'KORGDPRQPSMEI', label:'GDP 성장률', sig:true, sub:'실질 · 전년동기비' },
   { id:'KUN',  g:'inc', x:675, y:240, p:'KC0', chart:'LRUNTTTTKRM156S', label:'실업률', sig:true },
   { id:'KEMPR',g:'inc', x:825, y:240, p:'KUN', chart:'LREM64TTKRM156S', label:'고용률 15–64', sig:true, sub:'분모 판정짝' },
-  // 물가 (왼쪽) — 전부 ECOS 대기
-  { id:'KCPI', g:'todo', x:375, y:420, p:'KC0', dashed:true, label:'물가 CPI · PPI', sub:'ECOS 키 대기' },
-  // 한국은행 · 금리 (오른쪽)
+  // 물가 (왼쪽) — ECOS 직결 (상류 PPI → 소비자 CPI, 미국 지도와 같은 pct 모드)
+  { id:'KINF', g:'inf', x:375, y:420, hub:true, p:'KC0', label:'물가' },
+  { id:'KCPI', g:'inf', x:225, y:420, p:'KINF', chart:'KR_CPI', label:'CPI', pct:true },
+  { id:'KPPI', g:'inf', x:75,  y:420, p:'KINF', chart:'KR_PPI', label:'PPI', pct:true, sub:'상류 물가' },
+  // 한국은행 · 금리 (오른쪽) — 기준금리는 ECOS 공식 일별, 콜·CD는 시장의 체감
   { id:'KBOK', g:'mkt', x:825, y:420, hub:true, p:'KC0', label:'한국은행 · 금리' },
-  { id:'KCALL',g:'mkt', x:975, y:330, p:'KBOK', chart:'IRSTCI01KRM156N', label:'콜금리', sig:true, sub:'기준금리 프록시' },
+  { id:'KBASE',g:'mkt', x:825, y:330, p:'KBOK', chart:'KR_BASE_RATE', label:'기준금리', sig:true, sub:'공식 · 일별' },
+  { id:'KCALL',g:'mkt', x:975, y:330, p:'KBOK', chart:'IRSTCI01KRM156N', label:'콜금리', sig:true, sub:'익일물 시장금리' },
   { id:'KCD',  g:'mkt', x:975, y:420, p:'KBOK', chart:'IR3TIB01KRM156N', label:'CD 3개월', sig:true, sub:'인하 기대 체온계' },
-  { id:'KTB10',g:'mkt', x:975, y:510, p:'KBOK', chart:'IRLTLT01KRM156N', label:'국고채 10년', sig:true, sub:'월평균 · ECOS로 일간 예정' },
+  { id:'KTB10',g:'mkt', x:975, y:510, p:'KBOK', chart:'KR_TB10_D', label:'국고채 10년', sig:true, sub:'일간 · ECOS' },
   // 무역 (아래 왼쪽) — 수지는 수출−수입 자체 계산 (FRED 순수출 시리즈는 2024-12 스톱)
   { id:'KNX',  g:'nx', x:375, y:600, p:'KC0', chart:'KR_TRADE_BAL', label:'무역수지', sigLine:true, hideStats:true, sub:'수출−수입 계산' },
-  { id:'KCA',  g:'todo', x:375, y:510, p:'KNX', dashed:true, label:'경상수지', sub:'ECOS 키 대기' },
+  { id:'KCA',  g:'nx', x:375, y:510, p:'KNX', chart:'KR_CA', label:'경상수지', sigLine:true, hideStats:true, sub:'상품+서비스+소득' },
   { id:'KEXP', g:'nx', x:225, y:690, p:'KNX', chart:'XTEXVA01KRM667S', label:'수출', sig:true, sub:'한국 경제의 엔진' },
   { id:'KIMP', g:'nx', x:375, y:690, p:'KNX', chart:'XTIMVA01KRM667S', label:'수입', sig:true },
   { id:'KSEMI',g:'todo', x:75, y:690, p:'KEXP', dashed:true, label:'반도체 수출', sub:'관세청 일간 대기' },
@@ -2885,12 +3004,12 @@ const FM_NODES_KRFX = [
   { id:'FKSPR', g:'mkt', x:525, y:240, p:'FK0', chart:'US_KR_10Y_SPREAD', label:'미−한 10Y 금리차', sig:true, sub:'자본 이동 압력' },
   { id:'FKUS10',g:'bridge', x:375, y:150, p:'FKSPR', dashed:true, chart:'DGS10', label:'미 10Y', sig:true },
   { id:'FKFFR', g:'bridge', x:225, y:150, p:'FKUS10', dashed:true, chart:'FEDFUNDS', label:'미 기준금리', sig:true },
-  { id:'FKKR10',g:'mkt', x:675, y:150, p:'FKSPR', chart:'IRLTLT01KRM156N', label:'한 10Y', sig:true, sub:'월평균' },
+  { id:'FKKR10',g:'mkt', x:675, y:150, p:'FKSPR', chart:'KR_TB10_D', label:'한 10Y', sig:true, sub:'일간 · ECOS' },
   { id:'FKCALL',g:'mkt', x:825, y:150, p:'FKKR10', chart:'IRSTCI01KRM156N', label:'한은 콜금리', sig:true, sub:'기준금리 프록시' },
   // 실수요 (아래 왼쪽) — 수출이 원화의 엔진, 반도체가 그 엔진의 엔진
   { id:'FKTRD', g:'nx', x:375, y:600, p:'FK0', chart:'KR_TRADE_BAL', label:'무역수지', sigLine:true, hideStats:true, sub:'달러 실수요 · 수출−수입' },
   { id:'FKEXP', g:'nx', x:225, y:690, p:'FKTRD', chart:'XTEXVA01KRM667S', label:'수출', sig:true, sub:'반도체 사이클 대리' },
-  { id:'FKCA',  g:'todo', x:225, y:600, p:'FKTRD', dashed:true, label:'경상수지', sub:'ECOS 키 대기' },
+  { id:'FKCA',  g:'nx', x:225, y:600, p:'FKTRD', chart:'KR_CA', label:'경상수지', sigLine:true, hideStats:true, sub:'달러 실수요 총계' },
   // 위험선호·수급 (아래 오른쪽) — 외국인 순매수는 수급 탭이 거주지
   { id:'FKKOSPI',g:'gdp', x:825, y:600, p:'FK0', chart:'KR_KOSPI', label:'KOSPI', sig:true, sub:'외국인 위험선호' },
   { id:'FKSUP', g:'bridge', x:975, y:600, p:'FKKOSPI', dashed:true, label:'외국인 순매수', sub:'거주지: 💹수급 탭' },
@@ -2960,10 +3079,10 @@ function fmLoadStats() {
     const ind = INDICATORS.find(i => i.id === id);
     if (!ind) return;
     // FRED 직접 + 계산 소스 + Yahoo(price)·일본금리(jpreal·spread). 재무부 소스는 FRED 키 없이도 로딩.
-    const needsFredKey = !ind.source || ['fredratio', 'fedliq', 'fredchg', 'wagegap', 'freddiff', 'spread'].includes(ind.source);
+    const needsFredKey = !ind.source || ['fredratio', 'fedliq', 'fredchg', 'wagegap', 'freddiff', 'spread', 'krspread'].includes(ind.source);
     if (needsFredKey && !apiKey) return;
     const fetcher = !ind.source ? () => fetchFRED(ind.id, ind.freq)
-      : ['fredratio', 'fedliq', 'fredchg', 'dts', 'auction', 'wagegap', 'freddiff', 'price', 'jpreal', 'spread'].includes(ind.source)
+      : ['fredratio', 'fedliq', 'fredchg', 'dts', 'auction', 'wagegap', 'freddiff', 'price', 'jpreal', 'spread', 'ecos', 'krspread'].includes(ind.source)
         ? () => LINE_SOURCES[ind.source](ind)
       : null;
     if (!fetcher) return;
