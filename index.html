@@ -560,7 +560,7 @@
     .fm-head { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-shrink:0; }
     .fm-head b { font-size:15px; }
     .fm-sub { color:var(--text-muted); font-size:11px; margin-left:10px; }
-    #fm-reset, #fm-add, #fm-link { background:var(--panel-bg); color:var(--text-muted); border:1px solid var(--border);
+    #fm-reset, #fm-add, #fm-link, #fm-api { background:var(--panel-bg); color:var(--text-muted); border:1px solid var(--border);
       border-radius:6px; padding:4px 10px; cursor:pointer; font-size:11px; }
     #fm-reset:hover, #fm-add:hover, #fm-link:hover { color:var(--text); border-color:var(--accent); }
     #collapse-btn { background:transparent; color:var(--text-muted); border:1px solid var(--border);
@@ -735,6 +735,7 @@
         <button id="fm-add" title="커스텀 박스 추가">＋ 박스</button>
         <button id="fm-link" title="노드 두 개를 클릭해 화살표로 연결 (더블클릭으로 삭제)">＋ 선</button>
         <button id="fm-reset" title="노드 배치와 이름을 기본값으로 되돌림 (커스텀 박스·선·메모는 유지)">↺ 배치 초기화</button>
+        <button id="fm-api" title="FRED · ECOS · e-Stat API 키 설정">⚙ API 키</button>
       </div>
     </div>
     <div id="fm-svg-wrap"><svg id="fm-svg" viewBox="0 0 1520 940" preserveAspectRatio="xMidYMid meet"></svg></div>
@@ -2416,7 +2417,6 @@ function showYRangeBar() {
 // ─── API KEY MODAL ────────────────────────────────────────────────────────────
 document.getElementById('api-btn').addEventListener('click', () => {
   apiKeyInput.value = apiKey;
-  document.getElementById('av-key-input').value = avKey;
   apiModal.classList.add('show');
 });
 
