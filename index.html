@@ -754,8 +754,13 @@
        <a href="https://ecos.bok.or.kr/api/" target="_blank" style="color:var(--accent)">발급 링크 (무료)</a>
     </p>
     <input type="text" id="ecos-key-input" placeholder="ECOS 인증키 (이미 저장했으면 비워두세요)" />
+    <p style="margin-top:14px">일본 총무성 e-Stat 앱 ID — 일본 CPI<br>
+       <a href="https://www.e-stat.go.jp/mypage/view/api" target="_blank" style="color:var(--accent)">발급 링크 (무료)</a>
+    </p>
+    <input type="text" id="estat-key-input" placeholder="e-Stat 앱 ID (이미 저장했으면 비워두세요)" />
     <button id="save-api-btn">저장</button>
-    <button id="ecos-test-btn" type="button" style="margin-left:8px">ECOS 연결 테스트</button>
+    <button id="ecos-test-btn" type="button" style="margin-left:8px">ECOS 테스트</button>
+    <button id="estat-test-btn" type="button" style="margin-left:8px">e-Stat 테스트</button>
     <div id="ecos-test-result" style="margin-top:10px;font-size:12px;line-height:1.8;color:var(--text-muted);text-align:left;white-space:pre-wrap"></div>
   </div>
 </div>
@@ -1028,6 +1033,11 @@ const INDICATORS = [
   // 2026-08 전면 정비: 죽은 시리즈(CPI 2021-06·PPI 2022-12·산업생산 2024-03·
   // 경상수지 2024-10·BOJ 기준금리 2023-12 스톱) 제거. CPI·PPI는 e-Stat 키 발급 후 복구 예정.
   { id:'JP_MAP', name:'🗺 일본 경제 지도', unit:'인터랙티브', category:'지도 / MAP', country:'JP', source:'fiscalmap', noStats:true },
+  // e-Stat 직결 (2026-08 추가 — 앱 ID는 ⚙ 설정. 코드는 dbview 공개 페이지 실물 확정)
+  { id:'JP_CPI',      name:'CPI (총합)',              unit:'% YoY', category:'물가 / INFLATION', country:'JP',
+    source:'estat', estatId:'0003427113', estatCat:'0001', transform:'yoy' },
+  { id:'JP_CPI_CORE', name:'CPI 코어 (신선식품 제외)', unit:'% YoY', category:'물가 / INFLATION', country:'JP',
+    source:'estat', estatId:'0003427113', estatCat:'0161', transform:'yoy' },
   { id:'JPFX_MAP', name:'🗺 엔/달러 지도', unit:'인터랙티브', category:'지도 / MAP', country:'JP', source:'fiscalmap', noStats:true },
   { id:'DEXJPUS',          name:'엔/달러 환율',          unit:'엔',   category:'환율 / FX',         country:'JP', freq:'w' },
   { id:'NIKKEI225',        name:'닛케이 225',            unit:'pt',   category:'주식 / EQUITY',     country:'JP', freq:'w', lineRaw:true },
@@ -1684,6 +1694,49 @@ async function fetchECOS(ind) {
   return pts;
 }
 
+// ─── 일본 총무성 e-Stat ───────────────────────────────────────────────────────
+// e-Stat API는 CORS 직접 허용 (2026-08-05 실물 확인) — 프록시 불필요, 키가 제3자를 안 거침.
+// 파라미터는 e-stat.go.jp/dbview?sid=0003427113 공개 페이지에서 실물 확정:
+//   CPI 2020년 기준 = 0003427113 · 全国 cdArea 00000 · 総合 cdCat01 0001 ·
+//   生鮮食品除く総合(BOJ 코어) 0161 · 生鮮+에너지 제외 0178
+//   시간코드: 월간 = YYYY00MMMM (MM 반복), 연간 YYYY000000·연도 YYYY100000은 걸러냄
+const ESTAT_KEY_STORAGE = 'estat_app_id';
+let estatKey = localStorage.getItem(ESTAT_KEY_STORAGE) || '';
+
+async function fetchEStat(ind) {
+  if (!estatKey) throw new Error('e-Stat 앱 ID가 없습니다. 우측 상단 ⚙ 버튼에서 입력하세요.\n발급(무료): e-stat.go.jp 회원가입 → 마이페이지 → API');
+  const cacheKey = `estat_${ind.estatId}_${ind.estatCat}`;
+  if (cache[cacheKey]) return cache[cacheKey];
+  const url = `https://api.e-stat.go.jp/rest/3.0/app/json/getStatsData?appId=${estatKey}`
+    + `&statsDataId=${ind.estatId}&cdArea=${ind.estatArea || '00000'}&cdCat01=${ind.estatCat}`
+    + `&metaGetFlg=N&cntGetFlg=N&explanationGetFlg=N&annotationGetFlg=N&limit=10000`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`e-Stat 서버 오류 (HTTP ${res.status}): 잠시 후 다시 시도하세요.`);
+  const json = await res.json();
+  const root = json.GET_STATS_DATA;
+  if (!root || root.RESULT.STATUS !== 0) throw new Error(`e-Stat API 오류: ${root ? root.RESULT.ERROR_MSG : '응답 형식 이상'}`);
+  let rows = root.STATISTICAL_DATA && root.STATISTICAL_DATA.DATA_INF && root.STATISTICAL_DATA.DATA_INF.VALUE;
+  if (!rows) throw new Error('e-Stat 응답이 비었습니다 — statsDataId/코드를 확인하세요.');
+  if (!Array.isArray(rows)) rows = [rows];
+  // 월간 행만 (연간·연도 행 제외) + 날짜 정렬 + 중복 제거
+  const seen = new Set();
+  const pts = [];
+  rows.forEach(r => {
+    const t = String(r['@time'] || '');
+    if (t.length !== 10 || t.slice(4, 6) !== '00' || t.slice(6, 8) !== t.slice(8, 10) || t.slice(6, 8) === '00') return;
+    const v = parseFloat(r['$']);
+    if (!isFinite(v)) return;
+    const x = `${t.slice(0, 4)}-${t.slice(6, 8)}-01`;
+    if (seen.has(x)) return;
+    seen.add(x);
+    pts.push({ x, y: v });
+  });
+  pts.sort((a, b) => (a.x < b.x ? -1 : 1));
+  if (!pts.length) throw new Error('e-Stat 월간 데이터가 없습니다 — 코드를 확인하세요.');
+  cache[cacheKey] = pts;
+  return pts;
+}
+
 // 미−한 10년 금리차 (일간) = FRED DGS10 − ECOS 국고채 10년. 둘 다 일간이라 기본 staleness(7일).
 async function fetchKRSpread() {
   const [us, kr] = await Promise.all([
@@ -1817,6 +1870,7 @@ const LINE_SOURCES = {
   freddiff: ind => fetchFredDiff(ind),
   ecos: ind => fetchECOS(ind),
   krspread: () => fetchKRSpread(),
+  estat: ind => fetchEStat(ind),
 };
 
 const SOURCE_LABEL = {
@@ -1824,7 +1878,7 @@ const SOURCE_LABEL = {
   tsa:'TSA', jpreal:'日本相互証券', spread:'FRED + 日本相互証券',
   fredratio:'FRED (계산)', fedliq:'FRED (계산)', fredchg:'FRED (계산)',
   dts:'재무부 DTS (일간)', dtsyoy:'재무부 DTS (계산)', auction:'재무부 경매', wagegap:'FRED + 재무부 (계산)',
-  freddiff:'FRED (계산)', ecos:'한국은행 ECOS', krspread:'FRED + ECOS (계산)',
+  freddiff:'FRED (계산)', ecos:'한국은행 ECOS', krspread:'FRED + ECOS (계산)', estat:'総務省 e-Stat',
 };
 
 // ─── CHART ────────────────────────────────────────────────────────────────────
@@ -2369,16 +2423,22 @@ document.getElementById('api-btn').addEventListener('click', () => {
 document.getElementById('save-api-btn').addEventListener('click', () => {
   const val = apiKeyInput.value.trim();
   const eco = document.getElementById('ecos-key-input').value.trim();
+  const est = document.getElementById('estat-key-input').value.trim();
   if (eco) {
     ecosKey = eco;
     localStorage.setItem(ECOS_KEY_STORAGE, eco);
     document.getElementById('ecos-key-input').value = '';
   }
+  if (est) {
+    estatKey = est;
+    localStorage.setItem(ESTAT_KEY_STORAGE, est);
+    document.getElementById('estat-key-input').value = '';
+  }
   if (val) {
     apiKey = val;
     localStorage.setItem(API_KEY_STORAGE, val);
   }
-  if (val || eco) cache = {};
+  if (val || eco || est) cache = {};
   if (apiKey) {
     apiModal.classList.remove('show');
     selectIndicator(currentIndicator || INDICATORS[0]);
@@ -2411,6 +2471,32 @@ document.getElementById('ecos-test-btn').addEventListener('click', async () => {
     box.textContent = lines.join('\n');
   }
   lines.push('— 값이 한국은행 공표치와 맞는지 확인하고, 이 결과를 채팅에 붙여넣어 주세요 (키 말고!)');
+  box.textContent = lines.join('\n');
+});
+
+// e-Stat 연결 테스트 — 일본 CPI 총합·코어 최신 관측 표시 (코드 검증용)
+document.getElementById('estat-test-btn').addEventListener('click', async () => {
+  const box = document.getElementById('ecos-test-result');
+  const est = document.getElementById('estat-key-input').value.trim();
+  if (est) { estatKey = est; localStorage.setItem(ESTAT_KEY_STORAGE, est); document.getElementById('estat-key-input').value = ''; }
+  if (!estatKey) { box.textContent = '❌ e-Stat 앱 ID를 먼저 입력하세요.'; return; }
+  const tests = [
+    ['일본 CPI 총합',        { estatId:'0003427113', estatCat:'0001' }],
+    ['일본 CPI 코어(신선제외)', { estatId:'0003427113', estatCat:'0161' }],
+  ];
+  box.textContent = '테스트 중…';
+  const lines = [];
+  for (const [name, cfg] of tests) {
+    try {
+      const pts = await fetchEStat(cfg);
+      const last = pts[pts.length - 1];
+      lines.push(`✅ ${name}: ${last.x} → ${last.y.toLocaleString()}`);
+    } catch (e) {
+      lines.push(`❌ ${name}: ${e.message.split('\n')[0]}`);
+    }
+    box.textContent = lines.join('\n');
+  }
+  lines.push('— 이 결과를 채팅에 붙여넣어 주세요 (키 말고!)');
   box.textContent = lines.join('\n');
 });
 
@@ -2918,10 +3004,12 @@ const FM_NODES_JP = [
   { id:'JGDP', g:'gdp', x:525, y:240, p:'JC0', chart:'JPNGDPRQPSMEI', label:'GDP 성장률', sig:true, sub:'실질 · 전년동기비' },
   { id:'JUN',  g:'inc', x:675, y:240, p:'JC0', chart:'LRUN64TTJPM156S', label:'실업률', sig:true },
   { id:'JEMPR',g:'inc', x:825, y:240, p:'JUN', chart:'LREM64TTJPM156S', label:'고용률 15–64', sig:true, sub:'분모 판정짝' },
-  // 물가 (왼쪽) — 시장의 기대(BEI)는 살아있고, 공식 통계는 e-Stat 대기
+  // 물가 (왼쪽) — 공식 CPI(e-Stat)와 시장의 기대(BEI). BOJ가 보는 건 코어(신선식품 제외).
   { id:'JINF', g:'inf', x:375, y:420, hub:true, p:'JC0', label:'물가' },
   { id:'JBEI', g:'inf', x:225, y:420, p:'JINF', chart:'JPR_BEI', label:'기대인플레 BEI', sig:true, sub:'10년 · 시장의 물가 전망' },
-  { id:'JCPI', g:'todo', x:75, y:420, p:'JINF', dashed:true, label:'CPI · PPI', sub:'e-Stat 키 대기' },
+  { id:'JCPI', g:'inf', x:75, y:420, p:'JINF', chart:'JP_CPI', label:'CPI', pct:true },
+  { id:'JCORE',g:'inf', x:75, y:330, p:'JCPI', chart:'JP_CPI_CORE', label:'CPI 코어', pct:true, sub:'BOJ 기준 · 신선 제외' },
+  { id:'JPPI', g:'todo', x:225, y:330, p:'JINF', dashed:true, label:'PPI (기업물가)', sub:'BOJ 소스 대기' },
   // 일본은행 · 금리 (오른쪽) — 콜금리가 정책금리 프록시(공식 시리즈는 2023-12 스톱)
   { id:'JBOJ', g:'mkt', x:825, y:420, hub:true, p:'JC0', label:'일본은행 · 금리' },
   { id:'JASSET',g:'mkt', x:825, y:330, p:'JBOJ', chart:'JPNASSETS', label:'BOJ 총자산', sig:true, sub:'양적 완화의 저량' },
@@ -3082,7 +3170,7 @@ function fmLoadStats() {
     const needsFredKey = !ind.source || ['fredratio', 'fedliq', 'fredchg', 'wagegap', 'freddiff', 'spread', 'krspread'].includes(ind.source);
     if (needsFredKey && !apiKey) return;
     const fetcher = !ind.source ? () => fetchFRED(ind.id, ind.freq)
-      : ['fredratio', 'fedliq', 'fredchg', 'dts', 'auction', 'wagegap', 'freddiff', 'price', 'jpreal', 'spread', 'ecos', 'krspread'].includes(ind.source)
+      : ['fredratio', 'fedliq', 'fredchg', 'dts', 'auction', 'wagegap', 'freddiff', 'price', 'jpreal', 'spread', 'ecos', 'krspread', 'estat'].includes(ind.source)
         ? () => LINE_SOURCES[ind.source](ind)
       : null;
     if (!fetcher) return;
