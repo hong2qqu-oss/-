@@ -554,6 +554,22 @@
     #supply-panel { display:none; flex:1; overflow:auto; padding:18px 22px; }
     #supply-panel.show { display:block; }
 
+    /* 📋 지표 해부 보고서 탭 */
+    #report-panel { display:none; flex:1; overflow:auto; padding:20px 30px; }
+    #report-panel.show { display:block; }
+    #report-body { max-width: 860px; margin: 0 auto; line-height: 1.75; font-size: 13.5px; }
+    #report-body h1 { font-size: 19px; margin: 6px 0 4px; }
+    #report-body h2 { font-size: 15.5px; margin: 20px 0 6px; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
+    #report-body h3 { font-size: 13.5px; margin: 14px 0 4px; }
+    #report-body p { margin: 6px 0; }
+    #report-body table { border-collapse: collapse; margin: 8px 0; width: 100%; font-size: 12.5px; }
+    #report-body th, #report-body td { border: 1px solid var(--border); padding: 5px 9px; text-align: left; }
+    #report-body th { color: var(--text-muted); font-size: 11.5px; }
+    #report-body blockquote { border-left: 3px solid var(--accent); margin: 8px 0; padding: 2px 12px; color: var(--text-muted); }
+    #report-body code { background: rgba(110,118,129,0.2); padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+    #report-body ul { margin: 6px 0; padding-left: 22px; }
+    #report-body hr { border: 0; border-top: 1px solid var(--border); margin: 14px 0; }
+
     /* ── 🗺 재정 지도 ── */
     #fiscal-panel { display:none; flex:1; min-height:0; padding:14px 20px 16px; flex-direction:column; gap:10px; }
     #fiscal-panel.show { display:flex; }
@@ -637,6 +653,7 @@
     <button class="country-btn" data-country="SENTI">📐 센티먼트</button>
     <button class="country-btn" data-country="COT">📊 COT</button>
     <button class="country-btn" data-country="SUPPLY">💹 수급</button>
+    <button class="country-btn" data-country="REPORT">📋 보고서</button>
     <button class="country-btn disabled" data-country="EU" title="준비 중">🇪🇺 EU</button>
   </div>
   <div id="sidebar-scroll" id="indicator-list"></div>
@@ -723,6 +740,9 @@
       <div id="sup-sigma-table"></div>
     </div>
   </div>
+
+  <!-- 📋 지표 해부 보고서 패널 -->
+  <div id="report-panel"><div id="report-body"></div></div>
 
   <!-- 🗺 재정 지도 패널 (US 탭) -->
   <div id="fiscal-panel">
@@ -2568,8 +2588,10 @@ document.querySelectorAll('.country-btn:not(.disabled)').forEach(btn => {
     currentCountry = btn.dataset.country;
     document.querySelectorAll('.country-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    if (currentCountry === 'SUPPLY') { showSupplyPanel(); return; }
+    if (currentCountry === 'SUPPLY') { hideReportPanel(); showSupplyPanel(); return; }
+    if (currentCountry === 'REPORT') { hideSupplyPanel(); showReportPanel(); return; }
     hideSupplyPanel();
+    hideReportPanel();
     overlays = [];
     renderOverlayChips();
     updateOverlayBtns();
@@ -2915,6 +2937,100 @@ function hideSupplyPanel(){
   document.getElementById('topbar').style.display = '';
   document.getElementById('chart-area').style.display = '';
   document.getElementById('legend-area').style.display = '';
+}
+
+// ─── 📋 지표 해부 보고서 탭 ──────────────────────────────────────────────────
+// 보고서는 reports/*.md + reports/index.json 매니페스트 (발표일마다 자동 생성·커밋).
+// 사이트는 정적이라 목록도 파일로 관리 — 새 보고서를 커밋하면 자동으로 목록에 뜬다.
+async function showReportPanel() {
+  hideFiscalMap();
+  document.getElementById('topbar').style.display = 'none';
+  document.getElementById('chart-area').style.display = 'none';
+  document.getElementById('legend-area').style.display = 'none';
+  document.getElementById('report-panel').classList.add('show');
+  let idx;
+  try {
+    idx = await (await fetch('reports/index.json', { cache: 'no-store' })).json();
+  } catch (e) {
+    document.getElementById('report-body').innerHTML =
+      '<p style="color:var(--text-muted)">보고서 목록(reports/index.json)을 불러오지 못했습니다 — 아직 보고서가 없거나 경로 문제입니다.</p>';
+    document.getElementById('sidebar-scroll').innerHTML = '';
+    return;
+  }
+  idx.sort((a, b) => (a.date < b.date ? 1 : -1));
+  document.getElementById('sidebar-scroll').innerHTML =
+    '<div style="padding:10px 14px;font-size:11px;color:var(--text-muted);line-height:1.6">📋 <b style="color:var(--text)">지표 해부 보고서</b><br>발표일마다 자동 생성 · 최신순</div>' +
+    idx.map(r =>
+      `<div class="indicator-item report-item" data-file="${r.file}">
+         <span style="color:var(--text-muted);font-size:10.5px">${r.date} · ${r.tag || ''}</span><br>${r.title}
+       </div>`).join('');
+  document.querySelectorAll('.report-item').forEach(el => el.addEventListener('click', () => {
+    document.querySelectorAll('.report-item').forEach(x => x.classList.remove('active'));
+    el.classList.add('active');
+    loadReport(el.dataset.file);
+  }));
+  const first = document.querySelector('.report-item');
+  if (first) { first.classList.add('active'); loadReport(first.dataset.file); }
+}
+function hideReportPanel() {
+  document.getElementById('report-panel').classList.remove('show');
+  document.getElementById('topbar').style.display = '';
+  document.getElementById('chart-area').style.display = '';
+  document.getElementById('legend-area').style.display = '';
+}
+async function loadReport(file) {
+  const el = document.getElementById('report-body');
+  el.innerHTML = '<p style="color:var(--text-muted)">불러오는 중…</p>';
+  try {
+    const md = await (await fetch('reports/' + file, { cache: 'no-store' })).text();
+    el.innerHTML = mdRender(md);
+    document.getElementById('report-panel').scrollTop = 0;
+  } catch (e) { el.innerHTML = '<p style="color:var(--red)">로드 실패: ' + e.message + '</p>'; }
+}
+
+// 최소 마크다운 렌더러 — 제목·굵게·표·리스트·인용·코드·링크·수평선만 (보고서에 필요한 전부)
+function mdEsc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+function mdInline(s) {
+  return s
+    .replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" style="color:var(--accent)">$1</a>');
+}
+function mdRender(md) {
+  const lines = md.split(/\r?\n/);
+  let html = '', inList = false, inTable = false;
+  const closeAll = () => {
+    if (inList) { html += '</ul>'; inList = false; }
+    if (inTable) { html += '</table>'; inTable = false; }
+  };
+  for (const l of lines) {
+    if (/^\s*$/.test(l)) { closeAll(); continue; }
+    if (/^### /.test(l)) { closeAll(); html += '<h3>' + mdInline(mdEsc(l.slice(4))) + '</h3>'; continue; }
+    if (/^## /.test(l))  { closeAll(); html += '<h2>' + mdInline(mdEsc(l.slice(3))) + '</h2>'; continue; }
+    if (/^# /.test(l))   { closeAll(); html += '<h1>' + mdInline(mdEsc(l.slice(2))) + '</h1>'; continue; }
+    if (/^---+\s*$/.test(l)) { closeAll(); html += '<hr>'; continue; }
+    if (/^\|/.test(l)) {
+      const cells = l.split('|').slice(1, -1).map(c => c.trim());
+      if (cells.every(c => /^:?-{2,}:?$/.test(c))) continue;   // 헤더 구분선
+      if (!inTable) {
+        if (inList) { html += '</ul>'; inList = false; }
+        html += '<table>'; inTable = true;
+        html += '<tr>' + cells.map(c => '<th>' + mdInline(mdEsc(c)) + '</th>').join('') + '</tr>';
+      } else {
+        html += '<tr>' + cells.map(c => '<td>' + mdInline(mdEsc(c)) + '</td>').join('') + '</tr>';
+      }
+      continue;
+    }
+    if (/^[-*] /.test(l)) {
+      if (inTable) { html += '</table>'; inTable = false; }
+      if (!inList) { html += '<ul>'; inList = true; }
+      html += '<li>' + mdInline(mdEsc(l.slice(2))) + '</li>'; continue;
+    }
+    if (/^> /.test(l)) { closeAll(); html += '<blockquote>' + mdInline(mdEsc(l.slice(2))) + '</blockquote>'; continue; }
+    closeAll(); html += '<p>' + mdInline(mdEsc(l)) + '</p>';
+  }
+  closeAll();
+  return html;
 }
 
 document.querySelectorAll('.sup-subtab').forEach(btn => {
