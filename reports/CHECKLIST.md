@@ -1,7 +1,9 @@
 # 지표 해부 체크리스트 (보고서 에이전트 교본)
 
 이 문서는 발표일마다 자동 실행되는 보고서 에이전트의 작업 지침이다.
-모든 시리즈 ID는 fred.stlouisfed.org `/graph/fredgraph.csv?id=` 로 키 없이 수집한다 (2026-08-10 실물 검증 완료).
+**데이터는 저장소 안의 `reports/data/<시리즈ID>.csv`에서 읽는다** (형식: `date,value` 한 줄씩, 날짜 오름차순).
+GitHub Actions(fred-mirror, 평일 23:05 KST)가 FRED 공식 API로 미러링해둔 것 — 에이전트는 외부 네트워크가 필요 없다.
+미러 시각은 `reports/data/_mirror_time.txt`. 데이터가 하루 이상 낡았으면 보고서에 그 사실을 명시하라.
 보고서는 `reports/YYYY-MM-DD_지표.md`로 저장하고 `reports/index.json`에 `{file, date, title, tag}` 추가 후 커밋.
 
 ## 공통 원칙

@@ -1,0 +1,61 @@
+# FRED 데이터 미러 — 보고서 파이프라인의 데이터 공급자
+# 클라우드 에이전트 샌드박스와 데이터센터 IP는 fred.stlouisfed.org(웹)에서 차단되지만,
+# FRED 공식 API(api.stlouisfed.org)는 키가 있으면 어디서든 작동한다.
+# 평일 23:05 KST(14:05 UTC)에 47개 시리즈를 reports/data/*.csv로 커밋 →
+# 23:30 클라우드 루틴이 외부 접속 없이 저장소 파일만 읽어 보고서 작성.
+# 필요 시크릿: FRED_API_KEY (Settings → Secrets and variables → Actions)
+name: FRED data mirror
+on:
+  schedule:
+    - cron: '5 14 * * 1-5'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch FRED series
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+        run: |
+          set -e
+          if [ -z "$FRED_API_KEY" ]; then
+            echo "::error::FRED_API_KEY 시크릿이 없습니다. 저장소 Settings → Secrets and variables → Actions에서 추가하세요."
+            exit 1
+          fi
+          mkdir -p reports/data
+          SERIES="PAYEMS USPRIV USGOVT USGOOD SRVPRD MANEMP USCONS USEHS USLAH USPBS USTRADE USINFO USFIRE USTPU TEMPHELPS CES9091000001 CE16OV UNRATE U6RATE CIVPART LNS12032194 AWHAETP CES0500000003 ICSA CPIAUCSL CPILFESL CUSR0000SAH1 CUSR0000SEHA CUSR0000SEHC CUSR0000SA0L2 CUSR0000SACL1E CUSR0000SASLE PCETRIM12M159SFRBDAL T10YIE PPIFIS WPSFD4131 WPSFD49207 WPSFD49116 RSAFS RSFSXMV RRSFS RSXFS PCEPI PCEPILFE PCEDG PCES DPCCRC1M027SBEA"
+          fail=0
+          for id in $SERIES; do
+            url="https://api.stlouisfed.org/fred/series/observations?series_id=${id}&api_key=${FRED_API_KEY}&file_type=json&sort_order=asc"
+            if curl -sf "$url" | jq -r '.observations[] | select(.value != ".") | .date + "," + .value' > "reports/data/${id}.csv.tmp"; then
+              if [ -s "reports/data/${id}.csv.tmp" ]; then
+                mv "reports/data/${id}.csv.tmp" "reports/data/${id}.csv"
+              else
+                echo "::warning::${id}: 빈 응답 — 기존 파일 유지"
+                rm -f "reports/data/${id}.csv.tmp"
+              fi
+            else
+              echo "::warning::${id}: 수집 실패 — 기존 파일 유지"
+              rm -f "reports/data/${id}.csv.tmp"
+              fail=$((fail+1))
+            fi
+            sleep 0.6   # FRED API 속도 제한(120/분) 여유
+          done
+          date -u +"%Y-%m-%dT%H:%M:%SZ" > reports/data/_mirror_time.txt
+          echo "완료 (실패 ${fail}건)"
+      - name: Commit if changed
+        run: |
+          git config user.name "fred-mirror-bot"
+          git config user.email "actions@github.com"
+          git add reports/data
+          if git diff --cached --quiet; then
+            echo "변경 없음 — 커밋 생략"
+          else
+            git commit -m "데이터 미러: $(date -u +%Y-%m-%d) FRED 47종"
+            git push
+          fi
