@@ -16,6 +16,10 @@ try:
     import winreg
 except ImportError:
     winreg = None
+try:  # 윈도우 콘솔(cp949)에서 '—' 같은 문자로 죽는 것 방지
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
 
 OUT = Path(__file__).parent / "supply_data.json"
 LOG = Path(__file__).parent / "supply_run.log"
@@ -146,10 +150,23 @@ def push():
         subprocess.run(["git", "add", "supply_data.json"], cwd=p)
         if subprocess.run(["git", "diff", "--cached", "--quiet"], cwd=p).returncode != 0:
             subprocess.run(["git", "commit", "-m", f"수급 자동갱신 {dt.date.today():%Y-%m-%d}"], cwd=p)
-            r = subprocess.run(["git", "push", "origin", "main"], cwd=p)
-            log("git push " + ("완료" if r.returncode == 0 else "실패"))
         else:
-            log("변경 없음 — push 생략")
+            log("변경 없음 — 커밋 생략")
+        # 다른 작업(FRED 미러 등)이 원격을 앞서가면 non-fast-forward로 push가 거부되므로
+        # 항상 rebase로 먼저 맞추고 push. 미푸시 커밋이 쌓여 있어도 여기서 같이 올라감.
+        def git(*a):
+            r = subprocess.run(["git", *a], cwd=p, capture_output=True, text=True, encoding="utf-8", errors="replace")
+            return r.returncode, (r.stdout or "").strip(), (r.stderr or "").strip()
+        rc, out, err = git("pull", "--rebase", "--autostash", "origin", "main")
+        if rc != 0:
+            git("rebase", "--abort")
+            log("git pull --rebase 실패: " + (err or out)[-200:])
+            return
+        if git("log", "origin/main..main", "--oneline")[1]:
+            rc, out, err = git("push", "origin", "main")
+            log("git push " + ("완료" if rc == 0 else "실패: " + err[-200:]))
+        else:
+            log("원격과 동일 — push 생략")
     else:
         github_api_push()
 
@@ -216,10 +233,15 @@ def main():
         if (i+1) % 30 == 0: log(f"  ...{i+1}/{len(todo)}")
 
     days = [{"date": d, "v": data[d]} for d in ordered]
-    payload = {"updated": dt.datetime.now().isoformat(timespec="seconds"), "unit": "억원",
-               "source": "현물=키움[0784] ka10051 / 파생=KRX MDCSTAT13101", "days": days}
-    OUT.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-    log(f"저장 총 {len(days)}일")
+    # days가 기존 파일과 동일하면 쓰지 않는다 (updated 타임스탬프만 바뀌어 빈 커밋 쌓이는 것 방지)
+    old_days = json.loads(OUT.read_text(encoding="utf-8")).get("days") if OUT.exists() else None
+    if old_days == days:
+        log(f"데이터 변경 없음 — 저장 생략 (총 {len(days)}일)")
+    else:
+        payload = {"updated": dt.datetime.now().isoformat(timespec="seconds"), "unit": "억원",
+                   "source": "현물=키움[0784] ka10051 / 파생=KRX MDCSTAT13101", "days": days}
+        OUT.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+        log(f"저장 총 {len(days)}일")
     if "--push" in sys.argv: push()
     log("===== 끝 =====")
 
