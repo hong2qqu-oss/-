@@ -2958,19 +2958,51 @@ async function showReportPanel() {
     return;
   }
   idx.sort((a, b) => (a.date < b.date ? 1 : -1));
+  rpIndex = idx;
+  // 지표별 그룹 (발표 순서대로 고정) — 각 그룹 안은 최신순. 헤더 클릭으로 접기(localStorage 기억).
+  const TAGS = [
+    ['NFP', '고용보고서 (NFP)'], ['CPI', 'CPI'], ['PPI', 'PPI'],
+    ['RETAIL', '소매판매'], ['PCE', 'PCE 물가'], ['ETC', '기타'],
+  ];
+  const collapsed = JSON.parse(localStorage.getItem('rpCollapsed_v1') || '{}');
+  const groups = TAGS.map(([tag, label]) => ({
+    tag, label,
+    items: idx.filter(r => (TAGS.some(t => t[0] === r.tag) ? r.tag : 'ETC') === tag),
+  })).filter(g => g.items.length);
+  // 항목 라벨: "7월분 · 8/12" 식 — 데이터월은 제목에서 추출, 없으면 발표일만
+  const itemLabel = r => {
+    const m = (r.title || '').match(/(\d{1,2})월분/);
+    return (m ? m[1] + '월분 · ' : '') + r.date.slice(5).replace('-', '/');
+  };
   document.getElementById('sidebar-scroll').innerHTML =
-    '<div style="padding:10px 14px;font-size:11px;color:var(--text-muted);line-height:1.6">📋 <b style="color:var(--text)">지표 해부 보고서</b><br>발표일마다 자동 생성 · 최신순</div>' +
-    idx.map(r =>
-      `<div class="indicator-item report-item" data-file="${r.file}">
-         <span style="color:var(--text-muted);font-size:10.5px">${r.date} · ${r.tag || ''}</span><br>${r.title}
-       </div>`).join('');
+    '<div style="padding:10px 14px;font-size:11px;color:var(--text-muted);line-height:1.6">📋 <b style="color:var(--text)">지표 해부 보고서</b><br>지표별 · 각 그룹 최신순 · 헤더 클릭=접기</div>' +
+    groups.map(g => `
+      <div class="category-label rp-head" data-tag="${g.tag}" style="cursor:pointer;display:flex;justify-content:space-between">
+        <span>${collapsed[g.tag] ? '▸' : '▾'} ${g.label}</span><span style="font-weight:400;opacity:.7">${g.items.length}건</span>
+      </div>
+      <div class="rp-group" data-tag="${g.tag}" style="${collapsed[g.tag] ? 'display:none' : ''}">
+        ${g.items.map(r => `
+          <div class="indicator-item report-item" data-file="${r.file}" title="${r.title}">
+            <span style="color:var(--text-muted);font-size:10.5px">${itemLabel(r)}</span><br>${(r.title || '').replace(/^[^—]*—\s*/, '')}
+          </div>`).join('')}
+      </div>`).join('');
+  document.querySelectorAll('.rp-head').forEach(h => h.addEventListener('click', () => {
+    const tag = h.dataset.tag;
+    const grp = document.querySelector(`.rp-group[data-tag="${tag}"]`);
+    const now = grp.style.display !== 'none';
+    grp.style.display = now ? 'none' : '';
+    h.querySelector('span').textContent = (now ? '▸ ' : '▾ ') + h.querySelector('span').textContent.slice(2);
+    collapsed[tag] = now;
+    localStorage.setItem('rpCollapsed_v1', JSON.stringify(collapsed));
+  }));
   document.querySelectorAll('.report-item').forEach(el => el.addEventListener('click', () => {
     document.querySelectorAll('.report-item').forEach(x => x.classList.remove('active'));
     el.classList.add('active');
     loadReport(el.dataset.file);
   }));
-  const first = document.querySelector('.report-item');
-  if (first) { first.classList.add('active'); loadReport(first.dataset.file); }
+  // 첫 화면 = 가장 최근 보고서 (그룹과 무관하게)
+  const latest = idx[0] && document.querySelector(`.report-item[data-file="${idx[0].file}"]`);
+  if (latest) { latest.classList.add('active'); loadReport(latest.dataset.file); }
 }
 function hideReportPanel() {
   document.getElementById('report-panel').classList.remove('show');
@@ -2978,12 +3010,36 @@ function hideReportPanel() {
   document.getElementById('chart-area').style.display = '';
   document.getElementById('legend-area').style.display = '';
 }
+let rpIndex = [];   // showReportPanel이 채움 — 같은 지표 이전/다음 회차 이동용
 async function loadReport(file) {
   const el = document.getElementById('report-body');
   el.innerHTML = '<p style="color:var(--text-muted)">불러오는 중…</p>';
   try {
     const md = await (await fetch('reports/' + file, { cache: 'no-store' })).text();
-    el.innerHTML = mdRender(md);
+    // 상단 네비: 같은 태그의 이전/다음 회차 (쌓일수록 이게 제일 편함)
+    const cur = rpIndex.find(r => r.file === file);
+    let nav = '';
+    if (cur) {
+      const same = rpIndex.filter(r => r.tag === cur.tag);   // 최신순 정렬 상태
+      const i = same.findIndex(r => r.file === file);
+      const newer = i > 0 ? same[i - 1] : null, older = i < same.length - 1 ? same[i + 1] : null;
+      const btn = (r, label) => r
+        ? `<a href="#" class="rp-nav" data-file="${r.file}" style="color:var(--accent);text-decoration:none">${label}</a>`
+        : `<span style="color:var(--text-muted);opacity:.5">${label}</span>`;
+      nav = `<div style="display:flex;justify-content:space-between;align-items:center;font-size:11.5px;color:var(--text-muted);
+                 border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:10px">
+               <span>${btn(older, '◀ 이전 회차' + (older ? ' (' + older.date.slice(5).replace('-', '/') + ')' : ''))}</span>
+               <span>${cur.tag} · ${same.length}건 중 ${i + 1}번째</span>
+               <span>${btn(newer, (newer ? '(' + newer.date.slice(5).replace('-', '/') + ') ' : '') + '다음 회차 ▶')}</span>
+             </div>`;
+    }
+    el.innerHTML = nav + mdRender(md);
+    el.querySelectorAll('.rp-nav').forEach(a => a.addEventListener('click', e => {
+      e.preventDefault();
+      const f = a.dataset.file;
+      document.querySelectorAll('.report-item').forEach(x => x.classList.toggle('active', x.dataset.file === f));
+      loadReport(f);
+    }));
     document.getElementById('report-panel').scrollTop = 0;
   } catch (e) { el.innerHTML = '<p style="color:var(--red)">로드 실패: ' + e.message + '</p>'; }
 }
