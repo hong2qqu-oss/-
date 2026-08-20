@@ -56,6 +56,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "변경 없음 — 커밋 생략"
           else
-            git commit -m "데이터 미러: $(date -u +%Y-%m-%d) FRED 47종"
+            git commit -m "데이터 미러: $(date -u +%Y-%m-%d) FRED $(ls reports/data/*.csv | wc -l)종"
             git push
           fi
