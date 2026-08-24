@@ -1417,10 +1417,9 @@ async function fetchCOT(cotName) {
     + `$select=report_date_as_yyyy_mm_dd,noncomm_positions_long_all,noncomm_positions_short_all,`
     + `comm_positions_long_all,comm_positions_short_all,nonrept_positions_long_all,nonrept_positions_short_all`
     + `&$where=${where}&$order=report_date_as_yyyy_mm_dd ASC&$limit=2000`;
-  const proxied = `https://corsproxy.io/?${encodeURIComponent(url)}`;
-
+  // CFTC Socrata API는 CORS 직접 허용 — 프록시 불필요 (corsproxy 종료 후 직결로 전환)
   let res;
-  try { res = await fetch(proxied); }
+  try { res = await fetch(url); }
   catch (e) { throw new Error('네트워크 오류: CFTC 서버에 연결할 수 없습니다.'); }
   if (!res.ok) throw new Error(`CFTC 서버 오류 (HTTP ${res.status})`);
   const json = await res.json();
@@ -1485,21 +1484,19 @@ function normalize0100(series) {
   return series.map(p => ({ x: p.x, y: (mx === mn) ? 50 : +((p.y - mn) / (mx - mn) * 100).toFixed(1) }));
 }
 
-// Yahoo Finance 주간 가격 (선물)
+// Yahoo Finance 주간 가격 — corsproxy 종료로 미러(reports/data/yahoo_*.csv, 매일 갱신) 사용.
+// 파일명은 심볼에서 영숫자만 남긴 것 (^KS11→KS11, ES=F→ESF, BTC-USD→BTCUSD)
 async function fetchYahooWeekly(symbol, range = '10y') {
-  const cacheKey = `yf_${symbol}_${range}`;
+  const cacheKey = `yf_${symbol}`;
   if (cache[cacheKey]) return cache[cacheKey];
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1wk&range=${range}`;
-  const proxied = `https://corsproxy.io/?${encodeURIComponent(url)}`;
-  const j = await fetch(proxied).then(r => r.json());
-  const r = j.chart?.result?.[0];
-  if (!r) throw new Error('가격 데이터 없음');
-  const ts = r.timestamp || [];
-  const closes = r.indicators?.quote?.[0]?.close || [];
-  const pts = ts.map((t, i) => ({
-    x: new Date(t * 1000).toISOString().slice(0, 10),
-    y: closes[i] != null ? +closes[i].toFixed(4) : null
-  })).filter(p => p.y !== null);
+  const san = symbol.replace(/[^A-Za-z0-9]/g, '');
+  const res = await fetch(`reports/data/yahoo_${san}.csv`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(
+    `${symbol}: 가격 미러에 없습니다.\n.github/workflows/fred-mirror.yml의 YAHOO 목록에 추가하세요.`);
+  const pts = (await res.text()).trim().split('\n').filter(Boolean).map(l => {
+    const [x, y] = l.split(',');
+    return { x, y: +y };
+  }).filter(p => p.x && isFinite(p.y));
   cache[cacheKey] = pts;
   return pts;
 }
@@ -1612,34 +1609,43 @@ async function fetchTSA() {
 }
 
 // ─── FETCH ────────────────────────────────────────────────────────────────────
+// 2026-08-21 대전환: corsproxy 무료 종료로 프록시 경유 FRED API 사장(死藏).
+// 데이터는 자체 미러(reports/data/*.csv, GitHub Actions가 매일 23:05 갱신)를 같은 출처로 읽는다.
+// → 프록시·API 키 둘 다 불필요. 단점: 갱신이 하루 1회 (일간 시리즈는 전일자까지).
 async function fetchFRED(seriesId, freq) {
-  if (!apiKey) {
-    throw new Error('API 키가 없습니다. 우측 상단 ⚙ API Key 버튼에서 입력하세요.');
-  }
   const cacheKey = `${seriesId}_${freq||''}`;
   if (cache[cacheKey]) return cache[cacheKey];
-
-  const freqParam = freq ? `&frequency=${freq}&aggregation_method=avg` : '';
-  const fredUrl = `https://api.stlouisfed.org/fred/series/observations?series_id=${seriesId}&api_key=${apiKey}&file_type=json&sort_order=asc${freqParam}`;
-  const url = `https://corsproxy.io/?${encodeURIComponent(fredUrl)}`;
-  let res;
-  try {
-    res = await fetch(url);
-  } catch (netErr) {
-    throw new Error('네트워크 오류: 데이터를 불러올 수 없습니다.\n• 인터넷 연결을 확인하세요\n• 잠시 후 다시 시도하세요');
-  }
-  if (!res.ok) {
-    throw new Error(`FRED 서버 오류 (HTTP ${res.status}): 잠시 후 다시 시도하세요.`);
-  }
-  const json = await res.json();
-  if (json.error_message) throw new Error(`FRED API 오류: ${json.error_message}`);
-
-  const points = json.observations
-    .filter(o => o.value !== '.' && o.value !== '')
-    .map(o => ({ x: o.date, y: parseFloat(o.value) }));
-
+  const res = await fetch(`reports/data/${seriesId}.csv`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(
+    `${seriesId}: 미러에 없는 시리즈입니다 (HTTP ${res.status}).\n` +
+    `.github/workflows/fred-mirror.yml의 SERIES 목록에 추가하고 워크플로를 실행하세요.`);
+  const text = await res.text();
+  let points = text.trim().split('\n').filter(Boolean).map(l => {
+    const [x, y] = l.split(',');
+    return { x, y: +y };
+  }).filter(p => p.x && isFinite(p.y));
+  if (freq) points = aggregateSeries(points, freq);   // FRED API의 frequency 파라미터 대체
   cache[cacheKey] = points;
   return points;
+}
+
+// 주간(w)/월간(m) 평균 집계 — 일간 원시 데이터를 차트용으로 축소
+function aggregateSeries(points, freq) {
+  const buckets = new Map();
+  points.forEach(p => {
+    let k;
+    if (freq === 'm') k = p.x.slice(0, 7) + '-01';
+    else {   // 주간: 그 주 일요일 날짜로 묶음
+      const d = new Date(p.x + 'T00:00:00Z');
+      d.setUTCDate(d.getUTCDate() - d.getUTCDay());
+      k = d.toISOString().slice(0, 10);
+    }
+    if (!buckets.has(k)) buckets.set(k, []);
+    buckets.get(k).push(p.y);
+  });
+  return [...buckets.entries()]
+    .map(([x, arr]) => ({ x, y: +(arr.reduce((s, v) => s + v, 0) / arr.length).toFixed(4) }))
+    .sort((a, b) => a.x.localeCompare(b.x));
 }
 
 // ─── 일본 실질금리 (jp_real.json) ─────────────────────────────────────────────
@@ -1711,52 +1717,21 @@ function ecosParseTime(t, cycle) {
   return `${t.slice(0, 4)}-01-01`;
 }
 
-// 한 구간 호출 — corsproxy 무료 티어가 큰 응답에 413을 뱉으므로 일간은 이걸 청크로 돌린다
-async function ecosCall(ind, start, end) {
-  const ecosUrl = `https://ecos.bok.or.kr/api/StatisticSearch/${ecosKey}/json/kr/1/10000/${ind.ecosStat}/${ind.ecosCycle}/${start}/${end}/${ind.ecosItem}`;
-  const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(ecosUrl)}`);
-  if (!res.ok) throw new Error(`ECOS 서버 오류 (HTTP ${res.status}): 잠시 후 다시 시도하세요.`);
-  const json = await res.json();
-  if (json.RESULT) {
-    if (json.RESULT.CODE === 'INFO-200') return [];   // 해당 구간 데이터 없음 — 청크에선 정상
-    throw new Error(`ECOS API 오류: ${json.RESULT.CODE} — ${json.RESULT.MESSAGE}`);
-  }
-  return (json.StatisticSearch && json.StatisticSearch.row) || [];
-}
-
+// 2026-08-21: corsproxy 종료로 브라우저 직접 호출 사장 — GitHub Actions 미러(reports/data/ecos_*.csv) 사용.
+// 파일명: ecos_{통계표}_{항목코드 영숫자화}.csv (예: ecos_404Y014__AA.csv — *AA의 *는 _로)
 async function fetchECOS(ind) {
-  if (!ecosKey) throw new Error('ECOS API 키가 없습니다. 우측 상단 ⚙ 버튼에서 입력하세요.\n발급(무료): ecos.bok.or.kr/api');
   const cacheKey = `ecos_${ind.ecosStat}_${ind.ecosItem}_${ind.ecosCycle}`;
   if (cache[cacheKey]) return cache[cacheKey];
-  const now = new Date();
-  const ymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
-  let rows = [];
-  if (ind.ecosCycle === 'D') {
-    // 일간 전체(1995~)는 한 방에 받으면 413 — 3년 청크(~750행, 월간 응답과 같은 크기)로 순차 수집
-    const y0 = +(ind.ecosStart || 2015);
-    const yN = now.getFullYear();
-    for (let y = y0; y <= yN; y += 3) {
-      const endY = Math.min(y + 2, yN);
-      rows = rows.concat(await ecosCall(ind, `${y}0101`, endY === yN ? ymd : `${endY}1231`));
-    }
-  } else if (ind.ecosCycle === 'Q') {
-    rows = await ecosCall(ind, '1960Q1', `${now.getFullYear()}Q${Math.floor(now.getMonth() / 3) + 1}`);
-  } else {
-    rows = await ecosCall(ind, '196001', ymd.slice(0, 6));
-  }
-  // 날짜 정렬 + 중복 제거 필수 (지뢰 노트 — 청크 경계 중복도 여기서 걸러짐)
-  const seen = new Set();
-  const pts = [];
-  rows.forEach(r => {
-    const v = parseFloat(r.DATA_VALUE);
-    if (!isFinite(v)) return;
-    const x = ecosParseTime(r.TIME, ind.ecosCycle);
-    if (seen.has(x)) return;
-    seen.add(x);
-    pts.push({ x, y: v * (ind.scale || 1) });
-  });
-  pts.sort((a, b) => (a.x < b.x ? -1 : 1));
-  if (!pts.length) throw new Error('ECOS 응답이 비었습니다 — 통계코드/항목코드를 확인하세요.');
+  const san = ind.ecosItem.replace(/[^A-Za-z0-9]/g, '_');
+  const res = await fetch(`reports/data/ecos_${ind.ecosStat}_${san}.csv`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(
+    `ECOS ${ind.ecosStat}/${ind.ecosItem}: 미러에 없습니다.\n` +
+    `저장소 Settings → Secrets에 ECOS_API_KEY가 등록돼 있는지, 워크플로 ECOS 목록에 이 시리즈가 있는지 확인하세요.`);
+  const pts = (await res.text()).trim().split('\n').filter(Boolean).map(l => {
+    const [x, y] = l.split(',');
+    return { x, y: +y * (ind.scale || 1) };
+  }).filter(p => p.x && isFinite(p.y));
+  if (!pts.length) throw new Error('ECOS 미러 파일이 비었습니다 — 통계코드/항목코드를 확인하세요.');
   cache[cacheKey] = pts;
   return pts;
 }
@@ -3420,9 +3395,7 @@ function fmLoadStats() {
   ids.forEach(id => {
     const ind = INDICATORS.find(i => i.id === id);
     if (!ind) return;
-    // FRED 직접 + 계산 소스 + Yahoo(price)·일본금리(jpreal·spread). 재무부 소스는 FRED 키 없이도 로딩.
-    const needsFredKey = !ind.source || ['fredratio', 'fedliq', 'fredchg', 'wagegap', 'freddiff', 'spread', 'krspread'].includes(ind.source);
-    if (needsFredKey && !apiKey) return;
+    // 전 소스 미러/직결 체제(2026-08-21) — API 키 게이트 불필요
     const fetcher = !ind.source ? () => fetchFRED(ind.id, ind.freq)
       : ['fredratio', 'fedliq', 'fredchg', 'dts', 'auction', 'wagegap', 'freddiff', 'price', 'jpreal', 'spread', 'ecos', 'krspread', 'estat'].includes(ind.source)
         ? () => LINE_SOURCES[ind.source](ind)
@@ -3460,8 +3433,6 @@ function fmLoadStats() {
   });
   // ── 이하 미국 지도 전용 동적 부제 (RATE·GAP 노드) ──
   if (fmCur !== 'FISCAL_MAP') return;
-  // 금리 박스: 10Y + 기간 프리미엄 실시간 값을 부제에 합쳐 표시 (FRED 키 필요)
-  if (!apiKey) return;
   Promise.all([fetchFRED('DGS10', 'w'), fetchFRED('THREEFYTP10', 'w')]).then(([dg, tp]) => {
     fmDynSub.RATE = `10Y ${dg[dg.length - 1].y.toFixed(2)}% · 프리미엄 ${tp[tp.length - 1].y.toFixed(2)}%`;
     rerender();
@@ -3878,11 +3849,8 @@ function hideFiscalMap() {
 buildSidebar();
 loadingEl.style.display = 'none';
 
-if (!apiKey) {
-  apiModal.classList.add('show');
-} else {
-  selectIndicator(INDICATORS[0]);
-}
+// 미러 체제(2026-08-21)부터 FRED 키 없이도 작동 — 모달은 ⚙로만 (e-Stat 키 입력용으로 유지)
+selectIndicator(INDICATORS[0]);
 </script>
 </body>
 </html>
