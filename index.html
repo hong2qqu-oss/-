@@ -2936,7 +2936,7 @@ async function showReportPanel() {
   rpIndex = idx;
   // 지표별 그룹 (발표 순서대로 고정) — 각 그룹 안은 최신순. 헤더 클릭으로 접기(localStorage 기억).
   const TAGS = [
-    ['NFP', '고용보고서 (NFP)'], ['CPI', 'CPI'], ['PPI', 'PPI'],
+    ['NFP', '고용보고서 (NFP)'], ['ADP', 'ADP 민간고용'], ['CPI', 'CPI'], ['PPI', 'PPI'],
     ['RETAIL', '소매판매'], ['PCE', 'PCE 물가'], ['CLAIMS', '실업청구 (주간)'], ['ETC', '기타'],
   ];
   const collapsed = JSON.parse(localStorage.getItem('rpCollapsed_v1') || '{}');
