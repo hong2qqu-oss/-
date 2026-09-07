@@ -2944,11 +2944,18 @@ async function showReportPanel() {
     tag, label,
     items: idx.filter(r => (TAGS.some(t => t[0] === r.tag) ? r.tag : 'ETC') === tag),
   })).filter(g => g.items.length);
-  // 항목 라벨: "7월분 · 8/12" 식 — 데이터월은 제목에서 추출, 없으면 발표일만
+  // 항목 라벨: "7월분 · 8/12" 식 — 데이터월은 제목에서 추출, 없으면 발표일만 (연도는 올해가 아닐 때만)
+  const thisYear = String(new Date().getFullYear());
   const itemLabel = r => {
     const m = (r.title || '').match(/(\d{1,2})월분/);
-    return (m ? m[1] + '월분 · ' : '') + r.date.slice(5).replace('-', '/');
+    const d = r.date.startsWith(thisYear) ? r.date.slice(5).replace('-', '/') : r.date.slice(2).replace(/-/g, '/');
+    return (m ? m[1] + '월분 · ' : '') + d;
   };
+  const RP_SHOW = 3;
+  const rpItem = r => `
+          <div class="indicator-item report-item" data-file="${r.file}" title="${r.title}">
+            <span style="color:var(--text-muted);font-size:10.5px">${itemLabel(r)}</span><br>${(r.title || '').replace(/^[^—]*—\s*/, '')}
+          </div>`;
   document.getElementById('sidebar-scroll').innerHTML =
     '<div style="padding:10px 14px;font-size:11px;color:var(--text-muted);line-height:1.6">📋 <b style="color:var(--text)">지표 해부 보고서</b><br>지표별 · 각 그룹 최신순 · 헤더 클릭=접기</div>' +
     groups.map(g => `
@@ -2956,11 +2963,18 @@ async function showReportPanel() {
         <span>${collapsed[g.tag] ? '▸' : '▾'} ${g.label}</span><span style="font-weight:400;opacity:.7">${g.items.length}건</span>
       </div>
       <div class="rp-group" data-tag="${g.tag}" style="${collapsed[g.tag] ? 'display:none' : ''}">
-        ${g.items.map(r => `
-          <div class="indicator-item report-item" data-file="${r.file}" title="${r.title}">
-            <span style="color:var(--text-muted);font-size:10.5px">${itemLabel(r)}</span><br>${(r.title || '').replace(/^[^—]*—\s*/, '')}
-          </div>`).join('')}
+        ${g.items.slice(0, RP_SHOW).map(rpItem).join('')}
+        ${g.items.length > RP_SHOW ? `
+          <div class="rp-more" data-tag="${g.tag}" style="padding:5px 14px;font-size:10.5px;color:var(--accent);cursor:pointer">▸ 이전 회차 ${g.items.length - RP_SHOW}건 더보기</div>
+          <div class="rp-rest" data-tag="${g.tag}" style="display:none">${g.items.slice(RP_SHOW).map(rpItem).join('')}</div>` : ''}
       </div>`).join('');
+  // 그룹당 최신 3건만 기본 노출 — 수년치 쌓여도 사이드바가 안 길어짐. 나머지는 "더보기" 뒤.
+  document.querySelectorAll('.rp-more').forEach(m => m.addEventListener('click', () => {
+    const rest = document.querySelector(`.rp-rest[data-tag="${m.dataset.tag}"]`);
+    const open = rest.style.display === 'none';
+    rest.style.display = open ? '' : 'none';
+    m.textContent = (open ? '▾ 접기' : '▸ 이전 회차 ' + rest.children.length + '건 더보기');
+  }));
   document.querySelectorAll('.rp-head').forEach(h => h.addEventListener('click', () => {
     const tag = h.dataset.tag;
     const grp = document.querySelector(`.rp-group[data-tag="${tag}"]`);
