@@ -569,6 +569,8 @@
     .rp-chip:hover { color:var(--text); }
     .rp-chip.on { background:var(--active-bg); color:var(--text); border-color:var(--accent); }
     .rp-chip.off { opacity:.35; cursor:default; }
+    .rp-year { margin-left:auto; font-size:10.5px; padding:2px 4px; border-radius:6px; border:1px solid var(--border); background:var(--sidebar-bg); color:var(--text); cursor:pointer; outline:none; }
+    .rp-year:hover { border-color: var(--accent); }
     #report-panel { display:none; flex:1; overflow:auto; padding:20px 30px; }
     #report-panel.show { display:block; }
     #report-body { max-width: 860px; margin: 0 auto; line-height: 1.75; font-size: 13.5px; }
@@ -2999,13 +3001,14 @@ function renderReportSidebar() {
   const cnt = c => rpIndex.filter(r => rpCountry(r) === c).length;
   const years = rpYears(rpFilter.country);
   const chips =
-    `<div class="rp-chips">${RP_COUNTRIES.map(([c, l]) =>
-      `<span class="rp-chip ${c === rpFilter.country ? 'on' : cnt(c) ? '' : 'off'}" data-country="${c}" title="${cnt(c) ? cnt(c) + '건' : '아직 보고서 없음'}">${l}</span>`).join('')}</div>` +
-    `<div class="rp-chips" style="padding-top:0">${years.map(y =>
-      `<span class="rp-chip ${y === rpFilter.year ? 'on' : ''}" data-year="${y}">${y}</span>`).join('')}` +
-      `<span class="rp-chip ${rpFilter.year === 'ALL' ? 'on' : ''}" data-year="ALL">전체</span></div>`;
+    `<div class="rp-chips" style="align-items:center">${RP_COUNTRIES.map(([c, l]) =>
+      `<span class="rp-chip ${c === rpFilter.country ? 'on' : cnt(c) ? '' : 'off'}" data-country="${c}" title="${cnt(c) ? cnt(c) + '건' : '아직 보고서 없음'}">${l}</span>`).join('')}` +
+    // 연도는 드롭다운 — 수년치가 쌓여도 칩이 줄줄이 붙지 않게
+    `<select class="rp-year" title="연도">${years.map(y =>
+      `<option value="${y}" ${y === rpFilter.year ? 'selected' : ''}>${y}</option>`).join('')}` +
+      `<option value="ALL" ${rpFilter.year === 'ALL' ? 'selected' : ''}>전체</option></select></div>`;
   document.getElementById('sidebar-scroll').innerHTML =
-    '<div style="padding:10px 14px 4px;font-size:11px;color:var(--text-muted);line-height:1.6">📋 <b style="color:var(--text)">지표 해부 보고서</b><br>국가 · 연도 · 지표별 최신 회차 · 헤더 클릭=이전 회차</div>' +
+    '<div style="padding:10px 14px 4px;font-size:11px;color:var(--text-muted);line-height:1.6">📋 <b style="color:var(--text)">지표 해부 보고서</b><br>국가·연도 고르면 지표별 최신 회차 · 헤더 클릭=이전 회차</div>' +
     chips +
     (groups.length ? '' : '<div style="padding:12px 14px;font-size:11px;color:var(--text-muted)">이 국가·연도에는 보고서가 없습니다.</div>') +
     groups.map(g => {
@@ -3031,12 +3034,11 @@ function renderReportSidebar() {
     saveFilter(); renderReportSidebar();
     const first = rpVisible()[0]; if (first) selectReport(first.file);
   }));
-  document.querySelectorAll('.rp-chip[data-year]').forEach(c => c.addEventListener('click', () => {
-    if (c.dataset.year === rpFilter.year) return;
-    rpFilter.year = c.dataset.year; saveFilter(); renderReportSidebar();
+  document.querySelector('.rp-year').addEventListener('change', e => {
+    rpFilter.year = e.target.value; saveFilter(); renderReportSidebar();
     // 현재 열린 보고서가 새 필터 안에 있으면 유지, 아니면 그 필터의 최신으로
     if (!document.querySelector('.report-item.active')) { const first = rpVisible()[0]; if (first) selectReport(first.file); }
-  }));
+  });
   document.querySelectorAll('.rp-more').forEach(m => m.addEventListener('click', () => {
     const rest = document.querySelector(`.rp-rest[data-tag="${m.dataset.tag}"]`);
     const open = rest.style.display === 'none';
