@@ -555,6 +555,15 @@
     #supply-panel.show { display:block; }
 
     /* 📋 지표 해부 보고서 탭 */
+    /* 보고서 탭 사이드바 — 항목 2줄 고정(날짜 · 제목 한 줄 말줄임), 그룹은 접혀도 최신 1건 노출 */
+    .report-item { display:block !important; padding:6px 14px 6px 16px; border-left:2px solid transparent; }
+    .report-item.active { border-left-color: var(--accent); }
+    .report-item .rp-d { font-size:10.5px; color:var(--text-muted); }
+    .report-item .rp-d b { color: var(--text); font-weight:600; }
+    .report-item .rp-t { display:block; font-size:11.5px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.5; }
+    .rp-head { cursor:pointer; display:flex; justify-content:space-between; align-items:center; user-select:none; }
+    .rp-head:hover { color: var(--text); }
+    .rp-more { padding:4px 16px 6px; font-size:10.5px; color:var(--accent); cursor:pointer; }
     #report-panel { display:none; flex:1; overflow:auto; padding:20px 30px; }
     #report-panel.show { display:block; }
     #report-body { max-width: 860px; margin: 0 auto; line-height: 1.75; font-size: 13.5px; }
@@ -2934,41 +2943,50 @@ async function showReportPanel() {
   }
   idx.sort((a, b) => (a.date < b.date ? 1 : -1));
   rpIndex = idx;
-  // 지표별 그룹 (발표 순서대로 고정) — 각 그룹 안은 최신순. 헤더 클릭으로 접기(localStorage 기억).
+  // 지표별 그룹 (발표 순서대로 고정) — 각 그룹 안은 최신순.
   const TAGS = [
     ['NFP', '고용보고서 (NFP)'], ['ADP', 'ADP 민간고용'], ['CPI', 'CPI'], ['PPI', 'PPI'],
     ['RETAIL', '소매판매'], ['PCE', 'PCE 물가'], ['CLAIMS', '실업청구 (주간)'], ['ETC', '기타'],
   ];
-  const collapsed = JSON.parse(localStorage.getItem('rpCollapsed_v1') || '{}');
+  // 펼침 상태(localStorage) — 기본은 전부 접힘. 접힌 그룹도 최신 1건은 보여서 8개 지표 최신 회차가 한눈에 들어옴.
+  const opened = JSON.parse(localStorage.getItem('rpOpen_v2') || '{}');
   const groups = TAGS.map(([tag, label]) => ({
     tag, label,
     items: idx.filter(r => (TAGS.some(t => t[0] === r.tag) ? r.tag : 'ETC') === tag),
   })).filter(g => g.items.length);
-  // 항목 라벨: "7월분 · 8/12" 식 — 데이터월은 제목에서 추출, 없으면 발표일만 (연도는 올해가 아닐 때만)
+  // 항목 라벨: "8월분 · 9/4" — 데이터월은 제목에서 추출, 없으면 발표일만 (연도는 올해가 아닐 때만)
   const thisYear = String(new Date().getFullYear());
   const itemLabel = r => {
     const m = (r.title || '').match(/(\d{1,2})월분/);
-    const d = r.date.startsWith(thisYear) ? r.date.slice(5).replace('-', '/') : r.date.slice(2).replace(/-/g, '/');
-    return (m ? m[1] + '월분 · ' : '') + d;
+    const d = r.date.startsWith(thisYear)
+      ? r.date.slice(5).split('-').map(Number).join('/')
+      : r.date.slice(2).split('-').map((v, i) => i ? Number(v) : v).join('/');
+    return (m ? '<b>' + m[1] + '월분</b> · ' : '') + d;
   };
-  const RP_SHOW = 3;
+  // 제목에서 "지표 해부 — N월분: " 접두를 떼고 한 줄 요지만 (전체 제목은 툴팁)
+  const itemSub = r => (r.title || '').replace(/^[^—]*—\s*/, '').replace(/^\d{1,2}월분\s*[:：]\s*/, '');
+  const RP_MAX = 8;   // 펼쳤을 때 최대 노출 — 그 이상은 "더보기"
   const rpItem = r => `
           <div class="indicator-item report-item" data-file="${r.file}" title="${r.title}">
-            <span style="color:var(--text-muted);font-size:10.5px">${itemLabel(r)}</span><br>${(r.title || '').replace(/^[^—]*—\s*/, '')}
+            <span class="rp-d">${itemLabel(r)}</span>
+            <span class="rp-t">${itemSub(r)}</span>
           </div>`;
   document.getElementById('sidebar-scroll').innerHTML =
-    '<div style="padding:10px 14px;font-size:11px;color:var(--text-muted);line-height:1.6">📋 <b style="color:var(--text)">지표 해부 보고서</b><br>지표별 · 각 그룹 최신순 · 헤더 클릭=접기</div>' +
-    groups.map(g => `
-      <div class="category-label rp-head" data-tag="${g.tag}" style="cursor:pointer;display:flex;justify-content:space-between">
-        <span>${collapsed[g.tag] ? '▸' : '▾'} ${g.label}</span><span style="font-weight:400;opacity:.7">${g.items.length}건</span>
+    '<div style="padding:10px 14px;font-size:11px;color:var(--text-muted);line-height:1.6">📋 <b style="color:var(--text)">지표 해부 보고서</b><br>지표별 최신 회차 · 헤더 클릭=이전 회차 펼치기</div>' +
+    groups.map(g => {
+      const open = !!opened[g.tag], rest = g.items.slice(1);
+      return `
+      <div class="category-label rp-head" data-tag="${g.tag}">
+        <span>${g.label}</span><span style="font-weight:400;opacity:.7">${g.items.length}건 ${open ? '▾' : '▸'}</span>
       </div>
-      <div class="rp-group" data-tag="${g.tag}" style="${collapsed[g.tag] ? 'display:none' : ''}">
-        ${g.items.slice(0, RP_SHOW).map(rpItem).join('')}
-        ${g.items.length > RP_SHOW ? `
-          <div class="rp-more" data-tag="${g.tag}" style="padding:5px 14px;font-size:10.5px;color:var(--accent);cursor:pointer">▸ 이전 회차 ${g.items.length - RP_SHOW}건 더보기</div>
-          <div class="rp-rest" data-tag="${g.tag}" style="display:none">${g.items.slice(RP_SHOW).map(rpItem).join('')}</div>` : ''}
-      </div>`).join('');
-  // 그룹당 최신 3건만 기본 노출 — 수년치 쌓여도 사이드바가 안 길어짐. 나머지는 "더보기" 뒤.
+      ${rpItem(g.items[0])}
+      <div class="rp-group" data-tag="${g.tag}" style="${open ? '' : 'display:none'}">
+        ${rest.slice(0, RP_MAX - 1).map(rpItem).join('')}
+        ${rest.length > RP_MAX - 1 ? `
+          <div class="rp-more" data-tag="${g.tag}">▸ 이전 회차 ${rest.length - (RP_MAX - 1)}건 더보기</div>
+          <div class="rp-rest" data-tag="${g.tag}" style="display:none">${rest.slice(RP_MAX - 1).map(rpItem).join('')}</div>` : ''}
+      </div>`;
+    }).join('');
   document.querySelectorAll('.rp-more').forEach(m => m.addEventListener('click', () => {
     const rest = document.querySelector(`.rp-rest[data-tag="${m.dataset.tag}"]`);
     const open = rest.style.display === 'none';
@@ -2978,11 +2996,11 @@ async function showReportPanel() {
   document.querySelectorAll('.rp-head').forEach(h => h.addEventListener('click', () => {
     const tag = h.dataset.tag;
     const grp = document.querySelector(`.rp-group[data-tag="${tag}"]`);
-    const now = grp.style.display !== 'none';
-    grp.style.display = now ? 'none' : '';
-    h.querySelector('span').textContent = (now ? '▸ ' : '▾ ') + h.querySelector('span').textContent.slice(2);
-    collapsed[tag] = now;
-    localStorage.setItem('rpCollapsed_v1', JSON.stringify(collapsed));
+    const open = grp.style.display === 'none';
+    grp.style.display = open ? '' : 'none';
+    h.lastElementChild.textContent = h.lastElementChild.textContent.replace(/[▾▸]/, open ? '▾' : '▸');
+    opened[tag] = open;
+    localStorage.setItem('rpOpen_v2', JSON.stringify(opened));
   }));
   document.querySelectorAll('.report-item').forEach(el => el.addEventListener('click', () => {
     document.querySelectorAll('.report-item').forEach(x => x.classList.remove('active'));
