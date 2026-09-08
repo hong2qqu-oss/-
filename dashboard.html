@@ -564,6 +564,11 @@
     .rp-head { cursor:pointer; display:flex; justify-content:space-between; align-items:center; user-select:none; }
     .rp-head:hover { color: var(--text); }
     .rp-more { padding:4px 16px 6px; font-size:10.5px; color:var(--accent); cursor:pointer; }
+    .rp-chips { display:flex; flex-wrap:wrap; gap:4px; padding:4px 14px 6px; }
+    .rp-chip { font-size:10.5px; padding:2px 8px; border-radius:10px; border:1px solid var(--border); color:var(--text-muted); cursor:pointer; user-select:none; }
+    .rp-chip:hover { color:var(--text); }
+    .rp-chip.on { background:var(--active-bg); color:var(--text); border-color:var(--accent); }
+    .rp-chip.off { opacity:.35; cursor:default; }
     #report-panel { display:none; flex:1; overflow:auto; padding:20px 30px; }
     #report-panel.show { display:block; }
     #report-body { max-width: 860px; margin: 0 auto; line-height: 1.75; font-size: 13.5px; }
@@ -2943,22 +2948,42 @@ async function showReportPanel() {
   }
   idx.sort((a, b) => (a.date < b.date ? 1 : -1));
   rpIndex = idx;
-  // 지표별 그룹 (발표 순서대로 고정) — 각 그룹 안은 최신순.
-  const TAGS = [
-    ['NFP', '고용보고서 (NFP)'], ['ADP', 'ADP 민간고용'], ['CPI', 'CPI'], ['PPI', 'PPI'],
-    ['RETAIL', '소매판매'], ['PCE', 'PCE 물가'], ['CLAIMS', '실업청구 (주간)'], ['ETC', '기타'],
-  ];
-  // 펼침 상태(localStorage) — 기본은 전부 접힘. 접힌 그룹도 최신 1건은 보여서 8개 지표 최신 회차가 한눈에 들어옴.
+  // 필터 기본값: 최신 보고서의 국가·연도 (저장된 게 있으면 그것, 단 해당 국가에 보고서가 없으면 최신 국가로)
+  const saved = JSON.parse(localStorage.getItem('rpFilter_v1') || '{}');
+  rpFilter.country = idx.some(r => rpCountry(r) === saved.country) ? saved.country : rpCountry(idx[0]);
+  const years = rpYears(rpFilter.country);
+  rpFilter.year = (saved.year === 'ALL' || years.includes(saved.year)) ? saved.year : years[0];
+  renderReportSidebar();
+  // 첫 화면 = 현재 필터 안에서 가장 최근 보고서
+  const first = rpVisible()[0];
+  if (first) selectReport(first.file);
+}
+// ── 보고서 분류 축: 국가 → 연도 → 지표. 보고서가 수년·여러 나라로 쌓여도 사이드바가 한 화면을 넘지 않게.
+const RP_COUNTRIES = [['US', '미국'], ['KR', '한국'], ['JP', '일본']];
+// 지표 그룹 라벨(국가별, 발표 순서). 목록에 없는 태그는 태그명 그대로 별도 그룹 — 새 지표를 추가해도 코드 수정 불필요.
+const RP_TAGS = {
+  US: [['NFP', '고용보고서 (NFP)'], ['ADP', 'ADP 민간고용'], ['CPI', 'CPI'], ['PPI', 'PPI'],
+       ['RETAIL', '소매판매'], ['PCE', 'PCE 물가'], ['CLAIMS', '실업청구 (주간)']],
+  KR: [['BOK', '한은 금통위'], ['CPI', 'CPI'], ['TRADE', '수출입'], ['GDP', 'GDP']],
+  JP: [['BOJ', '일본은행'], ['CPI', 'CPI'], ['TRADE', '수출입'], ['GDP', 'GDP']],
+};
+const rpFilter = { country: 'US', year: null };
+const rpCountry = r => r.country || 'US';       // 초기 보고서(2026-08~)는 country 없음 = 미국
+const rpYear = r => r.date.slice(0, 4);
+const rpYears = c => [...new Set(rpIndex.filter(r => rpCountry(r) === c).map(rpYear))].sort().reverse();
+const rpVisible = () => rpIndex.filter(r => rpCountry(r) === rpFilter.country && (rpFilter.year === 'ALL' || rpYear(r) === rpFilter.year));
+function renderReportSidebar() {
+  const idx = rpVisible();
+  const known = (RP_TAGS[rpFilter.country] || []).slice();
+  const tags = known.map(t => t[0]);
+  idx.forEach(r => { if (!tags.includes(r.tag)) { tags.push(r.tag); known.push([r.tag, r.tag]); } });
+  // 펼침 상태(localStorage) — 기본은 전부 접힘. 접힌 그룹도 최신 1건은 보여서 지표별 최신 회차가 한눈에 들어옴.
   const opened = JSON.parse(localStorage.getItem('rpOpen_v2') || '{}');
-  const groups = TAGS.map(([tag, label]) => ({
-    tag, label,
-    items: idx.filter(r => (TAGS.some(t => t[0] === r.tag) ? r.tag : 'ETC') === tag),
-  })).filter(g => g.items.length);
-  // 항목 라벨: "8월분 · 9/4" — 데이터월은 제목에서 추출, 없으면 발표일만 (연도는 올해가 아닐 때만)
-  const thisYear = String(new Date().getFullYear());
+  const groups = known.map(([tag, label]) => ({ tag, label, items: idx.filter(r => r.tag === tag) })).filter(g => g.items.length);
+  // 항목 라벨: "8월분 · 9/4" — 데이터월은 제목에서 추출, 없으면 발표일만 (연도는 연도 필터가 '전체'일 때만)
   const itemLabel = r => {
     const m = (r.title || '').match(/(\d{1,2})월분/);
-    const d = r.date.startsWith(thisYear)
+    const d = rpFilter.year !== 'ALL'
       ? r.date.slice(5).split('-').map(Number).join('/')
       : r.date.slice(2).split('-').map((v, i) => i ? Number(v) : v).join('/');
     return (m ? '<b>' + m[1] + '월분</b> · ' : '') + d;
@@ -2971,8 +2996,18 @@ async function showReportPanel() {
             <span class="rp-d">${itemLabel(r)}</span>
             <span class="rp-t">${itemSub(r)}</span>
           </div>`;
+  const cnt = c => rpIndex.filter(r => rpCountry(r) === c).length;
+  const years = rpYears(rpFilter.country);
+  const chips =
+    `<div class="rp-chips">${RP_COUNTRIES.map(([c, l]) =>
+      `<span class="rp-chip ${c === rpFilter.country ? 'on' : cnt(c) ? '' : 'off'}" data-country="${c}" title="${cnt(c) ? cnt(c) + '건' : '아직 보고서 없음'}">${l}</span>`).join('')}</div>` +
+    `<div class="rp-chips" style="padding-top:0">${years.map(y =>
+      `<span class="rp-chip ${y === rpFilter.year ? 'on' : ''}" data-year="${y}">${y}</span>`).join('')}` +
+      `<span class="rp-chip ${rpFilter.year === 'ALL' ? 'on' : ''}" data-year="ALL">전체</span></div>`;
   document.getElementById('sidebar-scroll').innerHTML =
-    '<div style="padding:10px 14px;font-size:11px;color:var(--text-muted);line-height:1.6">📋 <b style="color:var(--text)">지표 해부 보고서</b><br>지표별 최신 회차 · 헤더 클릭=이전 회차 펼치기</div>' +
+    '<div style="padding:10px 14px 4px;font-size:11px;color:var(--text-muted);line-height:1.6">📋 <b style="color:var(--text)">지표 해부 보고서</b><br>국가 · 연도 · 지표별 최신 회차 · 헤더 클릭=이전 회차</div>' +
+    chips +
+    (groups.length ? '' : '<div style="padding:12px 14px;font-size:11px;color:var(--text-muted)">이 국가·연도에는 보고서가 없습니다.</div>') +
     groups.map(g => {
       const open = !!opened[g.tag], rest = g.items.slice(1);
       return `
@@ -2987,6 +3022,21 @@ async function showReportPanel() {
           <div class="rp-rest" data-tag="${g.tag}" style="display:none">${rest.slice(RP_MAX - 1).map(rpItem).join('')}</div>` : ''}
       </div>`;
     }).join('');
+  const saveFilter = () => localStorage.setItem('rpFilter_v1', JSON.stringify(rpFilter));
+  document.querySelectorAll('.rp-chip[data-country]').forEach(c => c.addEventListener('click', () => {
+    if (c.classList.contains('off') || c.dataset.country === rpFilter.country) return;
+    rpFilter.country = c.dataset.country;
+    const ys = rpYears(rpFilter.country);
+    if (rpFilter.year !== 'ALL' && !ys.includes(rpFilter.year)) rpFilter.year = ys[0];
+    saveFilter(); renderReportSidebar();
+    const first = rpVisible()[0]; if (first) selectReport(first.file);
+  }));
+  document.querySelectorAll('.rp-chip[data-year]').forEach(c => c.addEventListener('click', () => {
+    if (c.dataset.year === rpFilter.year) return;
+    rpFilter.year = c.dataset.year; saveFilter(); renderReportSidebar();
+    // 현재 열린 보고서가 새 필터 안에 있으면 유지, 아니면 그 필터의 최신으로
+    if (!document.querySelector('.report-item.active')) { const first = rpVisible()[0]; if (first) selectReport(first.file); }
+  }));
   document.querySelectorAll('.rp-more').forEach(m => m.addEventListener('click', () => {
     const rest = document.querySelector(`.rp-rest[data-tag="${m.dataset.tag}"]`);
     const open = rest.style.display === 'none';
@@ -3002,14 +3052,21 @@ async function showReportPanel() {
     opened[tag] = open;
     localStorage.setItem('rpOpen_v2', JSON.stringify(opened));
   }));
-  document.querySelectorAll('.report-item').forEach(el => el.addEventListener('click', () => {
-    document.querySelectorAll('.report-item').forEach(x => x.classList.remove('active'));
-    el.classList.add('active');
-    loadReport(el.dataset.file);
-  }));
-  // 첫 화면 = 가장 최근 보고서 (그룹과 무관하게)
-  const latest = idx[0] && document.querySelector(`.report-item[data-file="${idx[0].file}"]`);
-  if (latest) { latest.classList.add('active'); loadReport(latest.dataset.file); }
+  document.querySelectorAll('.report-item').forEach(el => el.addEventListener('click', () => selectReport(el.dataset.file)));
+  // 현재 열린 보고서가 있으면 active 복원
+  if (rpCurrent) document.querySelectorAll('.report-item').forEach(x => x.classList.toggle('active', x.dataset.file === rpCurrent));
+}
+// 보고서 선택 — 사이드바 필터 밖(다른 국가·연도)의 파일이면 필터를 그쪽으로 옮기고 다시 그림
+function selectReport(file) {
+  const r = rpIndex.find(x => x.file === file);
+  rpCurrent = file;
+  if (r && (rpCountry(r) !== rpFilter.country || (rpFilter.year !== 'ALL' && rpYear(r) !== rpFilter.year))) {
+    rpFilter.country = rpCountry(r); rpFilter.year = rpYear(r);
+    localStorage.setItem('rpFilter_v1', JSON.stringify(rpFilter));
+    renderReportSidebar();
+  }
+  document.querySelectorAll('.report-item').forEach(x => x.classList.toggle('active', x.dataset.file === file));
+  loadReport(file);
 }
 function hideReportPanel() {
   document.getElementById('report-panel').classList.remove('show');
@@ -3018,35 +3075,34 @@ function hideReportPanel() {
   document.getElementById('legend-area').style.display = '';
 }
 let rpIndex = [];   // showReportPanel이 채움 — 같은 지표 이전/다음 회차 이동용
+let rpCurrent = null; // 현재 열린 보고서 파일명
 async function loadReport(file) {
   const el = document.getElementById('report-body');
   el.innerHTML = '<p style="color:var(--text-muted)">불러오는 중…</p>';
   try {
-    const md = await (await fetch('reports/' + file, { cache: 'no-store' })).text();
+    const res = await fetch('reports/' + file, { cache: 'no-store' });
+    if (!res.ok) throw new Error(res.status + ' — reports/' + file + ' 파일이 없습니다 (index.json만 있고 본문 미커밋?)');
+    const md = await res.text();
     // 상단 네비: 같은 태그의 이전/다음 회차 (쌓일수록 이게 제일 편함)
     const cur = rpIndex.find(r => r.file === file);
     let nav = '';
     if (cur) {
-      const same = rpIndex.filter(r => r.tag === cur.tag);   // 최신순 정렬 상태
+      const same = rpIndex.filter(r => r.tag === cur.tag && rpCountry(r) === rpCountry(cur));   // 같은 국가·지표, 최신순 (연도 무관)
       const i = same.findIndex(r => r.file === file);
       const newer = i > 0 ? same[i - 1] : null, older = i < same.length - 1 ? same[i + 1] : null;
+      const navDate = r => (rpYear(r) === rpYear(cur) ? r.date.slice(5) : r.date).replace(/-/g, '/');
       const btn = (r, label) => r
         ? `<a href="#" class="rp-nav" data-file="${r.file}" style="color:var(--accent);text-decoration:none">${label}</a>`
         : `<span style="color:var(--text-muted);opacity:.5">${label}</span>`;
       nav = `<div style="display:flex;justify-content:space-between;align-items:center;font-size:11.5px;color:var(--text-muted);
                  border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:10px">
-               <span>${btn(older, '◀ 이전 회차' + (older ? ' (' + older.date.slice(5).replace('-', '/') + ')' : ''))}</span>
+               <span>${btn(older, '◀ 이전 회차' + (older ? ' (' + navDate(older) + ')' : ''))}</span>
                <span>${cur.tag} · ${same.length}건 중 ${i + 1}번째</span>
-               <span>${btn(newer, (newer ? '(' + newer.date.slice(5).replace('-', '/') + ') ' : '') + '다음 회차 ▶')}</span>
+               <span>${btn(newer, (newer ? '(' + navDate(newer) + ') ' : '') + '다음 회차 ▶')}</span>
              </div>`;
     }
     el.innerHTML = nav + mdRender(md);
-    el.querySelectorAll('.rp-nav').forEach(a => a.addEventListener('click', e => {
-      e.preventDefault();
-      const f = a.dataset.file;
-      document.querySelectorAll('.report-item').forEach(x => x.classList.toggle('active', x.dataset.file === f));
-      loadReport(f);
-    }));
+    el.querySelectorAll('.rp-nav').forEach(a => a.addEventListener('click', e => { e.preventDefault(); selectReport(a.dataset.file); }));
     document.getElementById('report-panel').scrollTop = 0;
   } catch (e) { el.innerHTML = '<p style="color:var(--red)">로드 실패: ' + e.message + '</p>'; }
 }
