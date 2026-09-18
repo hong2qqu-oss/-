@@ -115,15 +115,27 @@ def krx_login():
 KRX_HDR = {"User-Agent": UA, "X-Requested-With": "XMLHttpRequest",
            "Referer": "https://data.krx.co.kr/contents/MDC/MDI/mdiLoader/index.cmd"}
 
+_drv_err = set()   # 같은 사유를 매 요청마다 찍지 않기 위한 1회 기록
+
 def fetch_drv(s, isuCd, isuOpt, dd):
     body = {"bld": "dbms/MDC/STAT/standard/MDCSTAT13101", "locale": "ko_KR", "prodId": "",
         "strtDd": dd, "endDd": dd, "inqTpCd": "1", "prtType": "AMT", "prtCheck": "SUN",
         "isuCd": isuCd, "isuOpt": isuOpt, "aggBasTpCd": "",
         "strtDdBox1": dd, "endDdBox1": dd, "share": "1", "money": "3", "csvxls_isNo": "false"}
     try:
-        rows = s.post(KRX_GET, data=body, headers=KRX_HDR, timeout=20).json().get("output", [])
-    except Exception:
+        r = s.post(KRX_GET, data=body, headers=KRX_HDR, timeout=20)
+    except Exception as e:
+        if "net" not in _drv_err:
+            _drv_err.add("net"); log(f"  KRX 요청 실패: {type(e).__name__} {e}"[:200])
         return None
+    # KRX는 본문에 'LOGOUT'/'TEMPBLOCK' 등 평문 코드를 주고 JSON이 아니다 — 조용히 삼키지 말 것
+    if r.status_code != 200 or not r.text.lstrip().startswith(("{", "[")):
+        code = r.text.strip()[:40] or f"HTTP {r.status_code}"
+        if code not in _drv_err:
+            _drv_err.add(code)
+            log(f"  KRX 조회 거부: {code} (HTTP {r.status_code}) — 파생 수집 불가")
+        return None
+    rows = r.json().get("output", [])
     d = {r["INVST_TP_NM"]: pnum(r.get("NETBID_TRDVAL")) for r in rows}
     if "합계" not in d: return None
     eok = lambda v: round(v / 1e8, 1)   # 억원 소수1자리
