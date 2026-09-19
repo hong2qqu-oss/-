@@ -108,7 +108,12 @@ def krx_login():
         payload["skipDup"] = "Y"
         d = s.post(url, data=payload, headers=hdr, timeout=15).json()
     if d.get("_error_code") != "CD001":
-        raise SystemExit(f"KRX 로그인 실패: {d.get('_error_code')} {d.get('_error_message')}")
+        code, msg = d.get("_error_code"), d.get("_error_message")
+        log(f"KRX 로그인 실패: {code} {msg}")
+        if code == "CD010":   # 주기적 비밀번호 변경 강제 — 사람이 직접 바꿔야 풀린다
+            log("  → KRX 사이트에서 비밀번호를 변경한 뒤 환경변수 KRX_PW 를 갱신하세요.")
+        # 파생만 포기하고 현물은 계속 모은다 (여기서 죽으면 현물까지 멈춘다)
+        return None
     log("KRX 로그인 완료")
     return s
 
@@ -235,8 +240,11 @@ def main():
         ordered.append(d); prev = sp
 
     redrv = "--redrv" in sys.argv
-    todo = [d for d in ordered if redrv or drv_incomplete(data[d]) or d == today]
-    log(f"파생 수집 {len(todo)}일")
+    todo = [] if ks is None else [d for d in ordered if redrv or drv_incomplete(data[d]) or d == today]
+    if ks is None:
+        log("파생 수집 건너뜀 (KRX 로그인 실패) — 기존 파생값은 그대로 보존")
+    else:
+        log(f"파생 수집 {len(todo)}일")
     for i, d in enumerate(todo):
         dd = d.replace("-", "")
         for key, (isu, opt) in DRV.items():
