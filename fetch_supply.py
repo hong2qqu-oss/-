@@ -25,7 +25,9 @@ OUT = Path(__file__).parent / "supply_data.json"
 LOG = Path(__file__).parent / "supply_run.log"
 JOURNAL_ENV = Path(r"C:\Users\user\OneDrive\바탕 화면\Trading\daily-trade-journal\.env")
 KIWOOM = "https://api.kiwoom.com"
-KRX_GET = "http://data.krx.co.kr/comm/bldAttendant/getJsonData.cmd"
+KRX_GET = "https://data.krx.co.kr/comm/bldAttendant/getJsonData.cmd"
+# https 필수: JSESSIONID가 Secure라 http로는 쿠키가 실리지 않고, 게다가 평문 응답이
+# 새 익명 세션을 내려보내 인증 쿠키를 덮어쓴다(=조회 전부 LOGOUT). 2026-09-17 증상.
 GITHUB_REPO = "hong2qqu-oss/-"
 
 DRV = {  # key -> (isuCd, isuOpt)
