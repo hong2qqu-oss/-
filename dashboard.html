@@ -1034,8 +1034,8 @@ const INDICATORS = [
   // 레벨의 계절성(보너스철·납부 달력)을 소거한 진짜 신호 — 0 아래 = 급여총액이 1년 전보다 감소
   { id:'DTS_WITHHELD_YOY', name:'└ 원천징수 4주합 YoY', unit:'%', category:'재정 / FISCAL', country:'US', source:'dtsyoy', noStats:true, lineRaw:true,
     refLines:[ {y:0, color:'#f85149', label:'0 = 급여총액 정체'} ] },
-  // 임금YoY − 징수YoY ≈ −(고용 증가율). 양수 = 고용 축소 방향, ±0.3%p 안은 노이즈 밴드
-  { id:'WAGE_DTS_GAP', name:'임금−징수 갭 (10일 평활)', unit:'%p', category:'재정 / FISCAL', country:'US', source:'wagegap', noStats:true, lineRaw:true,
+  // 임금YoY − 징수YoY ≈ −(고용 증가율). 양수 = 고용 축소 방향. 2026-09-28부터 달력 보정판(87일 급여일 물결 제거)
+  { id:'WAGE_DTS_GAP', name:'임금−징수 갭 (달력 보정·10일 평활)', unit:'%p', category:'재정 / FISCAL', country:'US', source:'wagegap', noStats:true, lineRaw:true,
     refLines:[ {y:1,  color:'#f85149', label:'+1%p 고용 위축 경보'},
                {y:0,  color:'#8b949e', label:'0 = 고용 정체'},
                {y:-1, color:'#7ee787', label:'-1%p 고용 확장'} ] },
@@ -1934,24 +1934,253 @@ async function fetchDTSYoY() {
   return fmYoYPct(await fetchDTSWithheld()).map(p => ({ x: p.x, y: +p.y.toFixed(2) }));
 }
 
-// 임금−징수 갭 시계열 — 징수YoY ≈ 임금상승률 + 고용증가율이므로,
-// 임금YoY(단가) − 징수YoY(총액) ≈ −(고용 증가율). 양수 = 고용이 줄어드는 방향.
-// 급여일 요일 정렬 차이로 일간 ±1%p 출렁여서 10일 평활을 걸어 판정 안정화.
-async function fetchWageGap() {
-  const [w, d] = await Promise.all([fetchFRED('CES0500000003', 'm'), fetchDTSWithheld()]);
-  const wy = fmYoYPct(w), dy = fmYoYPct(d);
-  if (!wy.length || !dy.length) return [];
-  let j = 0; const out = [];
-  for (const p of dy) {
-    while (j + 1 < wy.length && wy[j + 1].x <= p.x) j++;
-    if (wy[j].x <= p.x) out.push({ x: p.x, y: wy[j].y - p.y });
+// ─── 임금−징수 갭: 달력 보정판 (2026-09-28) ─────────────────────────────────────
+// 문제: 기존 갭(임금YoY − 원천징수 28일합 YoY)에는 약 87일 주기의 물결이 있었다(진폭 약 2.4%p, 잡음의 약 3/4).
+//   원인 = 달력 앨리어싱. 매달 1일·15일의 요일이 한 달에 2.44일씩 밀려 87.3일마다 되풀이되는데, 원천징수 예치는
+//   월요일과 월초·15일 직후에 몰린다. 28일 창은 요일 구성은 고정해도 '월초가 무슨 요일이냐'는 못 지운다.
+//   (달별 계절성은 없음: 2008~2017 월 효과 F검정 p=0.999 — YoY가 이미 지운다)
+// 해법 = 일간 달력 회귀. 입금 x_t = 월 수준 × 달력 인자 f_t, f_t = X_t·b (달력 변수 18개: 요일 누적 5, 월 첫 1~4영업일,
+//   말일, 15일 이하 마지막 영업일과 그 뒤 1~4영업일, 15일이 휴일인 달의 첫 영업일, 첫 영업일이 월·금요일인지).
+//   b는 해마다 1월 1일에 그 이전 자료로만 다시 추정(확장창, 2018 TCJA·2020-03~2023 코로나 유예·상환 제외) → 실시간.
+//   보정 수준 = 28일 창 Σx / Σf → YoY → 갭 → 관측 10개 평균 (창·평활은 기존과 같아서 지연 추가 없음).
+// 검증(20년치, 절단·교란 검정 통과): 2024-03~ 87일 진폭 2.42→0.21%p, 일간 잡음 1.56→0.81,
+//   임금총액 기준 갭과 수준상관 0.28→0.55, 고용YoY 월간변화 상관 0.33→0.52. 분석: 스크래치 wagegap/ (세션 기록)
+// 옛 표 접합: 2023-02-13 이전 = Table IV 'Withheld Income and Employment Taxes' − 같은 날 'Inter-agency Transfers'
+//   (재무부가 새 표 첫날 공표한 새 정의 재계산 누계와 백만$ 단위까지 일치). 옛 표는 고정 자료라 localStorage 캐시.
+const WGCAL = (function () {
+  const DAY = 86400000;
+  const SPLIT = '2023-02-14';                          // 새 표(Table II) 첫날
+  const FALLBACK_K = 0.960;                            // 그날 기관간 이체 행이 없을 때만 쓰는 대체 배율
+  const dn = s => Math.round(Date.UTC(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10)) / DAY);
+  const ds = n => new Date(n * DAY).toISOString().slice(0, 10);
+  const ymd = n => { const d = new Date(n * DAY); return [d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate()]; };
+  const wdOf = n => (new Date(n * DAY).getUTCDay() + 6) % 7;      // 0=월 ... 4=금, 5=토, 6=일
+  const mk = (y, m, d) => Math.round(Date.UTC(y, m - 1, d) / DAY);
+  const monthEnd = n => { const [y, m] = ymd(n); return mk(y, m + 1, 1) - 1; };
+
+  // ---------------------------------------------------------------- 1) 접합
+  function spliceDTS(oldRows, newRows) {
+    const W = new Map(), I = new Map(), N = new Map();
+    for (const r of oldRows || []) {
+      const d = r.record_date, v = +r.tax_deposit_today_amt;
+      if (!d || d >= SPLIT || !isFinite(v)) continue;
+      if (r.tax_deposit_type === 'Withheld Income and Employment Taxes') W.set(d, v);
+      else if (r.tax_deposit_type === 'Inter-agency Transfers') I.set(d, v);
+    }
+    for (const r of newRows || []) {
+      const d = r.record_date, v = +r.transaction_today_amt;
+      if (!d || d < SPLIT || !isFinite(v)) continue;
+      N.set(d, v);                                    // 같은 날짜가 두 번 오면 마지막 것 하나만
+    }
+    const out = [];
+    for (const [d, w] of W) out.push({ x: d, y: I.has(d) ? w - I.get(d) : w * FALLBACK_K });
+    for (const [d, v] of N) out.push({ x: d, y: v });
+    out.sort((a, b) => (a.x < b.x ? -1 : a.x > b.x ? 1 : 0));
+    return out;
   }
-  const sm = [];
-  for (let i = 0; i < out.length; i++) {
-    const s = out.slice(Math.max(0, i - 9), i + 1);
-    sm.push({ x: out[i].x, y: +(s.reduce((a, b) => a + b.y, 0) / s.length).toFixed(2) });
+
+  // ---------------------------------------------------------------- 2) 달력 (연준 = DTS 휴무 규칙)
+  function nthWd(y, m, wd, k) { let n = mk(y, m, 1); n += (wd - wdOf(n) + 7) % 7; return n + 7 * (k - 1); }
+  function lastWd(y, m, wd) { const n = mk(y, m + 1, 1) - 1; return n - ((wdOf(n) - wd + 7) % 7); }
+  function obs(n) { const w = wdOf(n); return w === 5 ? null : w === 6 ? n + 1 : n; }   // 토: 대체휴무 없음, 일: 월요일
+  function holidays(y) {
+    const h = [obs(mk(y, 1, 1)), nthWd(y, 1, 0, 3), nthWd(y, 2, 0, 3), lastWd(y, 5, 0), obs(mk(y, 7, 4)),
+      nthWd(y, 9, 0, 1), nthWd(y, 10, 0, 2), obs(mk(y, 11, 11)), nthWd(y, 11, 3, 4), obs(mk(y, 12, 25))];
+    if (y >= 2021) h.push(obs(mk(y, 6, 19)));
+    return h.filter(v => v !== null);
   }
-  return sm;
+  function ruleBusinessDays(n0, n1) {
+    const hol = new Set();
+    for (let y = ymd(n0)[0]; y <= ymd(n1)[0]; y++) holidays(y).forEach(v => hol.add(v));
+    const out = [];
+    for (let n = n0; n <= n1; n++) if (wdOf(n) < 5 && !hol.has(n)) out.push(n);
+    return out;
+  }
+  // 관측 구간 = DTS 날짜 그대로, 마지막 관측 뒤 = 규칙 영업일(다음 달 말일까지). 어긋나면 경고만 남긴다.
+  function calendar(t) {
+    const last = t[t.length - 1], end = monthEnd(monthEnd(last) + 1);
+    const rule = ruleBusinessDays(t[0], end), obsSet = new Set(t), warnings = [];
+    for (const n of rule) if (n <= last && !obsSet.has(n)) warnings.push('DTS 에 없는 규칙 영업일 ' + ds(n));
+    const ruleSet = new Set(rule);
+    for (const n of t) if (!ruleSet.has(n)) warnings.push('규칙상 휴무인데 DTS 가 있는 날 ' + ds(n));
+    return { bds: t.concat(rule.filter(n => n > last)), warnings };
+  }
+
+  // ---------------------------------------------------------------- 3) 달력 변수 18개
+  const NAMES = ['w_mon', 'w_tue', 'w_wed', 'w_thu', 'w_fss', 'bd1', 'bd2', 'bd3', 'bd4', 'lbd',
+    'f0', 'f1', 'f2', 'f3', 'f4', 'g0', 'bd1@0', 'bd1@4'];
+  const C = Object.fromEntries(NAMES.map((k, j) => [k, j]));
+  function features(bds) {
+    const n = bds.length, P = NAMES.length, X = Array.from({ length: n }, () => new Float64Array(P));
+    for (let i = 0; i < n; i++) {                    // 요일 누적: 직전 영업일 ~ 전날의 달력일(금·토·일은 합쳐 1)
+      const d = bds[i], p = i > 0 ? bds[i - 1] : d - (wdOf(d) ? 1 : 3);
+      let fss = false;
+      for (let t = p; t < d; t++) {
+        const k = wdOf(t);
+        if (k >= 4) { if (!fss) { X[i][C.w_fss] += 1; fss = true; } } else X[i][k] += 1;
+      }
+    }
+    const months = new Map();
+    for (let i = 0; i < n; i++) { const [y, m] = ymd(bds[i]); const key = y * 12 + m; if (!months.has(key)) months.set(key, []); months.get(key).push(i); }
+    for (const ii of months.values()) {
+      for (let k = 0; k < Math.min(4, ii.length); k++) X[ii[k]][C['bd' + (k + 1)]] = 1;
+      X[ii[ii.length - 1]][C.lbd] = 1;
+      const w = wdOf(bds[ii[0]]);
+      if (w === 0) X[ii[0]][C['bd1@0']] = 1;
+      if (w === 4) X[ii[0]][C['bd1@4']] = 1;
+      let f0 = -1, g0 = -1;
+      for (const j of ii) { const day = ymd(bds[j])[2]; if (day <= 15) f0 = j; if (day >= 15 && g0 < 0) g0 = j; }
+      if (f0 >= 0) { X[f0][C.f0] = 1; for (let k = 1; k <= 4; k++) if (f0 + k < n) X[f0 + k][C['f' + k]] = 1; }
+      if (g0 >= 0 && g0 !== f0) X[g0][C.g0] = 1;
+    }
+    return X;
+  }
+
+  // ---------------------------------------------------------------- 4) 추정: x_t = L_month * (X_t . b), 교대 최소제곱
+  function solve(A, b) {                              // 부분 피벗 가우스 소거
+    const n = b.length, M = A.map((r, i) => [...r, b[i]]);
+    for (let c = 0; c < n; c++) {
+      let p = c; for (let r = c + 1; r < n; r++) if (Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r;
+      [M[c], M[p]] = [M[p], M[c]];
+      for (let r = c + 1; r < n; r++) { const f = M[r][c] / M[c][c]; if (f) for (let k = c; k <= n; k++) M[r][k] -= f * M[c][k]; }
+    }
+    const x = new Array(n).fill(0);
+    for (let r = n - 1; r >= 0; r--) { let s = M[r][n]; for (let k = r + 1; k < n; k++) s -= M[r][k] * x[k]; x[r] = s / M[r][r]; }
+    return x;
+  }
+  function fit(X, x, mon, rows, iters) {
+    const P = NAMES.length, L = new Map(), cnt = new Map();
+    for (const i of rows) { L.set(mon[i], (L.get(mon[i]) || 0) + x[i]); cnt.set(mon[i], (cnt.get(mon[i]) || 0) + 1); }
+    for (const k of L.keys()) L.set(k, L.get(k) / cnt.get(k));
+    let b = null;
+    for (let it = 0; it < iters; it++) {
+      const A = Array.from({ length: P }, () => new Array(P).fill(0)), r = new Array(P).fill(0);
+      for (const i of rows) {
+        const xi = X[i], y = x[i] / L.get(mon[i]);
+        for (let a = 0; a < P; a++) { if (!xi[a]) continue; r[a] += xi[a] * y; for (let c = 0; c < P; c++) A[a][c] += xi[a] * xi[c]; }
+      }
+      for (let a = 0; a < P; a++) A[a][a] += 1e-9;
+      b = solve(A, r);
+      const num = new Map(), den = new Map();
+      for (const i of rows) { let f = 0; for (let a = 0; a < P; a++) f += X[i][a] * b[a]; num.set(mon[i], (num.get(mon[i]) || 0) + x[i] * f); den.set(mon[i], (den.get(mon[i]) || 0) + f * f); }
+      for (const k of num.keys()) L.set(k, num.get(k) / Math.max(den.get(k), 1e-12));
+    }
+    let s = 0; for (const i of rows) { let f = 0; for (let a = 0; a < P; a++) f += X[i][a] * b[a]; s += f; }
+    return b.map(v => v / (s / rows.length));        // 학습 행 평균 인자 = 1
+  }
+
+  // 1년 전 같은 날짜 이하 마지막 관측 대비 % (2/29 는 전년 2/28)
+  function yoy(t, v) {
+    const out = []; let j = 0;
+    for (let i = 0; i < t.length; i++) {
+      const [y, m, d] = ymd(t[i]); const tt = (m === 2 && d === 29) ? mk(y - 1, 2, 28) : mk(y - 1, m, d);
+      while (j + 1 < t.length && t[j + 1] <= tt) j++;
+      if (t[j] <= tt && v[j] > 0) out.push([t[i], (v[i] - v[j]) / v[j] * 100]);
+    }
+    return out;
+  }
+
+  // ---------------------------------------------------------------- 5) 본 계산
+  function wageGapCal(daily, ahe, opts = {}) {
+    const win = opts.win || 28, smooth = opts.smooth || 10, firstYear = opts.firstYear || 2007, iters = opts.iters || 6;
+    const t = daily.map(p => dn(p.x)), x = daily.map(p => +p.y);
+    const { bds, warnings } = calendar(t);
+    const X = features(bds).slice(0, t.length);
+    const mon = t.map(n => { const [y, m] = ymd(n); return y * 12 + m; });
+    const a = yoy(ahe.map(p => dn(p.x)), ahe.map(p => +p.y));
+    const excl = n => (n >= mk(2018, 1, 1) && n < mk(2019, 1, 1)) || (n >= mk(2020, 3, 1) && n < mk(2024, 1, 1));
+    const lastY = ymd(t[t.length - 1])[0], gap = [], gapRaw = [], collYoY = [], coefs = {};
+    for (let Y = firstYear; Y <= lastY; Y++) {
+      const T = mk(Y, 1, 1), rows = [];
+      for (let i = 0; i < t.length; i++) if (t[i] < T && !excl(t[i])) rows.push(i);
+      if (!opts.fixedB && rows.length < 250) continue;  // 학습 자료가 1년치도 안 되면 그 해는 출력하지 않음
+      const b = opts.fixedB || fit(X, x, mon, rows, iters); coefs[Y] = b;
+      const f = X.map(r => { let s = 0; for (let k = 0; k < r.length; k++) s += r[k] * b[k]; return Math.max(s, 0.05); });
+      const lt = [], lv = []; let lo = 0, sx = 0, sf = 0;       // (d-28, d] 창의 Σx / Σf
+      for (let i = 0; i < t.length; i++) {
+        sx += x[i]; sf += f[i];
+        while (t[lo] <= t[i] - win) { sx -= x[lo]; sf -= f[lo]; lo++; }
+        if (t[i] >= t[0] + win) { lt.push(t[i]); lv.push(sx / sf * 20 / 1000); }
+      }
+      const dy = yoy(lt, lv), raw = []; let j = 0;
+      for (const [d, v] of dy) {
+        if (ymd(d)[0] === Y) collYoY.push({ x: ds(d), y: v });
+        while (j + 1 < a.length && a[j + 1][0] <= d) j++;
+        if (a.length && a[j][0] <= d) raw.push([d, a[j][1] - v]);
+      }
+      for (let i = 0; i < raw.length; i++) {
+        if (ymd(raw[i][0])[0] !== Y) continue;
+        let s = 0; const i0 = Math.max(0, i - smooth + 1);
+        for (let k = i0; k <= i; k++) s += raw[k][1];
+        gap.push({ x: ds(raw[i][0]), y: s / (i - i0 + 1) });
+        gapRaw.push({ x: ds(raw[i][0]), y: raw[i][1] });
+      }
+    }
+    return { gap, gapRaw, collYoY, coefs, names: NAMES, warnings };
+  }
+
+  return { spliceDTS, wageGapCal };
+})();
+
+const WG_SHOW_FROM = '2024-03-01';   // 표시 시작 — 그 전 4년(2020-03~2024-02)은 코로나 급여세 유예·상환·표 개편으로 왜곡.
+                                     // 계산은 2005-10부터 전부 쓰고(계수 추정), 화면만 기존과 같은 구간부터.
+// 옛 표를 못 받았을 때만 쓰는 대비 계수 = 2026년 추정치(2005-10~2025, 학습 3,869영업일). 순서는 WGCAL 변수 순서.
+const WG_FALLBACK_B = [0.23236, 0.8862, 0.3735, 0.788076, 1.598438, 1.603106, 0.243341, 0.181671, 0.03132, 0.291794,
+  0.327423, 1.021879, 0.057939, 0.158538, 0.053347, 0.258883, 0.035155, -0.090699];
+const DTS_OLD_CACHE = 'dtsOldWithheldIAT_v1';
+// 옛 표(2005-10-03~2023-02-13) 접합값 [{x, y 백만$}] — 한 번 받으면 이 브라우저에 보관(약 0.1MB)
+async function fetchDTSOldSpliced() {
+  try {
+    const c = JSON.parse(localStorage.getItem(DTS_OLD_CACHE) || 'null');
+    if (c && c.length > 4000 && c[c.length - 1][0] === '2023-02-13') return c.map(([x, y]) => ({ x, y }));
+  } catch (e) {}
+  const url = FISCAL_API + '/v1/accounting/dts/federal_tax_deposits?fields=record_date,tax_deposit_type,tax_deposit_today_amt'
+    + '&filter=record_date:lte:2023-02-13,tax_deposit_type:in:(' + encodeURIComponent('Withheld Income and Employment Taxes')
+    + ',' + encodeURIComponent('Inter-agency Transfers') + ')&page[size]=10000&sort=record_date';
+  let rows = [];
+  for (let page = 1; page <= 5; page++) {
+    const r = await fetch(url + '&page[number]=' + page);
+    if (!r.ok) throw new Error('재무부 DTS 옛 표 API 오류: ' + r.status);
+    const j = await r.json(); rows = rows.concat(j.data);
+    if (!j.meta || page >= (j.meta['total-pages'] || 1)) break;
+  }
+  const out = WGCAL.spliceDTS(rows, []);
+  if (out.length > 4000 && out[out.length - 1].x === '2023-02-13') {
+    try { localStorage.setItem(DTS_OLD_CACHE, JSON.stringify(out.map(p => [p.x, p.y]))); } catch (e) {}
+  }
+  return out;
+}
+// 새 표(2023-02-14~) 원천징수 일간 원행
+async function fetchDTSNewRows() {
+  const url = FISCAL_API + '/v1/accounting/dts/deposits_withdrawals_operating_cash?fields=record_date,transaction_today_amt'
+    + '&filter=record_date:gte:2023-02-14,transaction_catg:in:(' + encodeURIComponent('Taxes - Withheld Individual/FICA') + ')'
+    + '&page[size]=10000&sort=record_date';
+  let rows = [];
+  for (let page = 1; page <= 5; page++) {
+    const r = await fetch(url + '&page[number]=' + page);
+    if (!r.ok) throw new Error('재무부 DTS API 오류: ' + r.status);
+    const j = await r.json(); rows = rows.concat(j.data);
+    if (!j.meta || page >= (j.meta['total-pages'] || 1)) break;
+  }
+  return rows;
+}
+
+// 임금−징수 갭 — 징수YoY ≈ 임금상승률 + 고용증가율이므로 임금YoY(단가) − 징수YoY(총액) ≈ −(고용 증가율).
+// 양수 = 고용이 줄어드는 방향. 위 달력 보정판으로 계산. 한 세션에 한 번만 계산해 차트·지도가 같이 쓴다.
+let wageGapP = null;
+function fetchWageGap() {
+  if (!wageGapP) wageGapP = (async () => {
+    const [w, oldD, newRows] = await Promise.all([
+      fetchFRED('CES0500000003', 'm'),
+      fetchDTSOldSpliced().catch(e => { console.warn('옛 표를 못 받아 고정 계수로 보정:', e.message); return null; }),
+      fetchDTSNewRows(),
+    ]);
+    const daily = (oldD || []).concat(WGCAL.spliceDTS([], newRows));
+    const r = WGCAL.wageGapCal(daily, w, oldD ? {} : { fixedB: WG_FALLBACK_B, firstYear: 2024 });
+    if (r.warnings.length) console.warn('임금−징수 갭 달력 경고 (계산은 계속):', r.warnings);
+    return r.gap.filter(p => p.x >= WG_SHOW_FROM).map(p => ({ x: p.x, y: +p.y.toFixed(2) }));
+  })().catch(e => { wageGapP = null; throw e; });
+  return wageGapP;
 }
 
 // 라인 차트로 그리는 소스들 (FRED/TSA는 별도 경로)
