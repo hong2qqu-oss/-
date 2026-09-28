@@ -608,6 +608,30 @@
       color:var(--text); font-size:12px; padding:8px 10px; min-height:52px; resize:vertical;
       font-family:inherit; flex-shrink:0; }
     #fm-memo:focus { outline:none; border-color:var(--accent); }
+    #fm-hist { background:var(--panel-bg); color:var(--text-muted); border:1px solid var(--border);
+      border-radius:6px; padding:4px 10px; cursor:pointer; font-size:11px; }
+    #fm-hist:hover { color:var(--text); border-color:var(--accent); }
+    /* 경기 국면 요약 기록 모달 — 읽기 전용이라 바깥 클릭·Esc로 닫힘 */
+    #fm-hist-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:1000;
+      align-items:center; justify-content:center; }
+    #fm-hist-modal.show { display:flex; }
+    #fm-hist-box { background:var(--sidebar-bg); border:1px solid var(--border); border-radius:12px;
+      width:min(720px, 92vw); max-height:84vh; display:flex; flex-direction:column; }
+    #fm-hist-box .fh-head { padding:14px 18px 8px; border-bottom:1px solid var(--border); }
+    #fm-hist-box .fh-head h2 { font-size:15px; margin:0 0 4px; }
+    #fm-hist-box .fh-head p { font-size:11px; color:var(--text-muted); margin:0; }
+    #fm-hist-list { overflow:auto; padding:10px 18px; flex:1; }
+    .fh-item { border-left:2px solid var(--border); padding:4px 0 10px 12px; margin-left:4px; }
+    .fh-item.now { border-left-color:var(--accent); }
+    .fh-date { font-size:11px; color:var(--text-muted); margin-bottom:3px; }
+    .fh-date b { color:var(--text); font-weight:600; }
+    .fh-badge { font-size:10px; color:var(--accent); border:1px solid var(--accent); border-radius:8px; padding:0 6px; margin-left:6px; }
+    .fh-text { font-size:12.5px; color:var(--text); line-height:1.6; white-space:pre-wrap; word-break:keep-all; }
+    .fh-empty { font-size:12px; color:var(--text-muted); padding:18px 0; }
+    #fm-hist-box .fh-foot { display:flex; gap:6px; justify-content:flex-end; padding:10px 18px; border-top:1px solid var(--border); }
+    #fm-hist-box .fh-foot button { background:var(--panel-bg); color:var(--text-muted); border:1px solid var(--border);
+      border-radius:6px; padding:5px 12px; cursor:pointer; font-size:11.5px; }
+    #fm-hist-box .fh-foot button:hover { color:var(--text); border-color:var(--accent); }
     .fm-node { cursor:grab; }
     .fm-node.dragging { cursor:grabbing; }
     .fm-node text { pointer-events:none; user-select:none; }
@@ -771,6 +795,7 @@
         <button id="fm-add" title="커스텀 박스 추가">＋ 박스</button>
         <button id="fm-link" title="노드 두 개를 클릭해 화살표로 연결 (더블클릭으로 삭제)">＋ 선</button>
         <button id="fm-reset" title="노드 배치와 이름을 기본값으로 되돌림 (커스텀 박스·선·메모는 유지)">↺ 배치 초기화</button>
+        <button id="fm-hist" title="중앙 경기 국면 요약을 바꿀 때마다 남은 기록 보기">📜 요약 기록</button>
         <button id="fm-api" title="FRED · ECOS · e-Stat API 키 설정">⚙ API 키</button>
       </div>
     </div>
@@ -778,6 +803,23 @@
     <textarea id="fm-memo" placeholder="메모 — 이 브라우저에만 저장됨 (예: 다음 할 일, 해석 노트)"></textarea>
   </div>
 </main>
+
+<!-- 경기 국면 요약 기록 모달 -->
+<div id="fm-hist-modal">
+  <div id="fm-hist-box">
+    <div class="fh-head">
+      <h2 id="fm-hist-title">경기 국면 요약 기록</h2>
+      <p>중앙 박스 요약을 바꿀 때마다 자동 저장 · 최신순 · 이 브라우저에만 저장되니 가끔 내보내기로 백업하세요</p>
+    </div>
+    <div id="fm-hist-list"></div>
+    <div class="fh-foot">
+      <button id="fm-hist-export" title="5개 지도의 요약 기록 전부를 JSON 파일로 저장">내보내기</button>
+      <button id="fm-hist-import" title="내보낸 JSON 파일을 합쳐 넣기 (중복은 건너뜀)">불러오기</button>
+      <button id="fm-hist-close">닫기</button>
+      <input type="file" id="fm-hist-file" accept=".json,application/json" hidden>
+    </div>
+  </div>
+</div>
 
 <!-- API Key 모달 -->
 <div id="api-modal">
@@ -3438,6 +3480,37 @@ const FM_MAPS = {
 let fmCur = 'FISCAL_MAP';                 // 현재 열린 지도 (showFiscalMap에서 설정)
 const fmLS = base => 'fm' + base + FM_MAPS[fmCur].ls + '_v1';
 
+// ── 경기 국면 요약 기록 (2026-09-28) — 중앙 박스 요약을 바꿀 때마다 [{t, text}]로 쌓는다.
+// 키는 지도별(fmSumHist{접미사}_v1). Labels와 분리해 두어 '↺ 배치 초기화'에도 기록은 남는다.
+// t = 저장 시각(ms). 기능 도입 전부터 있던 요약은 t:null(날짜 모름)로 한 번만 씨앗 저장.
+const FM_HIST_MERGE_MS = 30 * 60 * 1000;   // 30분 안에 다시 고치면 오타 수정으로 보고 직전 기록을 덮어씀
+const fmHistKey = k => 'fmSumHist' + FM_MAPS[k].ls + '_v1';
+function fmHistGet(k) { try { return JSON.parse(localStorage.getItem(fmHistKey(k)) || '[]'); } catch (e) { return []; } }
+function fmHistPut(k, list) { localStorage.setItem(fmHistKey(k), JSON.stringify(list)); }
+function fmCenterNode(k) { return FM_MAPS[k].nodes().find(n => n.center); }
+// 지금 중앙 박스에 사용자가 쓴 요약 (안내 문구 상태면 null)
+function fmCenterUserText(k) {
+  const c = fmCenterNode(k); if (!c) return null;
+  let lab = {};
+  try { lab = JSON.parse(localStorage.getItem('fmLabels' + FM_MAPS[k].ls + '_v1') || '{}'); } catch (e) {}
+  const sub = lab[c.id] && lab[c.id].sub;
+  return sub && sub !== c.sub ? sub : null;
+}
+function fmHistSeed(k) {
+  const list = fmHistGet(k);
+  if (list.length) return;
+  const cur = fmCenterUserText(k);
+  if (cur) fmHistPut(k, [{ t: null, text: cur }]);
+}
+function fmHistRecord(k, text) {
+  if (!text) return;                                  // 비우기(안내 문구 복귀)는 기록하지 않음
+  const list = fmHistGet(k), last = list[list.length - 1], now = Date.now();
+  if (last && last.text === text) return;             // 바뀐 게 없으면 무시
+  if (last && last.t && now - last.t < FM_HIST_MERGE_MS) { last.t = now; last.text = text; }
+  else list.push({ t: now, text });
+  fmHistPut(k, list);
+}
+
 // 커스텀 박스 (＋ 박스 버튼으로 추가, localStorage · 지도별)
 function fmCustoms() { return JSON.parse(localStorage.getItem(fmLS('Custom')) || '[]'); }
 function fmAllNodes() { return FM_MAPS[fmCur].nodes().concat(fmCustoms().map(c => ({ ...c, g:'custom', custom:true }))); }
@@ -3730,6 +3803,7 @@ function showFiscalMap(ind) {
   document.getElementById('fiscal-panel').classList.add('show');
   const memo = document.getElementById('fm-memo');
   if (memo) memo.value = localStorage.getItem(fmLS('Memo')) || '';   // 지도별 메모
+  fmHistSeed(fmCur);   // 기록 기능 도입 전에 써 둔 요약을 한 번 보존
   fmRender();
   fmLoadStats();   // 실시간 YoY/MoM (FRED, 지도별 세션당 1회)
 }
@@ -3833,8 +3907,10 @@ function hideFiscalMap() {
     const t = fmText(n);
     if (n.center) {
       const placeholder = t.sub === n.sub;   // 아직 안내 문구 상태면 빈칸으로 시작
-      const s = prompt('경기 국면 요약 — 길게 쓰면 자동 줄바꿈됩니다', placeholder ? '' : t.sub);
+      const s = prompt('경기 국면 요약 — 길게 쓰면 자동 줄바꿈됩니다 (바꿀 때마다 📜 요약 기록에 남음)', placeholder ? '' : t.sub);
       if (s === null) return;
+      fmHistSeed(fmCur);                    // 기록이 비어 있으면 바꾸기 전 요약부터 씨앗으로
+      fmHistRecord(fmCur, s.trim());
       const lab = fmStore(fmLS('Labels'));
       lab[n.id] = { label: t.label, sub: s.trim() || n.sub };
       fmStore(fmLS('Labels'), lab);
@@ -3933,6 +4009,72 @@ function hideFiscalMap() {
   const memo = document.getElementById('fm-memo');
   memo.value = localStorage.getItem(fmLS('Memo')) || '';
   memo.addEventListener('input', () => localStorage.setItem(fmLS('Memo'), memo.value));
+
+  // ── 📜 요약 기록 모달 ──
+  const hm = document.getElementById('fm-hist-modal');
+  const esc = x => String(x).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const WD = ['일', '월', '화', '수', '목', '금', '토'];
+  const fmtT = t => {
+    if (!t) return '<b>기록 시작 이전</b> · 날짜 모름';
+    const d = new Date(t), p2 = v => String(v).padStart(2, '0');
+    return `<b>${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())} (${WD[d.getDay()]})</b> ${p2(d.getHours())}:${p2(d.getMinutes())}`;
+  };
+  function fmHistOpen() {
+    fmHistSeed(fmCur);
+    const c = fmCenterNode(fmCur), cur = fmCenterUserText(fmCur);
+    const list = fmHistGet(fmCur).slice().reverse();   // 최신순
+    document.getElementById('fm-hist-title').textContent = '경기 국면 요약 기록 — ' + (c ? c.label : fmCur) + ' · ' + list.length + '건';
+    document.getElementById('fm-hist-list').innerHTML = list.length
+      ? list.map((h, i) => {
+          const now = i === 0 && cur === h.text;
+          return `<div class="fh-item${now ? ' now' : ''}"><div class="fh-date">${fmtT(h.t)}${now ? '<span class="fh-badge">현재</span>' : ''}</div>`
+            + `<div class="fh-text">${esc(h.text)}</div></div>`;
+        }).join('')
+      : '<div class="fh-empty">아직 기록이 없습니다. 중앙 박스를 더블클릭해 요약을 쓰면 그때부터 쌓입니다.</div>';
+    hm.classList.add('show');
+  }
+  const fmHistClose = () => hm.classList.remove('show');
+  document.getElementById('fm-hist').addEventListener('click', fmHistOpen);
+  document.getElementById('fm-hist-close').addEventListener('click', fmHistClose);
+  hm.addEventListener('click', e => { if (e.target === hm) fmHistClose(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && hm.classList.contains('show')) fmHistClose(); });
+  // 내보내기 — 5개 지도 전부 한 파일 (파일명 규칙: 한글명_YYYY.MM.DD)
+  document.getElementById('fm-hist-export').addEventListener('click', () => {
+    const maps = {};
+    Object.keys(FM_MAPS).forEach(k => { fmHistSeed(k); const l = fmHistGet(k); if (l.length) maps[k] = l; });
+    const d = new Date(), p2 = v => String(v).padStart(2, '0');
+    const blob = new Blob([JSON.stringify({ kind: 'EI-map-summary-history', v: 1, exported: d.toISOString(), maps }, null, 1)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `경기 국면 요약 기록_${d.getFullYear()}.${p2(d.getMonth() + 1)}.${p2(d.getDate())}.json`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  });
+  // 불러오기 — 합치기 (같은 시각·같은 문구는 건너뜀), 시각순 정렬(날짜 모름이 맨 앞)
+  const fileIn = document.getElementById('fm-hist-file');
+  document.getElementById('fm-hist-import').addEventListener('click', () => { fileIn.value = ''; fileIn.click(); });
+  fileIn.addEventListener('change', async () => {
+    const f = fileIn.files[0]; if (!f) return;
+    let data;
+    try { data = JSON.parse(await f.text()); } catch (e) { alert('JSON 파일을 읽지 못했습니다: ' + e.message); return; }
+    if (!data || data.kind !== 'EI-map-summary-history' || typeof data.maps !== 'object') { alert('요약 기록 내보내기 파일이 아닙니다.'); return; }
+    let added = 0;
+    Object.entries(data.maps).forEach(([k, arr]) => {
+      if (!FM_MAPS[k] || !Array.isArray(arr)) return;
+      const list = fmHistGet(k);
+      const seen = new Set(list.map(h => (h.t || 0) + '|' + h.text));
+      arr.forEach(h => {
+        if (!h || typeof h.text !== 'string' || !h.text) return;
+        const key = (h.t || 0) + '|' + h.text;
+        if (seen.has(key)) return;
+        seen.add(key); list.push({ t: h.t || null, text: h.text }); added++;
+      });
+      list.sort((a, b) => (a.t || 0) - (b.t || 0));
+      fmHistPut(k, list);
+    });
+    alert(added ? `${added}건을 합쳤습니다.` : '새로 합칠 기록이 없습니다 (모두 이미 있음).');
+    fmHistOpen();
+  });
 })();
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
