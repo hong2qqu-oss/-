@@ -1944,7 +1944,7 @@ async function fetchDTSYoY() {
 //   b는 해마다 1월 1일에 그 이전 자료로만 다시 추정(확장창, 2018 TCJA·2020-03~2023 코로나 유예·상환 제외) → 실시간.
 //   보정 수준 = 28일 창 Σx / Σf → YoY → 갭 → 관측 10개 평균 (창·평활은 기존과 같아서 지연 추가 없음).
 // 검증(20년치, 절단·교란 검정 통과): 2024-03~ 87일 진폭 2.42→0.21%p, 일간 잡음 1.56→0.81,
-//   임금총액 기준 갭과 수준상관 0.28→0.55, 고용YoY 월간변화 상관 0.33→0.52. 분석: 스크래치 wagegap/ (세션 기록)
+//   임금총액 기준 갭과 수준상관 0.28→0.55, 고용YoY 월간변화 상관 0.33→0.52. 분석 기록: .claude/wagegap_analysis/ (로컬 전용, README)
 // 옛 표 접합: 2023-02-13 이전 = Table IV 'Withheld Income and Employment Taxes' − 같은 날 'Inter-agency Transfers'
 //   (재무부가 새 표 첫날 공표한 새 정의 재계산 누계와 백만$ 단위까지 일치). 옛 표는 고정 자료라 localStorage 캐시.
 const WGCAL = (function () {
