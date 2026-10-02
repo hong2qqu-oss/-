@@ -878,7 +878,16 @@ const INDICATORS = [
   { id:'GDPC1',       name:'실질 GDP',              unit:'% YoY', category:'성장 / GROWTH', transform:'yoy' },
 
   // PMI
-  { id:'MFGPHLX',     name:'필라델피아 제조업 서베이', unit:'Index', category:'PMI',              country:'US' },
+  // ISM 제조업 PMI — ISM 원자료는 유료지만 OECD가 같은 값을 '경기서베이 신뢰지표'로 받아 FRED에 올린다.
+  // PMI = 50 + 값/2 (1950-01~). 2025년 12개월이 ISM 공표치와 소수 1자리까지 일치(현재 개정치 기준, 2026-10-02 확인).
+  // 한계: OECD 갱신이 매달 중순이라 ISM 발표(매월 첫 영업일)보다 약 2주 늦게 들어온다.
+  { id:'ISM_PMI',     name:'ISM 제조업 PMI',          unit:'Index', category:'PMI',              country:'US',
+    source:'fredlin', fredId:'BSCICP02USM460S', lin:[50, 0.5], noStats:true, lineRaw:true, yAuto:true,
+    refLines:[ {y:50, color:'#8b949e', label:'50 = 확장/위축 경계'} ] },
+  // 필라델피아 연준 제조업 서베이 — 현재 경기 확산지수(계절조정). 0 = 확장/위축 경계. 매월 셋째 목요일 발표라 ISM보다 2주 빠름.
+  // (2026-10-02 수정: 예전 ID 'MFGPHLX'는 FRED에 없는 ID라 미러가 매번 실패해 차트가 안 떴음)
+  { id:'GACDFSA066MSFRBPHI', name:'필라델피아 제조업 서베이', unit:'Index', category:'PMI', country:'US', noStats:true, lineRaw:true,
+    refLines:[ {y:0, color:'#8b949e', label:'0 = 확장/위축 경계'} ] },
 
   // 금리 & 스프레드
   { id:'FEDFUNDS',    name:'기준금리 (FFR)',          unit:'%',     category:'금리 & 스프레드',  country:'US' },
@@ -2197,6 +2206,8 @@ const LINE_SOURCES = {
   dtsyoy: () => fetchDTSYoY(),
   auction: () => fetchAuctionBTC(),
   wagegap: () => fetchWageGap(),
+  // FRED 계열에 일차식 a + b·값 (ISM PMI = 50 + OECD값/2 등)
+  fredlin: ind => fetchFRED(ind.fredId, 'm').then(a => a.map(p => ({ x: p.x, y: +(ind.lin[0] + ind.lin[1] * p.y).toFixed(2) }))),
   freddiff: ind => fetchFredDiff(ind),
   ecos: ind => fetchECOS(ind),
   krspread: () => fetchKRSpread(),
@@ -2206,7 +2217,7 @@ const LINE_SOURCES = {
 const SOURCE_LABEL = {
   price:'Yahoo', ratio:'Yahoo', cnn:'CNN Fear&Greed', cot:'CFTC COT',
   tsa:'TSA', jpreal:'日本相互証券', spread:'FRED + 日本相互証券',
-  fredratio:'FRED (계산)', fedliq:'FRED (계산)', fredchg:'FRED (계산)',
+  fredratio:'FRED (계산)', fedliq:'FRED (계산)', fredchg:'FRED (계산)', fredlin:'FRED · OECD 경유 (50+값/2)',
   dts:'재무부 DTS (일간)', dtsyoy:'재무부 DTS (계산)', auction:'재무부 경매', wagegap:'FRED + 재무부 (계산)',
   freddiff:'FRED (계산)', ecos:'한국은행 ECOS', krspread:'FRED + ECOS (계산)', estat:'総務省 e-Stat',
 };
@@ -2461,7 +2472,7 @@ function renderChart(allData, ind) {
           grid: { color: 'rgba(48,54,61,0.5)' },
           ticks: { color: '#8b949e', maxTicksLimit: 10, font: { size: 10 } }
         },
-        y: (() => { const s = calcSmartYRange(data); return {
+        y: (() => { const s = calcSmartYRange(data, ind); return {
           min: getYMin() ?? s.min,
           max: getYMax() ?? s.max,
           grid: { color: 'rgba(48,54,61,0.5)' },
@@ -2699,13 +2710,15 @@ document.getElementById('reset-zoom-btn').addEventListener('click', () => {
 });
 
 // ─── SMART Y RANGE ────────────────────────────────────────────────────────────
-function calcSmartYRange(data) {
+function calcSmartYRange(data, ind) {
   const vals = data.filter(p => p.y !== null && !isNaN(p.y)).map(p => p.y);
   if (vals.length === 0) return { min: undefined, max: undefined };
   const min = Math.min(...vals);
   const max = Math.max(...vals);
   const range = max - min;
   if (range === 0) return { min: undefined, max: undefined };
+  // yAuto:true 지표만 — 보이는 데이터 범위 ±10%로 축을 맞춤 (PMI처럼 0과 멀리 떨어진 지수, 기존 지표 동작은 그대로)
+  if (ind && ind.yAuto) return { min: Math.floor(min - range * 0.1), max: Math.ceil(max + range * 0.1) };
   // 데이터가 양수이고 범위가 좁게 뭉쳐 있을 때 (경제활동참가율 등)
   if (min > 0 && min > max * 0.55 && range / max < 0.3) {
     const pad = range * 0.6;
@@ -3789,7 +3802,7 @@ function fmLoadStats() {
     if (!ind) return;
     // 전 소스 미러/직결 체제(2026-08-21) — API 키 게이트 불필요
     const fetcher = !ind.source ? () => fetchFRED(ind.id, ind.freq)
-      : ['fredratio', 'fedliq', 'fredchg', 'dts', 'auction', 'wagegap', 'freddiff', 'price', 'jpreal', 'spread', 'ecos', 'krspread', 'estat'].includes(ind.source)
+      : ['fredratio', 'fedliq', 'fredchg', 'fredlin', 'dts', 'auction', 'wagegap', 'freddiff', 'price', 'jpreal', 'spread', 'ecos', 'krspread', 'estat'].includes(ind.source)
         ? () => LINE_SOURCES[ind.source](ind)
       : null;
     if (!fetcher) return;

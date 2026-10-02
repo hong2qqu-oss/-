@@ -228,7 +228,7 @@ constant maturity**다. 그래서 JBTS가 체계적으로 약 **-0.04~-0.07%p �
 - **풋콜 장기 히스토리**: CBOE 유료. CNN 1년치 + localStorage 누적이 유일한 공짜 방법.
   브라우저별로 쌓이므로 기기 간 공유 안 됨.
 - **원화/코스피/JGB COT 없음**: CFTC는 미국 시장만. KRX/JPX 별도 소스 필요.
-- **ISM PMI**: FRED가 2019까지만 → 필라델피아 연준 서베이로 대체 중.
+- **ISM 제조업 PMI**: ISM 원계열(NAPM)은 FRED에서 2019년 삭제. 대신 OECD 경유 `BSCICP02USM460S`를 `PMI = 50 + 값/2`로 환산(`source:'fredlin'`, 2026-10-02 추가, ISM 공표치와 일치). OECD 갱신이 매달 중순이라 ISM 발표보다 약 2주 늦다. 서비스 PMI는 무료 원천 없음.
 - **한국 기준금리**: 한국은행 ECOS API 키 필요 (미발급).
 - **일본 CPI/PPI가 2021~22에서 끊김**: e-Stat API 키 필요 (미발급).
 - **EU 탭 미구현**: ECB API 붙이면 됨.
