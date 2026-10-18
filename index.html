@@ -980,6 +980,13 @@ const INDICATORS = [
   { id:'Y001RC1Q027SBEA', name:'└ 지식재산 (명목)',  unit:'B$', category:'투자 / INVESTMENT', country:'US' },
   { id:'A679RC1Q027SBEA', name:'정보처리+SW (명목)', unit:'B$', category:'투자 / INVESTMENT', country:'US' },
   { id:'B935RC1Q027SBEA', name:'└ 컴퓨터·주변기기 (명목)', unit:'B$', category:'투자 / INVESTMENT', country:'US' },
+  // AI 투자 추적 세트 (2026-10-18). 공식 통계엔 'AI' 항목이 없어 대리변수를 쓴다 — 좁은 정의 = 컴퓨터·서버 + 데이터센터 건물.
+  // 데이터센터는 BEA 표 5.4.5U 5행(LA001282, 2020Q1~)로 FRED에 없음 → Actions가 BEA 원자료(NipaDataQ.txt)에서 추출해 미러.
+  // 컴퓨터류 수입(B852RC)은 투자의 약 1.4배 — 서버가 거의 수입이라 GDP 항등식의 차감항. 투자와 짝으로 볼 것.
+  { id:'LA001282', name:'└ 데이터센터 건물 (명목)', unit:'B$', category:'투자 / INVESTMENT', country:'US' },
+  { id:'AI_CAPEX_SHARE', name:'AI 투자 비중 (컴퓨터+데이터센터 ÷ 비주거)', unit:'%', category:'투자 / INVESTMENT', country:'US',
+    source:'fredratio', fredNum:['B935RC1Q027SBEA', 'LA001282'], fredDen:'PNFI', noStats:true, lineRaw:true, yAuto:true },
+  { id:'B852RC1Q027SBEA', name:'컴퓨터류 수입 (명목 · 투자 차감항)', unit:'B$', category:'투자 / INVESTMENT', country:'US' },
   { id:'NEWORDER',name:'핵심 자본재 주문',      unit:'M$', category:'투자 / INVESTMENT', country:'US' },
   { id:'DGORDER', name:'내구재 주문',           unit:'M$', category:'투자 / INVESTMENT', country:'US' },
   // 투자의 산소·체온계 — SLOOS는 침체 선행성이 재고보다 우수, 0 위=은행이 대출 조이는 중
@@ -1860,10 +1867,13 @@ async function fetchKRSpread() {
 
 // FRED 두 시리즈의 비율(%) — 이자/세입 같은 파생 지표용. 같은 날짜끼리만 나눔.
 async function fetchFredRatio(ind) {
-  const [num, den] = await Promise.all([fetchFRED(ind.fredNum, ind.freq), fetchFRED(ind.fredDen, ind.freq)]);
+  // fredNum 이 배열이면 분자를 합산 (AI 투자 비중 = (컴퓨터 + 데이터센터) ÷ 비주거투자). 모든 분자가 있는 날짜만.
+  const numIds = Array.isArray(ind.fredNum) ? ind.fredNum : [ind.fredNum];
+  const [den, ...nums] = await Promise.all([fetchFRED(ind.fredDen, ind.freq), ...numIds.map(id => fetchFRED(id, ind.freq))]);
   const denMap = Object.fromEntries(den.map(p => [p.x, p.y]));
-  return num.filter(p => denMap[p.x] !== undefined && denMap[p.x] !== 0)
-            .map(p => ({ x: p.x, y: +(p.y / denMap[p.x] * 100).toFixed(2) }));
+  const maps = nums.map(a => Object.fromEntries(a.map(p => [p.x, p.y])));
+  return nums[0].filter(p => denMap[p.x] !== undefined && denMap[p.x] !== 0 && maps.every(m => m[p.x] !== undefined))
+                .map(p => ({ x: p.x, y: +(maps.reduce((sum, m) => sum + m[p.x], 0) / denMap[p.x] * 100).toFixed(2) }));
 }
 
 // 연준 유동성 = 연준 총자산(WALCL, M$) − TGA(WTREGEN, M$) − 역레포(RRPONTSYD, B$) → 조$ 단위
@@ -3509,6 +3519,9 @@ const FM_NODES = [
   { id:'STR',  g:'inv', x:1125, y:240, p:'PNFI', chart:'B009RX1Q020SBEA', label:'건축물', sig:true },
   { id:'IPP',  g:'inv', x:1125, y:330, p:'PNFI', chart:'Y001RX1Q020SBEA', label:'지식재산', sig:true },
   { id:'AICAP',g:'inv', x:1275, y:60, p:'EQP', chart:'A679RX1Q020SBEA', label:'정보처리+SW', sig:true },
+  // AI 투자 비중 (2026-10-18): 공식 통계엔 AI 항목이 없어 '컴퓨터·서버 + 데이터센터 건물'을 좁은 정의로 — 2019년 4%대 → 2026년 10%대.
+  // 정보처리+SW(위 AICAP)는 소비자 PC·일반 소프트웨어까지 든 넓은 상한선. 수입 짝은 무역 가지의 CIMP.
+  { id:'AISH', g:'inv', x:975, y:330, p:'PNFI', chart:'AI_CAPEX_SHARE', label:'AI 투자 비중', sig:true, sub:'컴퓨터·서버+데이터센터 ÷ 비주거' },
   // 월간 쪽지시험: 내구재 주문(헤드라인) → 핵심 자본재(항공기·국방 뺀 판정짝)
   { id:'DGO',  g:'inv', x:1275, y:150, p:'PNFI', chart:'DGORDER',  label:'내구재 주문', sig:true },
   { id:'NEWO', g:'inv', x:1275, y:240, p:'DGO',  chart:'NEWORDER', label:'핵심 자본재', sig:true },
@@ -3542,6 +3555,8 @@ const FM_NODES = [
   // 아래 세 개는 수출 → 수입 → 달러인덱스 왼→오 순서 (사용자 지정)
   { id:'EXP', g:'nx', x:525, y:690, p:'NX', chart:'BOPTEXP', label:'수출', sig:true },
   { id:'IMP', g:'nx', x:675, y:690, p:'NX', chart:'BOPTIMP', label:'수입', sig:true },
+  // 컴퓨터류 수입 (2026-10-18): AI 서버는 거의 수입이라 투자(AISH)의 차감항 — 투자 증가분이 GDP에 얼마나 남는지의 짝
+  { id:'CIMP', g:'nx', x:675, y:600, p:'IMP', chart:'B852RC1Q027SBEA', label:'컴퓨터류 수입', sig:true, sub:'AI 서버 · 투자의 차감항' },
   { id:'BR_DXY',g:'nx', x:825, y:690, p:'NX', chart:'DTWEXBGS', label:'달러 인덱스', sig:true },
   // NIIP 서브트리 — 자산/부채로 갈라 보면 적자의 정체가 증권투자임이 드러남
   { id:'NIIP',g:'nx', x:825, y:510, p:'NX', chart:'IIPUSNETIQ', label:'NIIP', sub:'대외순자산 · 저량' },
