@@ -109,6 +109,7 @@ JBTS BEI 페이지는 **최근 약 3년만 보여주는 롤링 윈도우**다. �
 - **교본** `reports/CHECKLIST.md` — 지표별 전수 해부 골조. 보고서 품질 기준은 여기가 정본
 - **상태** `reports/state.json` — 지표별 마지막 보고 데이터월. 미러 CSV의 최신 관측월과 비교해 신규 발표를 감지
 - **데이터** `reports/data/*.csv` — GitHub Actions(fred-mirror, 평일 23:05 KST)가 FRED를 미러. 에이전트는 외부망 불필요
+- **FRED 밖 서베이** `reports/fetch_surveys.py` (2026-10-28) — ISM 제조업(`ISMM_*`, PR Newswire 보도자료 표)·컨퍼런스보드 소비자신뢰(`CB_*`, 보도자료 본문)·리치먼드 연은(`RICH_*`, 연은 공개 엑셀)을 같은 CSV 형식으로. 에이전트가 매 실행 `all`로 부른다. **PR Newswire는 파이썬 urllib 기본 요청을 403으로 막고 curl은 받아줘서 curl 서브프로세스로 받는다**(브라우저 흉내 UA는 쓰지 말 것). 검산 실패 시 그 달은 안 쓴다. 원문은 `.claude/src_cache/`(로컬). 과거 이력은 `--backfill`(ISM 2022-02~, CB 2024-05~, 이미 실행됨)
 - **실행기** `.claude/run_report.ps1` — 작업 스케줄러 "EI 보고서 에이전트"(평일 23:40)가 호출, `claude -p` 헤드리스로 작성→커밋→푸시
 - **로그** `.claude/report_agent.log`
 
