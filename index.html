@@ -585,6 +585,13 @@
     #report-body code { background: rgba(110,118,129,0.2); padding: 1px 5px; border-radius: 4px; font-size: 12px; }
     #report-body ul { margin: 6px 0; padding-left: 22px; }
     #report-body hr { border: 0; border-top: 1px solid var(--border); margin: 14px 0; }
+    /* FOMC 성명문 대조(~~지운 말~~ ++새 말++)·긴 전문 번역 접기(:::접기)·코드 블록 — 2026-10-29 */
+    #report-body del { color: var(--red); opacity: .85; }
+    #report-body ins { color: var(--category-color); text-decoration: underline; text-decoration-color: rgba(126,231,135,.45); }
+    #report-body pre { background: rgba(110,118,129,0.12); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; margin: 8px 0; overflow-x: auto; font-size: 12px; line-height: 1.55; }
+    #report-body pre code { background: none; padding: 0; }
+    #report-body details { border: 1px solid var(--border); border-radius: 6px; margin: 10px 0; padding: 2px 14px; }
+    #report-body summary { cursor: pointer; color: var(--accent); font-weight: 600; padding: 6px 0; }
 
     /* ── 🗺 재정 지도 ── */
     #fiscal-panel { display:none; flex:1; min-height:0; padding:14px 20px 16px; flex-direction:column; gap:10px; }
@@ -3264,7 +3271,8 @@ async function showReportPanel() {
 const RP_COUNTRIES = [['US', '미국'], ['KR', '한국'], ['JP', '일본']];
 // 지표 그룹 라벨(국가별, 발표 순서). 목록에 없는 태그는 태그명 그대로 별도 그룹 — 새 지표를 추가해도 코드 수정 불필요.
 const RP_TAGS = {
-  US: [['NFP', '고용보고서 (NFP)'], ['ADP', 'ADP 민간고용'], ['CPI', 'CPI'], ['PPI', 'PPI'],
+  US: [['FOMC', 'FOMC 성명·기자회견'], ['FOMC_MINUTES', 'FOMC 의사록'],
+       ['NFP', '고용보고서 (NFP)'], ['ADP', 'ADP 민간고용'], ['CPI', 'CPI'], ['PPI', 'PPI'],
        ['RETAIL', '소매판매'], ['PCE', 'PCE 물가'], ['CLAIMS', '실업청구 (주간)'],
        ['ISM', 'ISM 제조업 PMI'], ['RICHMOND', '리치먼드 연은 제조업'], ['DURABLE', '내구재 수주'],
        ['HOMESALES', '신규주택판매'], ['CASESHILLER', '케이스실러 주택가격'], ['CONF', '컨퍼런스보드 소비자신뢰']],
@@ -3286,14 +3294,14 @@ function renderReportSidebar() {
   const groups = known.map(([tag, label]) => ({ tag, label, items: idx.filter(r => r.tag === tag) })).filter(g => g.items.length);
   // 항목 라벨: "8월분 · 9/4" — 데이터월은 제목에서 추출, 없으면 발표일만 (연도는 연도 필터가 '전체'일 때만)
   const itemLabel = r => {
-    const m = (r.title || '').match(/(\d{1,2})월분/);
+    const m = (r.title || '').match(/(\d{1,2})월(분| 회의)/);   // FOMC는 'N월 회의'
     const d = rpFilter.year !== 'ALL'
       ? r.date.slice(5).split('-').map(Number).join('/')
       : r.date.slice(2).split('-').map((v, i) => i ? Number(v) : v).join('/');
-    return (m ? '<b>' + m[1] + '월분</b> · ' : '') + d;
+    return (m ? '<b>' + m[1] + '월' + m[2] + '</b> · ' : '') + d;
   };
   // 제목에서 "지표 해부 — N월분: " 접두를 떼고 한 줄 요지만 (전체 제목은 툴팁)
-  const itemSub = r => (r.title || '').replace(/^[^—]*—\s*/, '').replace(/^\d{1,2}월분\s*[:：]\s*/, '');
+  const itemSub = r => (r.title || '').replace(/^[^—]*—\s*/, '').replace(/^\d{1,2}월(?:분| 회의)\s*[:：]\s*/, '');
   const RP_MAX = 8;   // 펼쳤을 때 최대 노출 — 그 이상은 "더보기"
   const rpItem = r => `
           <div class="indicator-item report-item" data-file="${r.file}" title="${r.title}">
@@ -3411,22 +3419,29 @@ async function loadReport(file) {
   } catch (e) { el.innerHTML = '<p style="color:var(--red)">로드 실패: ' + e.message + '</p>'; }
 }
 
-// 최소 마크다운 렌더러 — 제목·굵게·표·리스트·인용·코드·링크·수평선만 (보고서에 필요한 전부)
+// 최소 마크다운 렌더러 — 제목·굵게·표·리스트·인용·코드·링크·수평선 + 취소선(~~)·삽입(++)·코드 블록(```)·접기(:::접기 제목 … :::)
 function mdEsc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 function mdInline(s) {
   return s
     .replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')
+    .replace(/~~(.+?)~~/g, '<del>$1</del>')
+    .replace(/\+\+(.+?)\+\+/g, '<ins>$1</ins>')
     .replace(/`([^`]+)`/g, '<code>$1</code>')
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" style="color:var(--accent)">$1</a>');
 }
 function mdRender(md) {
   const lines = md.split(/\r?\n/);
-  let html = '', inList = false, inTable = false;
+  let html = '', inList = false, inTable = false, inCode = false, folds = 0;
   const closeAll = () => {
     if (inList) { html += '</ul>'; inList = false; }
     if (inTable) { html += '</table>'; inTable = false; }
   };
   for (const l of lines) {
+    if (/^```/.test(l)) { closeAll(); html += inCode ? '</code></pre>' : '<pre><code>'; inCode = !inCode; continue; }
+    if (inCode) { html += mdEsc(l) + '\n'; continue; }
+    const fold = l.match(/^:::접기\s+(.+)/);
+    if (fold) { closeAll(); html += '<details><summary>' + mdInline(mdEsc(fold[1])) + '</summary>'; folds++; continue; }
+    if (/^:::\s*$/.test(l) && folds) { closeAll(); html += '</details>'; folds--; continue; }
     if (/^\s*$/.test(l)) { closeAll(); continue; }
     if (/^### /.test(l)) { closeAll(); html += '<h3>' + mdInline(mdEsc(l.slice(4))) + '</h3>'; continue; }
     if (/^## /.test(l))  { closeAll(); html += '<h2>' + mdInline(mdEsc(l.slice(3))) + '</h2>'; continue; }
@@ -3453,6 +3468,8 @@ function mdRender(md) {
     closeAll(); html += '<p>' + mdInline(mdEsc(l)) + '</p>';
   }
   closeAll();
+  if (inCode) html += '</code></pre>';
+  html += '</details>'.repeat(folds);
   return html;
 }
 
