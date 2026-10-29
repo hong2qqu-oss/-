@@ -1,4 +1,5 @@
 [
+  { "file": "2026-10-29_claims.md", "date": "2026-10-29", "tag": "CLAIMS", "country": "US", "title": "실업청구 주간 — 신규 194K 전주 수준 유지, 지난주 급증했던 연속 청구는 −21K로 대부분 되돌려져 비율 8.77로 밴드 복귀" },
   { "file": "2026-10-07_fomc_minutes.md", "date": "2026-10-07", "tag": "FOMC_MINUTES", "country": "US", "title": "FOMC 의사록 해부 — 9월 회의: 전원 25bp 인상에 '대부분이 연말 추가 인상 적절' — 10월 회의는 동결(인상 반대 2표), 비투표 참석자 분포는 10월 의사록에서 확인" },
   { "file": "2026-10-27_caseshiller.md", "date": "2026-10-27", "tag": "CASESHILLER", "country": "US", "title": "케이스실러 주택가격 해부 — 8월분: 전국 YoY 2.09%지만 CPI 대비 실질가격은 -1.26%, 북동부가 떠받치고 선벨트·서부는 정체" },
   { "file": "2026-10-27_homesales.md", "date": "2026-10-27", "tag": "HOMESALES", "country": "US", "title": "신규주택판매 해부 — 9월분: 67.6만 호 YoY -5.3%로 저조, 다만 건설사 완공재고는 3개월째 줄어 공급 과잉 심화는 아님" },
