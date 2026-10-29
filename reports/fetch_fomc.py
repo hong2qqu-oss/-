@@ -68,6 +68,21 @@ def calendar():
     return stmts, minutes
 
 
+def upcoming(after):
+    """일정 페이지 본문의 'December 8-9*' 같은 줄에서 아직 성명문이 없는 다음 회의 날짜(둘째 날)를 찾는다."""
+    t = re.sub(r"\s+", " ", page_text(get(CAL)))
+    out = []
+    for blk in re.finditer(r"(\d{4}) FOMC Meetings(.*?)(?=\d{4} FOMC Meetings|$)", t):
+        y = int(blk.group(1))
+        for m in re.finditer(r"\b(" + "|".join(k.capitalize() for k in MONTHS) + r")(?:/(\w+))? (\d{1,2})(?:-(\d{1,2}))?(\*)?", blk.group(2)):
+            end_mon = m.group(2) if m.group(2) and m.group(2).lower() in MONTHS else m.group(1)   # 'April/May 30-1' 은 둘째 달
+            mon = MONTHS[end_mon.lower()]
+            d = date(y, mon, int(m.group(4) or m.group(3))).isoformat()
+            if d > after:
+                out.append(d + (" (경제전망 포함)" if m.group(5) else ""))
+    return sorted(set(out))[0] if out else "일정 미공개"
+
+
 def today_et():
     # 미국 동부 날짜 (UTC-4로 고정 — 하루 단위 판정엔 충분)
     return (datetime.now(timezone.utc) - timedelta(hours=4)).date()
@@ -181,7 +196,8 @@ def cmd_check():
             print(f"NEW_MINUTES {d} released={rel}")
             found = True
     if not found:
-        print(f"NO_FOMC_NEW (마지막 성명 {st.get('FOMC')}, 마지막 의사록 {st.get('FOMC_MINUTES')}, 다음 회의 {next((d for d in stmts if d > today), '일정 미공개')})")
+        print(f"NO_FOMC_NEW (마지막 성명 {st.get('FOMC')}, 마지막 의사록 {st.get('FOMC_MINUTES')})")
+    print(f"다음 회의(둘째 날 = 성명 발표일): {upcoming(today)}")
 
 
 def cmd_get(d):
