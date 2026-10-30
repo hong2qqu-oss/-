@@ -6,7 +6,8 @@ FRED 미러와 같은 형식이라 calc_series.py 가 그대로 읽는다. 2026-
   ism       ISM 제조업 PMI — PR Newswire 보도자료의 'MANUFACTURING AT A GLANCE' 표 (하위지수 11종)
   cb        컨퍼런스보드 소비자신뢰 — PR Newswire 보도자료 본문 (총지수·현재·기대 + 응답 비율 10종 + 12개월 기대인플레)
   richmond  리치먼드 연은 제조업 — 리치먼드 연은 공개 엑셀 mfg_historicaldata.xlsx (SA 현재지수 + 6개월 기대)
-  all       위 셋 전부
+  cass      캐스 화물지수 — 캐스 공개 엑셀(출하량·운임지출 원계열+계절조정, 트럭 운임지수) + 그 달 보고서 페이지
+  all       위 넷 전부
 
 사용:
   python reports/fetch_surveys.py all                 # 최신 보도자료만 확인 (평소 — 보고서 에이전트가 매 실행 호출)
@@ -337,15 +338,24 @@ RICH_COLS = [("sa_mfg_composite", "RICH_COMP"), ("sa_mfg_ship_c", "RICH_SHIP"), 
              ("nsa_mfg_pct_chg_prcs_pd_e", "RICH_E_PRICE_PAID"), ("nsa_mfg_pct_chg_prcs_recd_e", "RICH_E_PRICE_RECD")]
 
 
-def xlsx_rows(b):
-    """표준 라이브러리만으로 첫 시트를 읽는다 (openpyxl 없는 환경 대비)."""
+def xlsx_rows(b, sheet=None):
+    """표준 라이브러리만으로 시트를 읽는다 (openpyxl 없는 환경 대비). sheet = 시트 이름(없으면 첫 시트)."""
     z = zipfile.ZipFile(io.BytesIO(b)); ns = {"m": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
     shared = []
     if "xl/sharedStrings.xml" in z.namelist():
         for si in ET.fromstring(z.read("xl/sharedStrings.xml")).findall("m:si", ns):
             shared.append("".join(x.text or "" for x in si.iter("{%s}t" % ns["m"])))
+    path = "xl/worksheets/sheet1.xml"
+    if sheet:   # 시트 이름 → 관계 id → 파일 경로
+        rid_attr = "{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id"
+        sh = next((s for s in ET.fromstring(z.read("xl/workbook.xml")).iter("{%s}sheet" % ns["m"]) if s.get("name") == sheet), None)
+        if sh is None:
+            raise ValueError(f"시트 '{sheet}' 없음")
+        rels = ET.fromstring(z.read("xl/_rels/workbook.xml.rels"))
+        target = next(r.get("Target") for r in rels if r.get("Id") == sh.get(rid_attr))
+        path = "xl/" + target.lstrip("/").replace("xl/", "", 1)
     rows = []
-    for r in ET.fromstring(z.read("xl/worksheets/sheet1.xml")).iter("{%s}row" % ns["m"]):
+    for r in ET.fromstring(z.read(path)).iter("{%s}row" % ns["m"]):
         cells = {}
         for c in r.findall("m:c", ns):
             col = re.match(r"[A-Z]+", c.get("r")).group(0)
@@ -398,17 +408,71 @@ def richmond(out, backfill):
     print(f"RICHMOND: 마지막 {lm} 종합 {series['RICH_COMP'][lm]:g}" + (" — 새 달" if lm > prev_last else " (변화 없음)"))
 
 
+# ── 캐스 화물지수 ────────────────────────────────────────────────────────
+# 2026-10-30 편입: 사용자 "화물운송량 — 매달 나오고 PMI랑 상관 짙은 것, 3달 뒤 후행이면 안 봄".
+# 캐스 출하량 YoY ~ ISM PMI 같은 달 상관 0.74(2017~, 코로나 제외 0.75) — BTS 화물지수 0.56·트럭 톤수 0.46보다 높고 두 달 덜 늦다.
+CASS_XLSX = "https://www.cassinfo.com/hubfs/Cass%20Indexes%20Historical%20Data.xlsx"
+CASS_PAGE = "https://www.cassinfo.com/freight-audit-payment/cass-transportation-indexes/"
+CASS_SHEETS = [  # (시트, 원계열 ID, 계절조정 ID) — 엑셀 열: 월 / 지수 / 전년비 / 2년 누적 / 전월비 / (빈칸) / 계절조정 / SA 전월비
+    ("Freight Index-Shipments", "CASS_SHIP", "CASS_SHIP_SA"),
+    ("Freight Index-Expenditures", "CASS_EXP", "CASS_EXP_SA"),
+    ("TL LH Index", "CASS_TLLH", None),   # 트럭 운임(Truckload Linehaul) — 원래 계절조정된 값
+]
+
+
+def cass(out, backfill):
+    b = get(CASS_XLSX, binary=True)
+    series, check = {}, {}
+    for sheet, sid, sa_id in CASS_SHEETS:
+        rows = xlsx_rows(b, sheet)
+        hi = next(i for i, r in enumerate(rows) if r and len(r) > 2 and r[1] == "Month")
+        head = rows[hi]
+        sa_col = next((i for i, h in enumerate(head) if h == "Seasonally Adjusted"), None)
+        d, dsa = {}, {}
+        for r in rows[hi + 1:]:
+            if len(r) < 3 or r[1] in (None, "") or r[2] in (None, ""):
+                continue
+            dt = date(1899, 12, 30) + timedelta(days=float(r[1]))
+            ym = f"{dt.year:04d}-{dt.month:02d}"
+            d[ym] = round(float(r[2]), 5)
+            if sa_col is not None and sa_col < len(r) and r[sa_col] not in (None, ""):
+                dsa[ym] = round(float(r[sa_col]), 5)
+            if len(r) > 3 and r[3] not in (None, ""):
+                check[(sid, ym)] = float(r[3])        # 엑셀의 전년비 — 검산용
+        series[sid] = d
+        if sa_id:
+            series[sa_id] = dsa
+    lm = max(series["CASS_SHIP"])
+    for sid in ("CASS_SHIP", "CASS_EXP"):   # 검산: 원계열로 계산한 전년비 = 엑셀의 전년비
+        d, prev = series[sid], ym_add(lm, -12)
+        if prev in d and (sid, lm) in check and abs((d[lm] / d[prev] - 1) - check[(sid, lm)]) > 0.002:
+            raise SystemExit(f"캐스 {sid} {lm}: 검산 실패 — 계산 {d[lm] / d[prev] - 1:.4f} vs 엑셀 {check[(sid, lm)]:.4f}")
+    prev_last = max(load(out, "CASS_SHIP") or {"0000-00": 0})
+    for sid, d in series.items():
+        save(out, sid, d)
+    try:   # 그 달 보고서 페이지(해설·계절조정 전월비 표)
+        mon = [k for k, v in MONTHS.items() if v == int(lm[5:])][0]
+        t = page_text(get(f"{CASS_PAGE}{mon}-{lm[:4]}"))
+        i = t.find("Year-over-year change")
+        j = min([k for k in (t.find("ACT Freight Expectations", i), t.find("Need more freight market", i)) if k > 0] or [i + 6000])
+        if i > 0: cache_text("cass", lm, f"{CASS_PAGE}{mon}-{lm[:4]}\n\n" + t[max(0, i - 200):j])
+    except Exception as e:
+        print("  (보고서 페이지 저장 실패:", e, ")")
+    print(f"CASS: 마지막 {lm} 출하 {series['CASS_SHIP'][lm]:g} (계절조정 {series['CASS_SHIP_SA'].get(lm, 0):g})"
+          + (" — 새 달" if lm > prev_last else " (변화 없음)"))
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("what", choices=["ism", "cb", "richmond", "all"])
+    ap.add_argument("what", choices=["ism", "cb", "richmond", "cass", "all"])
     ap.add_argument("--backfill", action="store_true", help="과거 보도자료로 이력 채우기 (ISM·CB)")
     ap.add_argument("--out", default=DATA, help="저장 폴더 (기본 reports/data)")
     a = ap.parse_args()
-    jobs = ["ism", "cb", "richmond"] if a.what == "all" else [a.what]
+    jobs = ["ism", "cb", "richmond", "cass"] if a.what == "all" else [a.what]
     bad = 0
     for j in jobs:
         try:
-            {"ism": ism, "cb": cb, "richmond": richmond}[j](a.out, a.backfill)
+            {"ism": ism, "cb": cb, "richmond": richmond, "cass": cass}[j](a.out, a.backfill)
         except (Exception, SystemExit) as e:
             bad += 1; print(f"✗ {j.upper()} 수집 실패: {e}")
     sys.exit(1 if bad == len(jobs) else 0)

@@ -20,7 +20,7 @@ LLM 암산 금지 (2026-09-12: YoY 기준월을 13개월 전으로 잘못 잡아
   창 교체 = 이번 달 3M창에 새로 들어온 달(t)과 빠진 달(t-3) — 3개월 연율 변화를 서술할 때 반드시 명시
   --levels  (확산지수는 %변화가 무의미 — 수준과 차이로 본다)
     전월차 = value[t] - value[t-1] (포인트) / 3M평균 = t-2~t 평균, ▲▼ = 전월 3M평균 대비
-    12M범위 = t-11~t 최저·최고 / 장기 백분위 = 시리즈 전 기간 중 value[t] 이하 비율
+    12M범위 = t-11~t 최저·최고 / 장기 백분위 = 시리즈 전 기간 중 value[t] 이하 비율 / 장기평균 = 시작~t 평균과 그 차이
     '이보다 높았던 마지막 달' = t 이전에 value[t]보다 컸던 가장 최근 달 ('N개월 만의 최고' 문장의 근거)
     연초~ 평균 vs 작년 같은 기간 평균 vs 작년 전체 평균 (신규주택판매처럼 단월 표본오차가 큰 SAAR 수준용)
   --qtr     분기 평균 연율 = (이번 분기 평균 / 직전 분기 평균)^4 - 1. 분기 중 일부 달만 있으면 있는 달만 평균하고 그 달 수를 같이 찍는다
@@ -60,6 +60,14 @@ SETS = {
                  "RICH_WAGE", "RICH_FGINV", "RICH_RAWINV", "RICH_LOCAL", "RICH_PRICE_PAID", "RICH_PRICE_RECD",
                  "RICH_E_SHIP", "RICH_E_NEWORD", "RICH_E_EMP", "RICH_E_CAPEX", "RICH_E_LOCAL",
                  "RICH_E_PRICE_PAID", "RICH_E_PRICE_RECD"],
+    # 2026-10-30 편입 (교본 CAPUTIL·FREIGHT)
+    "caputil": ["TCU", "CUMFNS", "CAPUTLGMFDS", "CAPUTLGMFNS", "CAPUTLG21S", "CAPUTLG2211A2S",
+                "CAPUTLHITEK2S", "CAPUTLX4HTK2S", "CAPUTLG331S", "CAPUTLG333S", "CAPUTLG334S", "CAPUTLG3361T3S",
+                "CAPUTLG3364T9S", "CAPUTLG325S", "CAPUTLG324S", "CAPUTLG322S", "CAPUTLG311A2S"],
+    "indpro": ["INDPRO", "IPMAN", "IPMINE", "IPUTIL", "IPCONGD", "IPDCONGD", "IPNCONGD", "IPBUSEQ", "IPMAT",
+               "IPHITEK2S", "IPB53122S", "IPG331S", "IPG333S", "IPG334S", "IPG3361T3S", "IPG3364T9S", "IPG325S", "IPG211S",
+               "CAPB50001S", "CAPGMFS", "CAPHITEK2S"],
+    "freight": ["CASS_SHIP", "CASS_SHIP_SA", "CASS_EXP", "CASS_EXP_SA", "CASS_TLLH"],
 }
 
 def load(sid):
@@ -117,12 +125,14 @@ def levels(sid, d, ym):
     hi = max((d[shift(ym, k)], shift(ym, k)) for k in range(12) if shift(ym, k) in d)
     hist = [x for k, x in d.items() if k <= ym]
     pctl = 100.0 * sum(1 for x in hist if x <= v) / len(hist)
+    lravg = sum(hist) / len(hist)          # 시리즈 시작~t 장기 평균 (설비가동률 'N%p 아래' 판정용)
     higher = max((k for k, x in d.items() if k < ym and x > v), default=None)
     lower = max((k for k, x in d.items() if k < ym and x < v), default=None)
     arrow = "" if a3 is None or a3p is None else ("▲" if a3 > a3p else ("▼" if a3 < a3p else "＝"))
     f = lambda x, fmt="{:.1f}": "  -  " if x is None else fmt.format(x)
-    line = (f"   {ym} {v:8.2f} {f(None if p is None else v - p, '{:+.2f}'):>7} {f(a3, '{:.2f}'):>7} {f(a3p, '{:.2f}'):>7}  {arrow:2} "
-            f"{lo[0]:g}({lo[1]})~{hi[0]:g}({hi[1]})  {pctl:5.1f}% ({min(d)}~)  ↑{higher or '없음'} / ↓{lower or '없음'}")
+    nd = 3 if abs(v) < 10 else 2          # 캐스 지수(1.023)처럼 작은 값은 소수 셋째 자리까지
+    line = (f"   {ym} {v:8.{nd}f} {f(None if p is None else v - p, '{:+.%df}' % nd):>7} {f(a3, '{:.%df}' % nd):>7} {f(a3p, '{:.%df}' % nd):>7}  {arrow:2} "
+            f"{lo[0]:g}({lo[1]})~{hi[0]:g}({hi[1]})  {pctl:5.1f}% ({min(d)}~, 장기평균 {lravg:.2f} → {v - lravg:+.2f})  ↑{higher or '없음'} / ↓{lower or '없음'}")
     if p is None:
         line += "  ※전월 관측 없음"
     y = ym[:4]; ly = str(int(y) - 1)
