@@ -3272,7 +3272,7 @@ const RP_COUNTRIES = [['US', '미국'], ['KR', '한국'], ['JP', '일본']];
 // 지표 그룹 라벨(국가별, 발표 순서). 목록에 없는 태그는 태그명 그대로 별도 그룹 — 새 지표를 추가해도 코드 수정 불필요.
 const RP_TAGS = {
   US: [['FOMC', 'FOMC 성명·기자회견'], ['FOMC_MINUTES', 'FOMC 의사록'],
-       ['NFP', '고용보고서 (NFP)'], ['ADP', 'ADP 민간고용'], ['CPI', 'CPI'], ['PPI', 'PPI'],
+       ['GDP', 'GDP (분기)'], ['NFP', '고용보고서 (NFP)'], ['ADP', 'ADP 민간고용'], ['CPI', 'CPI'], ['PPI', 'PPI'],
        ['RETAIL', '소매판매'], ['PCE', 'PCE 물가'], ['CLAIMS', '실업청구 (주간)'],
        ['ISM', 'ISM 제조업 PMI'], ['RICHMOND', '리치먼드 연은 제조업'], ['CAPUTIL', '설비가동률·산업생산'],
        ['FREIGHT', '캐스 화물운송'], ['DURABLE', '내구재 수주'],
@@ -3296,13 +3296,14 @@ function renderReportSidebar() {
   // 항목 라벨: "8월분 · 9/4" — 데이터월은 제목에서 추출, 없으면 발표일만 (연도는 연도 필터가 '전체'일 때만)
   const itemLabel = r => {
     const m = (r.title || '').match(/(\d{1,2})월(분| 회의)/);   // FOMC는 'N월 회의'
+    const q = (r.title || '').match(/(\d)분기 (속보|잠정|확정)/);  // GDP는 'N분기 속보'
     const d = rpFilter.year !== 'ALL'
       ? r.date.slice(5).split('-').map(Number).join('/')
       : r.date.slice(2).split('-').map((v, i) => i ? Number(v) : v).join('/');
-    return (m ? '<b>' + m[1] + '월' + m[2] + '</b> · ' : '') + d;
+    return (m ? '<b>' + m[1] + '월' + m[2] + '</b> · ' : q ? '<b>' + q[1] + '분기 ' + q[2] + '</b> · ' : '') + d;
   };
   // 제목에서 "지표 해부 — N월분: " 접두를 떼고 한 줄 요지만 (전체 제목은 툴팁)
-  const itemSub = r => (r.title || '').replace(/^[^—]*—\s*/, '').replace(/^\d{1,2}월(?:분| 회의)\s*[:：]\s*/, '');
+  const itemSub = r => (r.title || '').replace(/^[^—]*—\s*/, '').replace(/^(?:\d{1,2}월(?:분| 회의)|\d분기 (?:속보|잠정|확정))\s*[:：]\s*/, '');
   const RP_MAX = 8;   // 펼쳤을 때 최대 노출 — 그 이상은 "더보기"
   const rpItem = r => `
           <div class="indicator-item report-item" data-file="${r.file}" title="${r.title}">

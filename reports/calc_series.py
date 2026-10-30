@@ -68,6 +68,17 @@ SETS = {
                "IPHITEK2S", "IPB53122S", "IPG331S", "IPG333S", "IPG334S", "IPG3361T3S", "IPG3364T9S", "IPG325S", "IPG211S",
                "CAPB50001S", "CAPGMFS", "CAPHITEK2S"],
     "freight": ["CASS_SHIP", "CASS_SHIP_SA", "CASS_EXP", "CASS_EXP_SA", "CASS_TLLH"],
+    # 2026-10-30 편입 (교본 GDP) — 성장률(%, 연율)·기여도(%p)는 이미 BEA가 낸 값이라 --levels 로, 물가지수는 일반 모드로
+    "gdp_growth": ["A191RL1Q225SBEA", "PB0000031Q225SBEA", "A190RL1Q225SBEA", "DPCERL1Q225SBEA", "A191RI1Q225SBEA",
+                   "GDPNOW", "FINSALESDOMPRIVPUR"],
+    "gdp_contrib": ["DPCERY2Q224SBEA", "DGDSRY2Q224SBEA", "DDURRY2Q224SBEA", "DNDGRY2Q224SBEA", "DSERRY2Q224SBEA",
+                    "A006RY2Q224SBEA", "A007RY2Q224SBEA", "A008RY2Q224SBEA", "A009RY2Q224SBEA", "Y033RY2Q224SBEA",
+                    "Y001RY2Q224SBEA", "A011RY2Q224SBEA", "A014RY2Q224SBEA",
+                    "A019RY2Q224SBEA", "A020RY2Q224SBEA", "A021RY2Q224SBEA",
+                    "A822RY2Q224SBEA", "A823RY2Q224SBEA", "A824RY2Q224SBEA", "A825RY2Q224SBEA", "A829RY2Q224SBEA",
+                    "Y034RY2Q224SBEA", "B935RY2Q224SBEA", "A937RY2Q224SBEA", "B985RY2Q224SBEA", "Y694RY2Q224SBEA",
+                    "BB01RY2Q224SBEA", "BB00RY2Q224SBEA"],
+    "gdp_price": ["PCECTPI", "JCXFE", "GDPDEF"],
 }
 
 def load(sid):
@@ -95,7 +106,20 @@ def shift(ym, k):
 def pct(a, b):
     return (a / b - 1.0) * 100.0
 
-def calc(d, ym, diff=False):
+def step_of(d):
+    """분기 시리즈(관측월이 1·4·7·10월뿐)면 3, 아니면 1 — GDP 같은 분기 자료를 월간처럼 계산하지 않게 (2026-10-30)"""
+    return 3 if len(d) > 4 and all(k[5:7] in ("01", "04", "07", "10") for k in d) else 1
+
+def calc(d, ym, diff=False, step=1):
+    if step == 3:   # 분기: MoM칸 = 전기비, 3M연율칸 = 전기비 연율, 전월3M칸 = 직전 분기의 전기비 연율
+        need = [ym, shift(ym, 3), shift(ym, 6), shift(ym, 12)]
+        if any(k not in d for k in need):
+            return None
+        v, v1, v2 = d[ym], d[shift(ym, 3)], d[shift(ym, 6)]
+        if diff:
+            return dict(yoy=v - d[shift(ym, 12)], mom=v - v1, a3=v - v1, a3prev=v1 - v2, level=v)
+        return dict(yoy=pct(v, d[shift(ym, 12)]), mom=pct(v, v1), a3=((v / v1) ** 4 - 1.0) * 100.0,
+                    a3prev=((v1 / v2) ** 4 - 1.0) * 100.0, level=v)
     need = [ym, shift(ym, 1), shift(ym, 3), shift(ym, 4), shift(ym, 12)]
     if any(k not in d for k in need):
         return None
@@ -111,13 +135,13 @@ def calc(d, ym, diff=False):
     a3prev = ((d[shift(ym, 1)] / d[shift(ym, 4)]) ** 4 - 1.0) * 100.0
     return dict(yoy=yoy, mom=mom, a3=a3, a3prev=a3prev, level=d[ym])
 
-def levels(sid, d, ym):
+def levels(sid, d, ym, step=1):
     if ym not in d:
         return f"   {ym}: 관측 없음(미공표)"
     v = d[ym]
-    p = d.get(shift(ym, 1))
-    w = [d.get(shift(ym, k)) for k in range(3)]
-    wp = [d.get(shift(ym, k)) for k in range(1, 4)]
+    p = d.get(shift(ym, step))                       # 분기 시리즈면 직전 분기
+    w = [d.get(shift(ym, k * step)) for k in range(3)]
+    wp = [d.get(shift(ym, k * step)) for k in range(1, 4)]
     a3 = sum(w) / 3 if None not in w else None
     a3p = sum(wp) / 3 if None not in wp else None
     yr = [d[shift(ym, k)] for k in range(12) if shift(ym, k) in d]
@@ -134,7 +158,7 @@ def levels(sid, d, ym):
     line = (f"   {ym} {v:8.{nd}f} {f(None if p is None else v - p, '{:+.%df}' % nd):>7} {f(a3, '{:.%df}' % nd):>7} {f(a3p, '{:.%df}' % nd):>7}  {arrow:2} "
             f"{lo[0]:g}({lo[1]})~{hi[0]:g}({hi[1]})  {pctl:5.1f}% ({min(d)}~, 장기평균 {lravg:.2f} → {v - lravg:+.2f})  ↑{higher or '없음'} / ↓{lower or '없음'}")
     if p is None:
-        line += "  ※전월 관측 없음"
+        line += "  ※직전 관측 없음"
     y = ym[:4]; ly = str(int(y) - 1)
     ytd = [d[k] for k in d if k[:4] == y and k <= ym]
     lyy = [d[k] for k in d if k[:4] == ly and k[5:] <= ym[5:]]
@@ -187,10 +211,11 @@ def main():
             except FileNotFoundError:
                 print(f"== {sid}: 파일 없음 (reports/data/{sid}.csv)"); continue
             last = max(d) if not a.asof else a.asof
-            print(f"== {sid}  마지막 관측 {max(d)}  (수준 모드)")
+            st = step_of(d)
+            print(f"== {sid}  마지막 관측 {max(d)}  (수준 모드{' · 분기 — 전월차=전기차, 3M평균=최근 3분기 평균' if st == 3 else ''})")
             print(f"   {'월':7} {'값':>8} {'전월차':>7} {'3M평균':>7} {'전3M':>7}  방향 12M범위(최저~최고)  장기백분위  이보다 ↑높았던/↓낮았던 마지막 달")
             for k in range(a.months):
-                print(levels(sid, d, shift(last, k)))
+                print(levels(sid, d, shift(last, k * st), st))
         print("\n주의: 확산지수는 50(ISM)·0(지역 연은) 기준선 대비 위치와 전월차로 읽는다. ▲▼는 3M평균 기준. "
               "'N개월 만의 최고/최저'는 ↑/↓ 칸의 달로만 쓴다.")
         return
@@ -201,16 +226,21 @@ def main():
         except FileNotFoundError:
             print(f"== {sid}: 파일 없음 (reports/data/{sid}.csv)"); continue
         last = max(d) if not a.asof else a.asof
+        st = step_of(d)
         print(f"== {sid}  마지막 관측 {max(d)}  레벨 {d[max(d)]:g}")
-        print(f"   {'월':7} {'YoY':>8} {'MoM':>8} {'3M연율':>8} {'전월3M':>8}  방향  창(들어옴/빠짐)   12M기준월")
+        if st == 3:
+            print(f"   {'분기':7} {'YoY':>8} {'전기비':>8} {'전기비연율':>8} {'직전분기':>8}  방향  비교 분기          4분기 전")
+        else:
+            print(f"   {'월':7} {'YoY':>8} {'MoM':>8} {'3M연율':>8} {'전월3M':>8}  방향  창(들어옴/빠짐)   12M기준월")
         for k in range(a.months):
-            ym = shift(last, k)
-            r = calc(d, ym, a.diff)
+            ym = shift(last, k * st)
+            r = calc(d, ym, a.diff, st)
             if r is None:
                 print(f"   {ym}: 데이터 부족"); continue
             arrow = "▲" if r["a3"] > r["a3prev"] else ("▼" if r["a3"] < r["a3prev"] else "＝")
+            win = f"{ym} vs {shift(ym, 3)}" if st == 3 else f"{ym[5:]}월 in / {shift(ym,3)[5:]}월 out"
             print(f"   {ym} {r['yoy']:8.2f}{unit} {r['mom']:8.2f}{unit} {r['a3']:8.2f}{unit} {r['a3prev']:8.2f}{unit}  {arrow}   "
-                  f"{ym[5:]}월 in / {shift(ym,3)[5:]}월 out   {shift(ym,12)}")
+                  f"{win}   {shift(ym,12)}")
     print("\n주의: 3M연율의 부호(누적 방향)와 당월 MoM(단월 방향)은 별개다 — 둘 다 써라. "
           "가속/감속은 ▲▼(전월 3M 대비)로만 판정하고, 상위·하위 항목(식품⊃외식, 교통⊃항공)을 같은 개수로 세지 마라.")
 
