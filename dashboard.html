@@ -3303,7 +3303,7 @@ function renderReportSidebar() {
     return (m ? '<b>' + m[1] + '월' + m[2] + '</b> · ' : q ? '<b>' + q[1] + '분기 ' + q[2] + '</b> · ' : '') + d;
   };
   // 제목에서 "지표 해부 — N월분: " 접두를 떼고 한 줄 요지만 (전체 제목은 툴팁)
-  const itemSub = r => (r.title || '').replace(/^[^—]*—\s*/, '').replace(/^(?:\d{1,2}월(?:분| 회의)|\d분기 (?:속보|잠정|확정))\s*[:：]\s*/, '');
+  const itemSub = r => (r.title || '').replace(/^[^—]*—\s*/, '').replace(/^(?:\d{4}년 )?(?:\d{1,2}월(?:분| 회의)|\d분기 (?:속보|잠정|확정))\s*[:：]\s*/, '');
   const RP_MAX = 8;   // 펼쳤을 때 최대 노출 — 그 이상은 "더보기"
   const rpItem = r => `
           <div class="indicator-item report-item" data-file="${r.file}" title="${r.title}">
