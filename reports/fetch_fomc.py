@@ -9,13 +9,16 @@ FOMC 문서 수집기 — 성명문·이행 노트·의장 기자회견 녹취�
   python reports/fetch_fomc.py get 2026-10-28        # 그 회의의 성명문·이행 노트·기자회견·SEP + 직전 성명문 대조
   python reports/fetch_fomc.py get-minutes 2026-09-16  # 그 회의의 의사록 (회의 약 3주 뒤 공개)
 
+  python reports/fetch_fomc.py get-jh 2026-08-28     # 잭슨홀 심포지엄 의장 연설 (매년 8월 말, 캔자스시티 연은 주최)
+
 check 출력:
-  NEW_STATEMENT 2026-10-28 presconf=final|preliminary|missing days=N
+  NEW_STATEMENT 2026-10-28 presconf=full-preliminary|opening-preliminary|missing days=N
   NEW_MINUTES 2026-09-16 released=2026-10-07
+  NEW_JACKSONHOLE 2026-08-28 (연사·제목)
   NO_FOMC_NEW
-기자회견 녹취록은 회견 직후엔 모두발언만 담긴 'PRELIMINARY' PDF가 먼저 올라오고, 문답까지 담긴 'FINAL'은
-하루 이틀 뒤에 같은 주소로 바뀐다(2026-10-29 확인). 보고서는 final 이 올라온 뒤에 쓴다 — 회의 3일이 지나도
-final 이 없으면 있는 것으로 쓰고 그 사실을 적는다.
+기자회견 녹취록은 회견 직후엔 모두발언만 담긴 PDF가 먼저 올라오고, 몇 시간~하루 뒤 같은 주소가 문답까지 담긴
+완성본으로 바뀐다. 연준은 완성본에도 몇 주씩 'PRELIMINARY' 표시를 붙여 두므로 표시가 아니라 **문답이 들어 있나
+(presconf=full-…)**로 판단한다 — full 이면 바로 쓴다. 회의 3일이 지나도 opening 뿐이면 있는 것으로 쓰고 그 사실을 적는다.
 """
 import argparse, difflib, io, json, os, re, subprocess, sys
 from datetime import date, datetime, timedelta, timezone
@@ -148,7 +151,13 @@ def presconf(d):
         return "no-pypdf", None
     r = pypdf.PdfReader(io.BytesIO(b))
     pages = [p.extract_text() or "" for p in r.pages]
-    status = "final" if "FINAL" in pages[0][:300] else ("preliminary" if "PRELIMINARY" in pages[0][:300] else "unknown")
+    # 상태는 '문답이 들어 있나'로 판단한다. 연준은 문답까지 다 담긴 완성본에도 몇 주씩 'PRELIMINARY' 표시를 붙여 둔다
+    # (2026-10-28 회견: 10/29 15:22 GMT에 17쪽 문답 포함본으로 바뀌었는데 표시는 그대로 → 표시만 보고 나흘을 기다린 사고, 11/01 사용자 질책)
+    text = "\n".join(pages)
+    speakers = set(re.findall(r"\n([A-Z][A-Z.'\- ]{3,40})\.\s", text)) - {"CHAIRMAN WARSH", "CHAIR WARSH"}
+    speakers = {s for s in speakers if not s.startswith("CHAIR")}
+    label = "final" if "FINAL" in pages[0][:300] else ("preliminary" if "PRELIMINARY" in pages[0][:300] else "unknown")
+    status = ("full" if len(speakers) >= 2 else "opening") + "-" + label   # full-preliminary = 문답 포함(연준 표시는 예비)
     keep = []
     for p in pages:
         for l in p.split("\n"):
@@ -179,6 +188,41 @@ def minutes_text(d):
     return t[i:j if j > 0 else len(t)].strip()
 
 
+# ── 잭슨홀 ──────────────────────────────────────────────────────────────
+# 2026-11-01 사용자 요청("잭슨홀도 추가해"). 연준 연설 목록 JSON에서 장소에 'Jackson Hole'이 들어간 의장 연설을 찾는다.
+SPEECHES = FED + "/json/ne-speeches.json"
+
+
+def jackson_hole():
+    """[(날짜 YYYY-MM-DD, 연사, 제목, 링크)] — 의장(Chair/Chairman) 연설만, 최신순"""
+    d = json.loads(get(SPEECHES).lstrip("﻿"))
+    out = []
+    for x in d:
+        if "Jackson Hole" in x.get("lo", "") and re.search(r"\bChair(man)?\b", x.get("s", "")) and "Vice" not in x.get("s", ""):
+            m, dd, y = x["d"].split()[0].split("/")
+            out.append((f"{y}-{int(m):02d}-{int(dd):02d}", x["s"], html_unescape(x["t"]), x["l"]))
+    return sorted(out, reverse=True)
+
+
+def html_unescape(s):
+    import html as _h
+    return _h.unescape(_h.unescape(s))
+
+
+def cmd_get_jh(d):
+    hit = next((x for x in jackson_hole() if x[0] == d), None)
+    if not hit:
+        raise SystemExit(f"{d}: 잭슨홀 의장 연설 없음")
+    t = page_text(get(FED + hit[3]))
+    i = t.find(hit[2].split(":")[0][:30]) if hit[2] else -1
+    i = t.find("\n", t.find(hit[1].split()[-1], max(i, 0))) if i >= 0 else 0
+    j = min([k for k in (t.find("Last Update", i), t.find("Back to Top", i)) if k > 0] or [len(t)])
+    body = t[i:j].strip()
+    p = save(f"{d}_jacksonhole.txt", f"{FED}{hit[3]}\n{hit[1]} — {hit[2]} ({d})\n\n{body}")
+    print(f"잭슨홀 {d} — {hit[1]} \"{hit[2]}\" — 본문 {len(body.split())}단어")
+    print("  저장:", os.path.relpath(p, os.path.join(HERE, "..")))
+
+
 # ── 명령 ────────────────────────────────────────────────────────────────
 def cmd_check():
     st = json.load(open(os.path.join(HERE, "state.json"), encoding="utf-8-sig"))
@@ -195,6 +239,13 @@ def cmd_check():
         if d > st.get("FOMC_MINUTES", "0000") and rel <= today:
             print(f"NEW_MINUTES {d} released={rel}")
             found = True
+    try:
+        jh = jackson_hole()
+        if jh and jh[0][0][:4] > st.get("JACKSONHOLE", "0000") and jh[0][0] <= today:
+            print(f"NEW_JACKSONHOLE {jh[0][0]} ({jh[0][1]} — {jh[0][2]})")
+            found = True
+    except Exception as e:
+        print(f"(잭슨홀 확인 실패: {e})")
     if not found:
         print(f"NO_FOMC_NEW (마지막 성명 {st.get('FOMC')}, 마지막 의사록 {st.get('FOMC_MINUTES')})")
     print(f"다음 회의(둘째 날 = 성명 발표일): {upcoming(today)}")
@@ -241,7 +292,7 @@ def cmd_get_minutes(d):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["check", "get", "get-minutes"])
+    ap.add_argument("cmd", choices=["check", "get", "get-minutes", "get-jh"])
     ap.add_argument("date", nargs="?")
     a = ap.parse_args()
     if a.cmd == "check":
@@ -250,6 +301,8 @@ def main():
         ap.error("날짜(YYYY-MM-DD) 필요")
     elif a.cmd == "get":
         cmd_get(a.date)
+    elif a.cmd == "get-jh":
+        cmd_get_jh(a.date)
     else:
         cmd_get_minutes(a.date)
 
