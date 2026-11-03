@@ -1,0 +1,850 @@
+{
+"A091RC1Q027SBEA": {
+"est": 263,
+"hash": "cbc8298c98d5f10e2c544954af43525b",
+"lag": 29.0,
+"last": "2026-07-01",
+"src": "alfred",
+"t": "2026-11-03T16:09:45"
+},
+"A679RC1Q027SBEA": {
+"est": 263,
+"hash": "f0cc54ac4df20cb57622b20bb23a43ee",
+"lag": 29.0,
+"last": "2026-07-01",
+"src": "alfred",
+"t": "2026-11-03T16:08:00"
+},
+"A679RX1Q020SBEA": {
+"est": 71,
+"hash": "6ead27e1e1dad0d5b54135eb88816bcb",
+"lag": 29.0,
+"last": "2026-07-01",
+"src": "alfred",
+"t": "2026-11-03T16:07:39"
+},
+"A822RY2Q224SBEA": {
+"est": 262,
+"hash": "843f780cdef35649218d591f8ff3e137",
+"lag": 29.0,
+"last": "2026-07-01",
+"src": "alfred",
+"t": "2026-11-03T16:09:24"
+},
+"B009RC1Q027SBEA": {
+"est": 263,
+"hash": "ca4dbfd6b169b1a722ec8f1d950d648e",
+"lag": 29.0,
+"last": "2026-07-01",
+"src": "alfred",
+"t": "2026-11-03T16:07:56"
+},
+"B009RX1Q020SBEA": {
+"est": 71,
+"hash": "719a0af6d28902db5504d955fbe0a23a",
+"lag": 29.0,
+"last": "2026-07-01",
+"src": "alfred",
+"t": "2026-11-03T16:07:35"
+},
+"B852RC1Q027SBEA": {
+"est": 183,
+"hash": "57161d6a4eb146c5cdec3933f08782aa",
+"lag": 29.0,
+"last": "2026-07-01",
+"src": "alfred",
+"t": "2026-11-03T16:08:31"
+},
+"B935RC1Q027SBEA": {
+"est": 215,
+"hash": "ed2067ddcd14fd57245c25076ec56385",
+"lag": 29.0,
+"last": "2026-07-01",
+"src": "alfred",
+"t": "2026-11-03T16:08:03"
+},
+"B935RX1Q020SBEA": {
+"est": 68,
+"hash": "e3e59192c6bea0f54d085d6572fa2510",
+"lag": 28,
+"last": "2026-07-01",
+"src": "alfred",
+"t": "2026-11-03T16:07:41"
+},
+"BOGMBASE": {
+"est": 653,
+"hash": "a0fe08bd61e912df3b8c2d6967b5cc5f",
+"lag": 22.5,
+"last": "2026-09-01",
+"src": "alfred",
+"t": "2026-11-03T16:07:17"
+},
+"BOPGSTB": {
+"est": 58,
+"hash": "cf2870f56ed04eefd21b378b1de4586e",
+"lag": 36.0,
+"last": "2026-08-01",
+"src": "alfred",
+"t": "2026-11-03T16:08:52"
+},
+"BOPGTB": {
+"est": 58,
+"hash": "78f6eb8d971fab855392a010dc237c9c",
+"lag": 36.0,
+"last": "2026-08-01",
+"src": "alfred",
+"t": "2026-11-03T16:08:58"
+},
+"BOPSTB": {
+"est": 58,
+"hash": "00fc0807ecfbe97901817144444a1853",
+"lag": 36.0,
+"last": "2026-08-01",
+"src": "alfred",
+"t": "2026-11-03T16:09:01"
+},
+"BOPTEXP": {
+"est": 217,
+"hash": "6e4449f8df91a605b8ce10f494874bf0",
+"lag": 36.0,
+"last": "2026-08-01",
+"src": "alfred",
+"t": "2026-11-03T16:09:03"
+},
+"BOPTIMP": {
+"est": 217,
+"hash": "ff05cffd9560ad57f520dc721f362275",
+"lag": 36.0,
+"last": "2026-08-01",
+"src": "alfred",
+"t": "2026-11-03T16:09:05"
+},
+"CBI": {
+"est": 32,
+"hash": "76d0dbfcfbd2cecb6d354b4b29ac0ce1",
+"lag": 29.0,
+"last": "2026-07-01",
+"src": "alfred",
+"t": "2026-11-03T16:07:51"
+},
+"CBIC1": {
+"est": 46,
+"hash": "b9c0a25f94d737d249059cab322a8a9e",
+"lag": 29.0,
+"last": "2026-07-01",
+"src": "alfred",
+"t": "2026-11-03T16:07:31"
+},
+"CCSA": {
+"est": 2225,
+"hash": "5785c7b278144df9e1d014f2d9350ad0",
+"lag": 12.0,
+"last": "2026-10-17",
+"src": "alfred",
+"t": "2026-11-03T16:04:44"
+},
+"CES0500000003": {
+"est": 59,
+"hash": "1fa436ef98de5d70c23e602c99f0b5ca",
+"lag": 5.0,
+"last": "2026-09-01",
+"src": "alfred",
+"t": "2026-11-03T16:04:55"
+},
+"CIVPART": {
+"est": 588,
+"hash": "68458bb919f0e6cd3643f093490e65b3",
+"lag": 5.0,
+"last": "2026-09-01",
+"src": "alfred",
+"t": "2026-11-03T16:04:39"
+},
+"CPATAX": {
+"est": 138,
+"hash": "58dac7798c53b492221e171d98b6fd9f",
+"lag": 60.0,
+"last": "2026-04-01",
+"src": "alfred",
+"t": "2026-11-03T16:08:44"
+},
+"CPIAUCSL": {
+"est": 305,
+"hash": "ccbc1a0bd854dfa3902e86204eda4791",
+"lag": 12.0,
+"last": "2026-09-01",
+"src": "alfred",
+"t": "2026-11-03T16:04:15"
+},
+"CPILFESL": {
+"est": 478,
+"hash": "e5ecb3f5c386520375b3a32b23fcf3ec",
+"lag": 12.0,
+"last": "2026-09-01",
+"src": "alfred",
+"t": "2026-11-03T16:04:18"
+},
+"CPROFIT": {
+"est": 118,
+"hash": "899478ff2eb68b68f42c4e2665f82040",
+"lag": 60.0,
+"last": "2026-04-01",
+"src": "alfred",
+"t": "2026-11-03T16:08:47"
+},
+"CSUSHPINSA": {
+"est": 476,
+"hash": "95a31a8aef52853683d22f580ed6ba1d",
+"lag": 58.0,
+"last": "2026-08-01",
+"src": "alfred",
+"t": "2026-11-03T16:06:10"
+},
+"DFSARX1Q020SBEA": {
+"est": 71,
+"hash": "f0db1cdff5e1420983f607bb45c61995",
+"lag": 29.0,
+"last": "2026-07-01",
+"src": "alfred",
+"t": "2026-11-03T16:06:30"
+},
+"DGORDER": {
+"est": 496,
+"hash": "1eb180d9e68e86cf96db707d2042aeb5",
+"lag": 26.0,
+"last": "2026-09-01",
+"src": "alfred",
+"t": "2026-11-03T16:08:37"
+},
+"DHLCRX1Q020SBEA": {
+"est": 71,
+"hash": "c8c5a2d34f499c563a70208fe276885e",
+"lag": 29.0,
+"last": "2026-07-01",
+"src": "alfred",
+"t": "2026-11-03T16:06:34"
+},
+"DHUTRX1Q020SBEA": {
+"est": 71,
+"hash": "54d9a6d418c1600be4eaf0c01b548745",
+"lag": 29.0,
+"last": "2026-07-01",
+"src": "alfred",
+"t": "2026-11-03T16:06:32"
+},
+"DRCCLACBS": {
+"est": 80,
+"hash": "c58797a1095c9f15ca6566c25473fa57",
+"lag": 50.0,
+"last": "2026-04-01",
+"src": "alfred",
+"t": "2026-11-03T16:06:57"
+},
+"DRSFRMACBS": {
+"est": 80,
+"hash": "53b46b64a0dd96142137847a141fa8e1",
+"lag": 50.0,
+"last": "2026-04-01",
+"src": "alfred",
+"t": "2026-11-03T16:07:05"
+},
+"DRTSCILM": {
+"est": 147,
+"hash": "87ced390609730ad0d86d95774e2ca82",
+"lag": -56,
+"last": "2026-10-01",
+"src": "alfred",
+"t": "2026-11-03T16:08:39"
+},
+"DSPIC96": {
+"est": 249,
+"hash": "31f353cbbfbc738908c03b4277cd70c4",
+"lag": 29.0,
+"last": "2026-09-01",
+"src": "alfred",
+"t": "2026-11-03T16:06:49"
+},
+"FDEFX": {
+"est": 77,
+"hash": "f4b7fb828cb851fb19402c6e650014bb",
+"lag": 29.0,
+"last": "2026-07-01",
+"src": "alfred",
+"t": "2026-11-03T16:09:34"
+},
+"FEDFUNDS": {
+"est": 508,
+"hash": "27e70bc1d1554e24b7160b90bc932e68",
+"lag": 1.0,
+"last": "2026-10-01",
+"src": "alfred",
+"t": "2026-11-03T16:05:02"
+},
+"FGCE": {
+"est": 77,
+"hash": "5530c1baf7e0c6578c7d8096a2831792",
+"lag": 29.0,
+"last": "2026-07-01",
+"src": "alfred",
+"t": "2026-11-03T16:09:29"
+},
+"FNDEFX": {
+"est": 77,
+"hash": "bbce64ba5f93e83f9ddb81b9529c4642",
+"lag": 29.0,
+"last": "2026-07-01",
+"src": "alfred",
+"t": "2026-11-03T16:09:36"
+},
+"FRGSHPUSM649NCIS": {
+"est": 280,
+"hash": "3c1f65d34c9871a02ec2b86cf36b20bb",
+"lag": 15.0,
+"last": "2026-09-01",
+"src": "alfred",
+"t": "2026-11-03T16:09:50"
+},
+"GACDFSA066MSFRBPHI": {
+"est": 699,
+"hash": "609de296cc795c7cfd0515bd4d715d37",
+"lag": -12.0,
+"last": "2026-10-01",
+"src": "alfred",
+"t": "2026-11-03T16:05:00"
+},
+"GCE": {
+"est": 32,
+"hash": "17ab46953bdacb6cf3edc63a41b74810",
+"lag": 29.0,
+"last": "2026-07-01",
+"src": "alfred",
+"t": "2026-11-03T16:09:21"
+},
+"GDPC1": {
+"est": 178,
+"hash": "09b94fa878e7a8a51a6950658f94c576",
+"lag": 29.0,
+"last": "2026-07-01",
+"src": "alfred",
+"t": "2026-11-03T16:04:58"
+},
+"GFDEGDQ188S": {
+"est": 185,
+"hash": "6500904c35265f1630c3c971aa8e9ba0",
+"lag": 63,
+"last": "2026-04-01",
+"src": "alfred",
+"t": "2026-11-03T16:09:43"
+},
+"GPDI": {
+"est": 32,
+"hash": "0b7726aa5d60c500e1ab1ca430a5d82f",
+"lag": 29.0,
+"last": "2026-07-01",
+"src": "alfred",
+"t": "2026-11-03T16:07:44"
+},
+"GPDIC1": {
+"est": 46,
+"hash": "adff0d1366a12b450e3641700748b701",
+"lag": 29.0,
+"last": "2026-07-01",
+"src": "alfred",
+"t": "2026-11-03T16:07:23"
+},
+"HOUST": {
+"est": 17,
+"hash": "79db663bdd4c6212b87c84c793cbf196",
+"lag": 18.0,
+"last": "2026-09-01",
+"src": "alfred",
+"t": "2026-11-03T16:05:10"
+},
+"HSN1F": {
+"est": 437,
+"hash": "37bccfbd5618f92bd1f473710d063602",
+"lag": 25.0,
+"last": "2026-09-01",
+"src": "alfred",
+"t": "2026-11-03T16:05:12"
+},
+"ICSA": {
+"est": 2211,
+"hash": "472d7d24b86d01c8944f2d9fdd3cf9c2",
+"lag": 5.0,
+"last": "2026-10-24",
+"src": "alfred",
+"t": "2026-11-03T16:04:41"
+},
+"IEABC": {
+"est": 60,
+"hash": "dd0fc8636d0dc583ecb98cc53ea73f42",
+"lag": 81.0,
+"last": "2026-04-01",
+"src": "alfred",
+"t": "2026-11-03T16:08:56"
+},
+"IIPASSEQ": {
+"est": 36,
+"hash": "b6cb75d409f10c07244644bf2c971d7e",
+"lag": 89.0,
+"last": "2026-04-01",
+"src": "alfred",
+"t": "2026-11-03T16:09:09"
+},
+"IIPDIREAMVQ": {
+"est": 36,
+"hash": "a45252198e7dd24aaa9dc75b6cd5c615",
+"lag": 89.0,
+"last": "2026-04-01",
+"src": "alfred",
+"t": "2026-11-03T16:09:16"
+},
+"IIPDIRELMVQ": {
+"est": 36,
+"hash": "341687a9a0dca5b97a80108344d2e24b",
+"lag": 89.0,
+"last": "2026-04-01",
+"src": "alfred",
+"t": "2026-11-03T16:09:19"
+},
+"IIPLIABQ": {
+"est": 36,
+"hash": "a3f461d6e8232367c37f69995657c2c8",
+"lag": 89.0,
+"last": "2026-04-01",
+"src": "alfred",
+"t": "2026-11-03T16:09:11"
+},
+"IIPPORTAQ": {
+"est": 36,
+"hash": "c2366e773126444a52ee59ec80007114",
+"lag": 89.0,
+"last": "2026-04-01",
+"src": "alfred",
+"t": "2026-11-03T16:09:13"
+},
+"IIPPORTLQ": {
+"est": 36,
+"hash": "33656d581a0321c5eb33bfdc27c8f3c0",
+"lag": 89.0,
+"last": "2026-04-01",
+"src": "alfred",
+"t": "2026-11-03T16:09:15"
+},
+"IIPUSNETIQ": {
+"est": 36,
+"hash": "adda744096a9d08a7cf96888239c672d",
+"lag": 89.0,
+"last": "2026-04-01",
+"src": "alfred",
+"t": "2026-11-03T16:09:07"
+},
+"INDPRO": {
+"est": 95,
+"hash": "28e70e8c43e4face0b70bb747dc1f0ed",
+"lag": 16.0,
+"last": "2026-09-01",
+"src": "alfred",
+"t": "2026-11-03T16:09:54"
+},
+"ISRATIO": {
+"est": 588,
+"hash": "a0b8e01de70e1f410cac0c55b13b973b",
+"lag": 46.0,
+"last": "2026-08-01",
+"src": "alfred",
+"t": "2026-11-03T16:08:49"
+},
+"JTSHIL": {
+"est": 114,
+"hash": "ac8bd03f4053805325272d1d316c096e",
+"lag": 37.0,
+"last": "2026-08-01",
+"src": "alfred",
+"t": "2026-11-03T16:04:49"
+},
+"JTSJOL": {
+"est": 114,
+"hash": "6a90a57816e9c9d231dfd7cebb2fdec6",
+"lag": 37.0,
+"last": "2026-08-01",
+"src": "alfred",
+"t": "2026-11-03T16:04:46"
+},
+"JTSLDL": {
+"est": 114,
+"hash": "a3e9136abd1086b44d7d9d7ca06d1fda",
+"lag": 37.0,
+"last": "2026-08-01",
+"src": "alfred",
+"t": "2026-11-03T16:04:51"
+},
+"JTSQUL": {
+"est": 114,
+"hash": "8d94c62c1dfce9de90a03a5c86945a73",
+"lag": 37.0,
+"last": "2026-08-01",
+"src": "alfred",
+"t": "2026-11-03T16:04:53"
+},
+"M2V": {
+"est": 205,
+"hash": "b9638ddd2671ae3671309eed702b639f",
+"lag": 28.5,
+"last": "2026-07-01",
+"src": "alfred",
+"t": "2026-11-03T16:07:15"
+},
+"MICH": {
+"est": 294,
+"hash": "4d3292da78e5857fb1bf67032c06882b",
+"lag": -4.0,
+"last": "2026-09-01",
+"src": "alfred",
+"t": "2026-11-03T16:04:31"
+},
+"MORTGAGE30US": {
+"est": 2046,
+"hash": "3fda995e4fb6c8cbf531bdfb178cc8e2",
+"lag": 0.0,
+"last": "2026-10-29",
+"src": "alfred",
+"t": "2026-11-03T16:05:04"
+},
+"MSPUS": {
+"est": 192,
+"hash": "78342dc810515beaf8872351b36935d9",
+"lag": 26,
+"last": "2026-07-01",
+"src": "alfred",
+"t": "2026-11-03T16:06:07"
+},
+"MTSDS133FMS": {
+"est": 418,
+"hash": "7b33ef72906c8276ca8f8a1e14563d67",
+"lag": 12.0,
+"last": "2026-09-01",
+"src": "alfred",
+"t": "2026-11-03T16:09:40"
+},
+"NETEXP": {
+"est": 202,
+"hash": "6e3ca39c959652827426d5be4e11b179",
+"lag": 29.0,
+"last": "2026-07-01",
+"src": "alfred",
+"t": "2026-11-03T16:08:54"
+},
+"NEWORDER": {
+"est": 347,
+"hash": "0d54cb903fd96097f9dd1ee96c59738d",
+"lag": 26.0,
+"last": "2026-09-01",
+"src": "alfred",
+"t": "2026-11-03T16:08:34"
+},
+"PAYEMS": {
+"est": 195,
+"hash": "cfbc70c3f012654cb2c0cec4d99caac2",
+"lag": 5.0,
+"last": "2026-09-01",
+"src": "alfred",
+"t": "2026-11-03T16:04:36"
+},
+"PCE": {
+"est": 249,
+"hash": "b8cdee8b0488b1e7004b542bcbb5b185",
+"lag": 29.0,
+"last": "2026-09-01",
+"src": "alfred",
+"t": "2026-11-03T16:06:15"
+},
+"PCEC96": {
+"est": 248,
+"hash": "c375d72aa428ca4f94e1864c0fc3d4d0",
+"lag": 29.0,
+"last": "2026-09-01",
+"src": "alfred",
+"t": "2026-11-03T16:06:12"
+},
+"PCEDG": {
+"est": 249,
+"hash": "bfc95e7b08cf0ab349e55ba23147990c",
+"lag": 29.0,
+"last": "2026-09-01",
+"src": "alfred",
+"t": "2026-11-03T16:06:18"
+},
+"PCEND": {
+"est": 249,
+"hash": "135371ba07f829bf7a7f3df59d417005",
+"lag": 29.0,
+"last": "2026-09-01",
+"src": "alfred",
+"t": "2026-11-03T16:06:22"
+},
+"PCEPI": {
+"est": 497,
+"hash": "503cc0ccafaa46787596660c397b40a7",
+"lag": 29.0,
+"last": "2026-09-01",
+"src": "alfred",
+"t": "2026-11-03T16:04:20"
+},
+"PCEPILFE": {
+"est": 497,
+"hash": "6d36d073d4457ef00313fa2b1437a7fd",
+"lag": 29.0,
+"last": "2026-09-01",
+"src": "alfred",
+"t": "2026-11-03T16:04:22"
+},
+"PCESV": {
+"est": 32,
+"hash": "64ddf6ae37690b4f0e53d3abf322f86c",
+"lag": 29.0,
+"last": "2026-07-01",
+"src": "alfred",
+"t": "2026-11-03T16:06:25"
+},
+"PCESVC96": {
+"est": 46,
+"hash": "deec670cb0556b59cb29bf11856a9518",
+"lag": 29.0,
+"last": "2026-07-01",
+"src": "alfred",
+"t": "2026-11-03T16:06:28"
+},
+"PCETRIM12M159SFRBDAL": {
+"est": 329,
+"hash": "3aeee0879fd6df10ba49732042305d45",
+"lag": 29.0,
+"last": "2026-09-01",
+"src": "alfred",
+"t": "2026-11-03T16:04:24"
+},
+"PCTR": {
+"est": 599,
+"hash": "58ffc379d39f59f8ddb4ddcbbfcf7b71",
+"lag": 29.0,
+"last": "2026-09-01",
+"src": "alfred",
+"t": "2026-11-03T16:07:09"
+},
+"PERMIT": {
+"est": 474,
+"hash": "7002d13bd94cae6949795d2b73585c03",
+"lag": 18.0,
+"last": "2026-09-01",
+"src": "alfred",
+"t": "2026-11-03T16:05:07"
+},
+"PI": {
+"est": 239,
+"hash": "777bc4c69658c93db57f950737d91bb1",
+"lag": 29.0,
+"last": "2026-09-01",
+"src": "alfred",
+"t": "2026-11-03T16:06:45"
+},
+"PNFI": {
+"est": 77,
+"hash": "5cdf3125e39433367a8f293b7232c775",
+"lag": 29.0,
+"last": "2026-07-01",
+"src": "alfred",
+"t": "2026-11-03T16:07:47"
+},
+"PNFIC1": {
+"est": 73,
+"hash": "1e1fa5e84eb5c63548c9f92cd8f799ef",
+"lag": 29.0,
+"last": "2026-07-01",
+"src": "alfred",
+"t": "2026-11-03T16:07:25"
+},
+"PPIFIS": {
+"est": 50,
+"hash": "d9076d6260d15c0e35b341a0488ed777",
+"lag": 13.0,
+"last": "2026-09-01",
+"src": "alfred",
+"t": "2026-11-03T16:04:26"
+},
+"PRFI": {
+"est": 77,
+"hash": "f354cc80b1a904276d66334a035f7fab",
+"lag": 29.0,
+"last": "2026-07-01",
+"src": "alfred",
+"t": "2026-11-03T16:07:49"
+},
+"PRFIC1": {
+"est": 73,
+"hash": "f22c1d93280f60acc557303655952686",
+"lag": 29.0,
+"last": "2026-07-01",
+"src": "alfred",
+"t": "2026-11-03T16:07:28"
+},
+"PSAVERT": {
+"est": 455,
+"hash": "eb4962372ce9c253cdb3c877dafd2abf",
+"lag": 29.0,
+"last": "2026-09-01",
+"src": "alfred",
+"t": "2026-11-03T16:06:52"
+},
+"REVOLSL": {
+"est": 345,
+"hash": "2e4778424735a1a69d0031948d451c7a",
+"lag": 38.0,
+"last": "2026-08-01",
+"src": "alfred",
+"t": "2026-11-03T16:07:00"
+},
+"RRSFS": {
+"est": 112,
+"hash": "30bc5a1e686986b35870b82cfce88c79",
+"lag": 15.0,
+"last": "2026-09-01",
+"src": "alfred",
+"t": "2026-11-03T16:06:42"
+},
+"RSAFS": {
+"est": 112,
+"hash": "c9e5f54cb8e99ab1751f7a3c2e3856ce",
+"lag": 15.0,
+"last": "2026-09-01",
+"src": "alfred",
+"t": "2026-11-03T16:06:37"
+},
+"RSFSXMV": {
+"est": 112,
+"hash": "6aaa2b60bbfe1589c31c1c41918e8363",
+"lag": 15.0,
+"last": "2026-09-01",
+"src": "alfred",
+"t": "2026-11-03T16:06:39"
+},
+"SLCE": {
+"est": 77,
+"hash": "c7ecc6d148e9490d415b239e1604d730",
+"lag": 29.0,
+"last": "2026-07-01",
+"src": "alfred",
+"t": "2026-11-03T16:09:32"
+},
+"TCU": {
+"est": 357,
+"hash": "2d8c5884bda6c5ecd526ad52eafca325",
+"lag": 16.0,
+"last": "2026-09-01",
+"src": "alfred",
+"t": "2026-11-03T16:08:42"
+},
+"TDSP": {
+"est": 77,
+"hash": "498bcb207e7ddb898f87cd912c877489",
+"lag": 83,
+"last": "2026-04-01",
+"src": "alfred",
+"t": "2026-11-03T16:06:55"
+},
+"TNWBSHNO": {
+"est": 239,
+"hash": "27846eb852a9182a80aa85bee7039144",
+"lag": 70.0,
+"last": "2026-04-01",
+"src": "alfred",
+"t": "2026-11-03T16:07:02"
+},
+"UMCSENT": {
+"est": 380,
+"hash": "eb2ff9f5dbf35f0f4b80ccc4cd5fb7a3",
+"lag": -4.0,
+"last": "2026-09-01",
+"src": "alfred",
+"t": "2026-11-03T16:07:07"
+},
+"UNRATE": {
+"est": 145,
+"hash": "794012bb749781791e06d247ff3e7b18",
+"lag": 5.0,
+"last": "2026-09-01",
+"src": "alfred",
+"t": "2026-11-03T16:04:33"
+},
+"USALOLITOAASTSAM": {
+"est": 760,
+"hash": "36a99b624e3fee8518409203025719a4",
+"lag": 15,
+"last": "2026-09-01",
+"src": "alfred",
+"t": "2026-11-03T16:07:21"
+},
+"USGOVT": {
+"est": 273,
+"hash": "81a57d437ddc5f95ce8cb9ee92c34c72",
+"lag": 5.0,
+"last": "2026-09-01",
+"src": "alfred",
+"t": "2026-11-03T16:09:27"
+},
+"W006RC1Q027SBEA": {
+"est": 262,
+"hash": "53500ecb55cd218804c0b5ee7d17e016",
+"lag": 60.0,
+"last": "2026-04-01",
+"src": "alfred",
+"t": "2026-11-03T16:09:38"
+},
+"WPSFD4131": {
+"est": 493,
+"hash": "8967307de72164aa1076fdedd473f8e7",
+"lag": 13.0,
+"last": "2026-09-01",
+"src": "alfred",
+"t": "2026-11-03T16:04:29"
+},
+"WTREGEN": {
+"est": 1197,
+"hash": "5f666e248c09ce6e5e301255fcbfb80b",
+"lag": 1.0,
+"last": "2026-10-28",
+"src": "alfred",
+"t": "2026-11-03T16:09:47"
+},
+"Y001RC1Q027SBEA": {
+"est": 269,
+"hash": "7921e3c61761995288ea52d70a652fa8",
+"lag": 28.5,
+"last": "2026-07-01",
+"src": "alfred",
+"t": "2026-11-03T16:07:58"
+},
+"Y001RX1Q020SBEA": {
+"est": 61,
+"hash": "233d12a5cf36a1c8cd605dfbded67758",
+"lag": 28.5,
+"last": "2026-07-01",
+"src": "alfred",
+"t": "2026-11-03T16:07:37"
+},
+"Y033RC1Q027SBEA": {
+"est": 269,
+"hash": "73b8301fc607fc34f67a11bc6f315c58",
+"lag": 28.5,
+"last": "2026-07-01",
+"src": "alfred",
+"t": "2026-11-03T16:07:54"
+},
+"Y033RX1Q020SBEA": {
+"est": 61,
+"hash": "618f7edc24e258ac603475de98448b8c",
+"lag": 28.5,
+"last": "2026-07-01",
+"src": "alfred",
+"t": "2026-11-03T16:07:33"
+}
+}

@@ -100,6 +100,15 @@ JBTS BEI 페이지는 **최근 약 3년만 보여주는 롤링 윈도우**다. �
 
 이 외에 **📋 보고서 탭**이 있다 — `reports/*.md`를 렌더하고 목록은 `reports/index.json`.
 
+### 🧭 미국 경제 상황 (2026-11-03, `source:'situation'`, 사이드바 미국 지도 바로 아래)
+
+지도 가운데 '미국 경제' 박스를 눌러도 들어온다. 화면 3개 — ① 경제 대시보드(과거 케이스 조사 PCE 대시보드 방식: 보조축·커브 국면 띠·고용/PMI 띠·QE 리본·＋지표 추가) ② 채권시장 × FOMC(2년·10년 괴리율 + 폴리마켓 실시간 확률 + 자동 요약 + 과거 같은 상황 표) ③ PMI 예측(ISM 세부지표 / 경기선행지수·화물·리치먼드 / 핵심 자본재·페덱스·러셀 2000, σ 단위). 코드는 `index.html` 의 `sit*` 함수·`SitChart`·`SitGroup`.
+
+- **사용자 규칙: 모든 점은 '발표일'에 찍는다 · 값은 최신 수정치 · 수정 전 값은 클릭할 때만.** 발표일·수정 이력은 `reports/data/rel/<ID>.csv`(관측,첫 발표일,첫 발표치,e=추정) · `reports/data/vint/<ID>.csv`(관측,적용 시작일,값 — 주요 17종만) ← `reports/fetch_vintages.py`. 이 PC·에이전트는 ALFRED 웹 다운로드 양식(키 불필요, **User-Agent 를 바꾸면 ALFRED 가 응답을 안 줌**), GitHub 미러는 FRED API(`--backend api --changed`). FRED 밖 자료는 발표 규칙(ISM = 다음 달 첫 영업일, 리치먼드 = 그달 넷째 화요일, 컨퍼런스보드 = 마지막 화요일, 시세 = 그날).
+- 경기 국면 요약·메모는 미국 지도와 **같은 저장 칸**(`fmLabels_v1`·`fmMemo_v1`, `fmEditCenterSummary`)을 쓴다. 보기 설정은 `sitView_v1`.
+- 폴리마켓은 `gamma-api.polymarket.com`(CORS 허용) 직결, '연준 금리' 태그의 `Fed Decision in …` 이벤트(주소 꼬리가 무작위라 태그로 찾음). 칼시는 브라우저 요청을 403 으로 막음.
+- 페덱스·러셀 2000 일간 = `yahoo_FDX_d.csv`·`yahoo_RUT_d.csv`(미러의 'Yahoo daily' 단계, `range=max` 는 일간을 띄엄띄엄 줘서 `period1/period2`).
+
 ---
 
 ## 📋 보고서 에이전트 (무인 자동화)

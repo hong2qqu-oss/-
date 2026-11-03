@@ -680,6 +680,118 @@
     .sup-zero { color:var(--text-muted); }
     .sup-chk { width:15px; height:15px; accent-color:var(--accent); cursor:pointer; }
     .sup-table td.chk-col { text-align:center; }
+
+    /* ── 🧭 경제 상황 탭 (2026-11-03) — PCE 대시보드의 조작·띠·범례를 사이트 다크 테마로 ── */
+    #sit-panel { display:none; flex:1; overflow:auto; padding:14px 20px 30px; }
+    #sit-panel.show { display:block; }
+    #sit-panel .num { font-family:SFMono-Regular, Consolas, monospace; font-variant-numeric:tabular-nums; }
+    .sit-top { display:flex; flex-wrap:wrap; align-items:center; gap:8px 16px; margin-bottom:10px; }
+    .sit-ttl0 { font-size:16px; } .sit-ttl0 b { color:var(--text); }
+    #sit-asof { color:var(--text-muted); font-size:11px; margin-left:10px; }
+    #sit-tabs { display:inline-flex; border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+    #sit-tabs button { background:var(--panel-bg); color:var(--text-muted); border:0; padding:7px 16px; font-size:13px; cursor:pointer; }
+    #sit-tabs button + button { border-left:1px solid var(--border); }
+    #sit-tabs button.on { background:var(--active-bg); color:var(--text); font-weight:600; }
+    .sit-btn { background:var(--panel-bg); border:1px solid var(--border); color:var(--text-muted); border-radius:6px; padding:5px 10px; font-size:12px; cursor:pointer; margin-left:auto; }
+    .sit-btn:hover, #sit-tabs button:hover { color:var(--text); }
+    .sit-note { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); gap:10px; margin-bottom:12px; }
+    @media (max-width:1100px) { .sit-note { grid-template-columns:1fr; } }
+    .sit-note > div { background:var(--panel-bg); border:1px solid var(--border); border-radius:8px; padding:8px 12px; min-width:0; }
+    .sit-nh { font-size:12px; color:var(--text-muted); margin-bottom:4px; display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+    .sit-nh b { color:var(--text); font-size:12.5px; }
+    .sit-nh button { background:none; border:1px solid var(--border); color:var(--accent); border-radius:5px; padding:1px 7px; font-size:11px; cursor:pointer; }
+    #sit-sum-text { font-size:13px; line-height:1.6; white-space:pre-wrap; color:var(--text); }
+    #sit-sum-text.empty { color:var(--text-muted); font-size:12px; }
+    #sit-memo { width:100%; min-height:58px; resize:vertical; background:var(--bg); color:var(--text); border:1px solid var(--border); border-radius:6px; padding:6px 8px; font:inherit; font-size:12.5px; line-height:1.5; }
+    #sit-memo:focus { outline:none; border-color:var(--accent); }
+    .sit-view { display:none; } .sit-view.show { display:block; }
+    .sit-read { font-size:12.5px; color:var(--text-muted); line-height:1.65; margin:0 2px 8px; }
+    .sit-read b { color:var(--text); font-weight:600; }
+    .sit-bar { display:flex; flex-wrap:wrap; gap:6px 14px; align-items:center; font-size:12px; color:var(--text-muted); padding:4px 2px 8px; }
+    .sit-bar label { display:flex; align-items:center; gap:6px; }
+    .sit-bar select, .sit-bar input[type=number] { background:var(--panel-bg); color:var(--text); border:1px solid var(--border); border-radius:5px; padding:3px 6px; font-size:12px; }
+    .sit-bar input[type=number] { width:66px; }
+    .sit-bar .seg { display:inline-flex; border:1px solid var(--border); border-radius:6px; overflow:hidden; }
+    .sit-bar .seg button { background:var(--panel-bg); border:0; color:var(--text-muted); padding:3px 9px; font-size:12px; cursor:pointer; }
+    .sit-bar .seg button + button { border-left:1px solid var(--border); }
+    .sit-bar .seg button.on { background:var(--accent); color:#0d1117; font-weight:600; }
+    .sit-bar .hint { font-size:11px; color:#6e7681; }
+    .sit-chips { display:flex; flex-wrap:wrap; gap:5px 6px; margin:0 0 8px; }
+    .sc-chip { display:inline-flex; align-items:center; gap:6px; border:1px solid var(--border); border-radius:14px; padding:3px 9px 3px 6px; font-size:12px; color:var(--text); background:var(--panel-bg); user-select:none; }
+    .sc-chip .nm { cursor:pointer; }
+    .sc-chip .sw { width:13px; height:13px; border-radius:3px; border:2px solid var(--c); background:var(--c); cursor:pointer; flex:none; }
+    .sc-chip.off { color:#6e7681; } .sc-chip.off .sw { background:transparent; }
+    .sc-chip .ax { font-size:10.5px; color:#6e7681; }
+    .sc-chip .er { font-size:10.5px; color:var(--red); }
+    .sc-add { border:1px dashed var(--accent); color:var(--accent); background:none; border-radius:14px; padding:3px 11px; font-size:12px; cursor:pointer; }
+    .sc-box { position:relative; background:var(--panel-bg); border:1px solid var(--border); border-radius:8px; margin-bottom:10px; }
+    .sc-cv { display:block; width:100%; cursor:crosshair; }
+    .sc-tip { position:absolute; display:none; z-index:5; pointer-events:none; background:#0d1117; color:var(--text); border:1px solid #444c56; border-radius:7px; padding:9px 12px; font-size:12.5px; line-height:1.5; max-width:360px; box-shadow:0 8px 26px rgba(0,0,0,.5); }
+    .sc-tip.pin { pointer-events:auto; border-color:#e3b341; max-width:440px; }
+    .sc-tip .d { font-weight:600; margin-bottom:4px; display:flex; gap:6px; align-items:baseline; }
+    .sc-tip .r { display:flex; justify-content:space-between; gap:14px; }
+    .sc-tip .r i { display:inline-block; width:9px; height:9px; border-radius:2px; margin-right:6px; }
+    .sc-tip .s { font-size:11px; color:#8b949e; margin:-1px 0 3px 15px; }
+    .sc-tip .rv { font-size:11.5px; color:#c9d1d9; margin:-1px 0 5px 15px; padding-left:6px; border-left:2px solid #e3b341; }
+    .sc-tip .rv b { color:#e6edf3; font-weight:600; }
+    .sc-tip .m { color:#8b949e; font-size:11px; }
+    .sc-tip .hint { margin-top:4px; font-size:10.5px; color:#6e7681; }
+    .sc-tip .sc-x { margin-left:auto; background:none; border:0; color:#8b949e; font-size:16px; cursor:pointer; line-height:1; }
+    .sit-legend { display:flex; flex-wrap:wrap; gap:5px 16px; font-size:11.5px; color:var(--text-muted); padding:2px 2px 10px; }
+    .sit-legend i { display:inline-block; width:13px; height:10px; border-radius:2px; margin:0 5px 0 2px; vertical-align:-1px; }
+    .sit-legend .sit-rule { color:var(--text); }
+    .sit-ttl { font-size:12.5px; color:var(--text-muted); margin:6px 2px 6px; }
+    .sit-ttl b { color:var(--text); font-weight:600; margin-right:6px; }
+    .sit-cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:10px; margin-bottom:12px; }
+    .sit-card { background:var(--panel-bg); border:1px solid var(--border); border-radius:8px; padding:9px 12px; }
+    .sit-card.gap { border-width:2px; }
+    .sit-card .k { font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:6px; }
+    .sit-card .k i { display:inline-block; width:10px; height:10px; border-radius:2px; }
+    .sit-card .v { font-size:22px; font-weight:600; margin:2px 0 3px; font-family:SFMono-Regular, Consolas, monospace; }
+    .sit-card .v small { font-size:12px; color:var(--text-muted); margin-left:3px; font-weight:400; }
+    .sit-card .d { font-size:11px; color:var(--text-muted); font-family:SFMono-Regular, Consolas, monospace; line-height:1.55; }
+    #sit-panel .pos { color:#ff7b72; } #sit-panel .neg { color:#58a6ff; }
+    .sit-two { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:12px; margin:4px 0 12px; }
+    @media (max-width:1100px) { .sit-two { grid-template-columns:1fr; } }
+    .sit-box { background:var(--panel-bg); border:1px solid var(--border); border-radius:8px; padding:10px 14px; min-width:0; }
+    .sit-box h3 { font-size:13.5px; margin-bottom:8px; color:var(--text); }
+    .sit-box h3 .sub { font-size:11px; color:var(--text-muted); font-weight:400; margin-left:6px; }
+    #sit-panel .n { font-size:11px; color:#6e7681; line-height:1.55; margin-top:6px; }
+    .sit-ul { margin:0; padding-left:18px; font-size:12.5px; line-height:1.7; color:#c9d1d9; }
+    .sit-ul b { color:var(--text); }
+    .sit-one { margin-top:8px; padding:6px 10px; background:var(--bg); border-left:3px solid var(--accent); border-radius:4px; font-size:13px; color:var(--text); }
+    #sit-panel table { width:100%; border-collapse:collapse; font-size:12px; }
+    #sit-panel th, #sit-panel td { padding:4px 6px; border-bottom:1px solid var(--border); text-align:right; white-space:nowrap; }
+    #sit-panel th { color:var(--text-muted); font-weight:500; position:sticky; top:0; background:var(--panel-bg); }
+    #sit-panel td:first-child, #sit-panel th:first-child { text-align:left; white-space:normal; }
+    #sit-panel td.num { font-family:SFMono-Regular, Consolas, monospace; }
+    .sit-scroll { max-height:360px; overflow:auto; }
+    .pm-m { margin-bottom:10px; }
+    .pm-h { display:flex; justify-content:space-between; gap:8px; font-size:12.5px; margin-bottom:4px; flex-wrap:wrap; }
+    .pm-h a { color:var(--accent); text-decoration:none; font-weight:600; }
+    .pm-bar { display:flex; height:18px; border-radius:4px; overflow:hidden; background:var(--bg); }
+    .pm-bar i { display:block; height:100%; font-style:normal; font-size:10.5px; color:#fff; line-height:18px; text-align:center; overflow:hidden; white-space:nowrap; }
+    .pm-s { font-size:11px; color:var(--text-muted); margin-top:3px; }
+    .pm-y { font-size:12px; color:#c9d1d9; margin-top:6px; }
+    .sit-pop { position:fixed; z-index:950; background:#161b22; border:1px solid #444c56; border-radius:8px; padding:10px 12px; width:300px; box-shadow:0 10px 30px rgba(0,0,0,.55); font-size:12.5px; color:var(--text); }
+    .sit-pop h4 { font-size:13px; margin-bottom:8px; }
+    .sit-pop .rw { display:flex; align-items:center; gap:8px; margin:6px 0; flex-wrap:wrap; }
+    .sit-pop .rw > span:first-child { width:46px; color:var(--text-muted); font-size:12px; }
+    .sit-pop select { background:var(--panel-bg); color:var(--text); border:1px solid var(--border); border-radius:5px; padding:3px 6px; font-size:12px; }
+    .sit-pop input[type=color] { width:34px; height:22px; border:0; background:none; padding:0; }
+    .sit-pop .pal { display:flex; flex-wrap:wrap; gap:3px; }
+    .sit-pop .pal b { width:15px; height:15px; border-radius:3px; cursor:pointer; }
+    .sit-pop .btns { display:flex; justify-content:flex-end; gap:6px; margin-top:8px; }
+    .sit-pop .btns button { background:var(--panel-bg); border:1px solid var(--border); color:var(--text); border-radius:5px; padding:3px 10px; font-size:12px; cursor:pointer; }
+    .sit-pop .btns .rm { color:var(--red); }
+    .sit-pick { width:380px; }
+    .sit-pick .qs { width:100%; background:var(--bg); color:var(--text); border:1px solid var(--border); border-radius:5px; padding:6px 8px; font-size:12.5px; margin-bottom:6px; }
+    .sit-pick .ls { max-height:360px; overflow:auto; }
+    .sit-pick .ct { font-size:10.5px; color:var(--category-color); margin:8px 0 2px; letter-spacing:.3px; }
+    .sit-pick .it { padding:4px 6px; border-radius:4px; cursor:pointer; font-size:12.5px; }
+    .sit-pick .it:hover { background:var(--active-bg); }
+    .sit-pick .it span { color:#6e7681; font-size:11px; }
+    .sit-pick .nt { font-size:11px; color:#6e7681; margin-top:6px; }
   </style>
 </head>
 <body>
@@ -796,7 +908,7 @@
     <div class="fm-head">
       <div>
         <b>미국 경제 지도</b>
-        <span class="fm-sub">실선=포함 · 점선=다리/예정 · 빨강=할 일 · 화살표=그린 선(클릭+Del 삭제) · 클릭=차트(R로 복귀) · 드래그=가지째 이동 · Shift+드래그=한 개만 · 더블클릭=이름</span>
+        <span class="fm-sub">실선=포함 · 점선=다리/예정 · 빨강=할 일 · 화살표=그린 선(클릭+Del 삭제) · 클릭=차트(R로 복귀) · 가운데 '미국 경제' 클릭=🧭 경제 상황 · 드래그=가지째 이동 · Shift+드래그=한 개만 · 더블클릭=이름</span>
       </div>
       <div style="display:flex;gap:6px">
         <button id="fm-add" title="커스텀 박스 추가">＋ 박스</button>
@@ -808,6 +920,21 @@
     </div>
     <div id="fm-svg-wrap"><svg id="fm-svg" viewBox="0 0 1520 940" preserveAspectRatio="xMidYMid meet"></svg></div>
     <textarea id="fm-memo" placeholder="메모 — 이 브라우저에만 저장됨 (예: 다음 할 일, 해석 노트)"></textarea>
+  </div>
+  <!-- 🧭 경제 상황 패널 (US 탭 · 사이드바 지도 바로 아래 · 지도 가운데 '미국 경제' 박스 클릭으로도) -->
+  <div id="sit-panel">
+    <div class="sit-top">
+      <div class="sit-ttl0"><b>🧭 미국 경제 상황</b><span id="sit-asof"></span></div>
+      <div id="sit-tabs"><button data-v="1">① 경제 대시보드</button><button data-v="2">② 채권시장 × FOMC</button><button data-v="3">③ PMI 예측</button></div>
+      <button class="sit-btn" id="sit-map" title="미국 경제 지도로 (지도 가운데 박스를 누르면 다시 여기로)">🗺 지도로</button>
+    </div>
+    <div class="sit-note">
+      <div><div class="sit-nh"><b>경기 국면 요약</b><span>· 지도 가운데 '미국 경제' 박스와 같은 글</span><button id="sit-sum-edit">✎ 고치기</button><button id="sit-sum-hist">📜 기록</button></div><div id="sit-sum-text"></div></div>
+      <div><div class="sit-nh"><b>메모</b><span>· 미국 지도 메모와 같은 칸 — 어느 쪽에서 써도 같이 바뀜 (이 브라우저에 저장)</span></div><textarea id="sit-memo" placeholder="메모 — 미국 지도 아래 메모와 같은 글"></textarea></div>
+    </div>
+    <section class="sit-view" id="sit-v1"></section>
+    <section class="sit-view" id="sit-v2"></section>
+    <section class="sit-view" id="sit-v3"></section>
   </div>
 </main>
 
@@ -857,6 +984,8 @@ const INDICATORS = [
   // ── 🗺 재정 지도 (US 탭 맨 위 · 1칸) ──────────────────────────────────────
   // 노드 드래그·더블클릭 이름수정·메모 전부 localStorage 저장 (기기별)
   { id:'FISCAL_MAP', name:'🗺 미국 경제 지도', unit:'인터랙티브', category:'지도 / MAP', country:'US', source:'fiscalmap', noStats:true },
+  // 🧭 경제 상황 (2026-11-03) — 대시보드·채권시장×FOMC·PMI 예측 3화면. 지도 가운데 '미국 경제' 박스를 눌러도 여기로
+  { id:'US_SITU', name:'🧭 미국 경제 상황', unit:'대시보드 3화면', category:'지도 / MAP', country:'US', source:'situation', noStats:true },
 
   // 물가
   { id:'CPIAUCSL',    name:'CPI (전체)',            unit:'% YoY', category:'물가 / INFLATION', transform:'yoy' },
@@ -2626,6 +2755,9 @@ function renderOverlayChips() {
 
 // ─── SELECT INDICATOR ─────────────────────────────────────────────────────────
 async function selectIndicator(ind) {
+  // 🧭 경제 상황은 전용 패널 (2026-11-03)
+  if (ind.source === 'situation') { showSituation(ind); return; }
+  hideSituation();
   // 🗺 경제 지도는 차트 대신 지도 패널을 띄운다
   if (ind.source === 'fiscalmap') { showFiscalMap(ind); return; }
   hideFiscalMap();
@@ -2884,6 +3016,7 @@ apiModal.addEventListener('click', e => {
 document.querySelectorAll('.country-btn:not(.disabled)').forEach(btn => {
   btn.addEventListener('click', () => {
     currentCountry = btn.dataset.country;
+    hideSituation();
     document.querySelectorAll('.country-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     if (currentCountry === 'SUPPLY') { hideReportPanel(); showSupplyPanel(); return; }
@@ -3788,6 +3921,21 @@ function fmHistSeed(k) {
   const cur = fmCenterUserText(k);
   if (cur) fmHistPut(k, [{ t: null, text: cur }]);
 }
+// 가운데 박스 요약 고치기 — 지도 더블클릭과 🧭 경제 상황 탭 '✎ 고치기'가 같이 씀 (저장 칸 fmLabels{접미사}_v1)
+function fmEditCenterSummary(k) {
+  const c = fmCenterNode(k); if (!c) return false;
+  const key = 'fmLabels' + FM_MAPS[k].ls + '_v1';
+  let lab = {};
+  try { lab = JSON.parse(localStorage.getItem(key) || '{}'); } catch (e) {}
+  const cur = lab[c.id] && lab[c.id].sub, placeholder = !cur || cur === c.sub;   // 아직 안내 문구 상태면 빈칸으로 시작
+  const s = prompt('경기 국면 요약 — 길게 쓰면 자동 줄바꿈됩니다 (바꿀 때마다 📜 요약 기록에 남음)', placeholder ? '' : cur);
+  if (s === null) return false;
+  fmHistSeed(k);                    // 기록이 비어 있으면 바꾸기 전 요약부터 씨앗으로
+  fmHistRecord(k, s.trim());
+  lab[c.id] = { label: (lab[c.id] && lab[c.id].label) || c.label, sub: s.trim() || c.sub };
+  localStorage.setItem(key, JSON.stringify(lab));
+  return true;
+}
 function fmHistRecord(k, text) {
   if (!text) return;                                  // 비우기(안내 문구 복귀)는 기록하지 않음
   const list = fmHistGet(k), last = list[list.length - 1], now = Date.now();
@@ -4183,6 +4331,9 @@ function hideFiscalMap() {
         if (n.chart) {
           const ind = INDICATORS.find(i => i.id === n.chart);
           if (ind) { fmNavFromMap = true; fmNavMapId = fmCur; selectIndicator(ind); }   // 노드 → 차트 (복귀할 지도 기억)
+        } else if (n.center && fmCur === 'FISCAL_MAP') {
+          const s = INDICATORS.find(i => i.id === 'US_SITU');   // 가운데 '미국 경제' → 🧭 경제 상황 탭 (2026-11-03)
+          if (s) selectIndicator(s);
         } else if (n.url) {
           window.open(n.url, '_blank');
         }
@@ -4193,15 +4344,7 @@ function hideFiscalMap() {
   function fmEditNode(n) {
     const t = fmText(n);
     if (n.center) {
-      const placeholder = t.sub === n.sub;   // 아직 안내 문구 상태면 빈칸으로 시작
-      const s = prompt('경기 국면 요약 — 길게 쓰면 자동 줄바꿈됩니다 (바꿀 때마다 📜 요약 기록에 남음)', placeholder ? '' : t.sub);
-      if (s === null) return;
-      fmHistSeed(fmCur);                    // 기록이 비어 있으면 바꾸기 전 요약부터 씨앗으로
-      fmHistRecord(fmCur, s.trim());
-      const lab = fmStore(fmLS('Labels'));
-      lab[n.id] = { label: t.label, sub: s.trim() || n.sub };
-      fmStore(fmLS('Labels'), lab);
-      fmRender();
+      if (fmEditCenterSummary(fmCur)) fmRender();   // 🧭 경제 상황 탭의 '✎ 고치기'와 같은 함수
       return;
     }
     const label = prompt(n.custom ? '박스 이름 (비우면 삭제)' : '노드 이름', t.label);
@@ -4321,6 +4464,7 @@ function hideFiscalMap() {
     hm.classList.add('show');
   }
   const fmHistClose = () => hm.classList.remove('show');
+  window.fmHistOpenFor = k => { fmCur = k; fmHistOpen(); };   // 🧭 경제 상황 탭 '📜 기록' (2026-11-03)
   document.getElementById('fm-hist').addEventListener('click', fmHistOpen);
   document.getElementById('fm-hist-close').addEventListener('click', fmHistClose);
   hm.addEventListener('click', e => { if (e.target === hm) fmHistClose(); });
@@ -4363,6 +4507,1113 @@ function hideFiscalMap() {
     fmHistOpen();
   });
 })();
+
+// ─── 🧭 미국 경제 상황 탭 (2026-11-03) ─────────────────────────────────────────
+// 사이드바 '지도 / MAP' 의 미국 지도 바로 아래 · 지도 가운데 '미국 경제' 박스를 눌러도 들어온다.
+// 화면 ① 경제 대시보드 — 과거 케이스 조사 'PCE 대시보드' 방식(보조축·커브 국면 띠·고용/PMI 띠·QE 리본·지표 추가)
+// 화면 ② 채권시장 × FOMC — 2년물·10년물 괴리율('채권금리 괴리율' 페이지 방식) + 폴리마켓 실시간 확률 + 자동 요약
+// 화면 ③ PMI 예측 — ISM 세부지표 / 선행(경기선행지수·화물·리치먼드) / 설비투자·주가 (σ 단위, 'PMI 고저점' 페이지 방식)
+// 사용자 규칙(11/03): 모든 점은 '발표일'에 찍는다 · 값은 최신 수정치 · 수정 전 값은 클릭할 때만.
+//   발표일·수정 이력 = reports/data/rel·vint (reports/fetch_vintages.py ← ALFRED). FRED 밖 자료는 발표 규칙(ISM 첫 영업일 등).
+// 경기 국면 요약·메모는 미국 지도와 같은 저장 칸(fmLabels_v1·fmMemo_v1)을 함께 쓴다 — 어느 쪽에서 고쳐도 같이 바뀜.
+const SIT_DAY = 86400000;
+const sitI = s => Math.round(Date.UTC(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10)) / SIT_DAY);
+const sitS = i => new Date(Math.round(i) * SIT_DAY).toISOString().slice(0, 10);
+const sitTodayI = () => Math.floor(Date.now() / SIT_DAY);
+const sitEsc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+// NBER 공식 경기침체(정점 다음 달 ~ 저점 달) · 연준 대차대조표 국면 — PCE 대시보드와 같은 목록
+const SIT_REC = [['1948-12-01','1949-10-01'],['1953-08-01','1954-05-01'],['1957-09-01','1958-04-01'],['1960-05-01','1961-02-01'],['1970-01-01','1970-11-01'],['1973-12-01','1975-03-01'],['1980-02-01','1980-07-01'],['1981-08-01','1982-11-01'],['1990-08-01','1991-03-01'],['2001-04-01','2001-11-01'],['2008-01-01','2009-06-01'],['2020-03-01','2020-04-01']];
+const SIT_QE = [{a:'2008-11-25',b:'2010-03-31',t:'QE',l:'QE1'},{a:'2010-11-03',b:'2011-06-30',t:'QE',l:'QE2'},{a:'2011-09-21',b:'2012-12-31',t:'OT',l:'만기연장(OT)'},{a:'2012-09-13',b:'2013-12-17',t:'QE',l:'QE3'},{a:'2013-12-18',b:'2014-10-29',t:'TAPER',l:'테이퍼링'},{a:'2017-10-01',b:'2019-07-31',t:'QT',l:'QT1'},{a:'2019-10-11',b:'2020-03-14',t:'RMP',l:'단기채 매입'},{a:'2020-03-15',b:'2021-11-02',t:'QE',l:'QE4(팬데믹)'},{a:'2021-11-03',b:'2022-03-09',t:'TAPER',l:'테이퍼링'},{a:'2022-06-01',b:'2025-11-30',t:'QT',l:'QT2'},{a:'2025-12-01',b:'2099-01-01',t:'RMP',l:'지준관리 매입'}];
+const SIT_QEC = { QE:'rgba(13,148,136,.85)', TAPER:'rgba(13,148,136,.45)', RMP:'rgba(13,148,136,.35)', OT:'rgba(107,114,128,.7)', QT:'rgba(146,64,14,.85)' };
+const SIT_RGC = { bullsteep:'70,130,255', bearsteep:'255,221,0', bullflat:'150,220,40', bearflat:'255,130,30' };
+const SIT_RGN = { bullsteep:'불 스티프닝', bearsteep:'베어 스티프닝', bullflat:'불 플래트닝', bearflat:'베어 플래트닝' };
+
+// ── 자료 읽기 (reports/data — 미러가 매일 갱신, 에이전트가 발표일 밤 갱신) ──
+const sitFiles = {};
+function sitFetch(path) {
+  if (!(path in sitFiles)) sitFiles[path] = fetch(path, { cache: 'no-store' }).then(r => r.ok ? r.text() : null).catch(() => null);
+  return sitFiles[path];
+}
+async function sitRaw(file) {   // 머리줄 없는 날짜,값 → [[날짜, 값]] (정렬·중복 제거)
+  const t = await sitFetch('reports/data/' + file + '.csv');
+  if (!t) return null;
+  const m = new Map();
+  t.split('\n').forEach(l => { const c = l.split(','); if (c.length >= 2 && /^\d{4}-\d{2}-\d{2}/.test(c[0]) && c[1] !== '' && isFinite(+c[1])) m.set(c[0].slice(0, 10), +c[1]); });
+  return [...m.entries()].sort((a, b) => a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0);
+}
+async function sitRelMap(id) {  // 관측일 → {d 첫 발표일, f 첫 발표치, e 발표일 추정}
+  const t = await sitFetch('reports/data/rel/' + id + '.csv');
+  if (!t) return null;
+  const m = new Map();
+  t.split('\n').forEach(l => { const c = l.split(','); if (c.length >= 3 && c[1]) m.set(c[0], { d: c[1], f: c[2] === '' ? null : +c[2], e: c[3] === 'e' }); });
+  return m.size ? m : null;
+}
+async function sitVintMap(id) { // 관측일 → [[적용 시작일, 값]…] — 수정 이력 전체(주요 지표만)
+  const t = await sitFetch('reports/data/vint/' + id + '.csv');
+  if (!t) return null;
+  const m = new Map();
+  t.split('\n').forEach(l => { const c = l.split(','); if (c.length >= 3) { if (!m.has(c[0])) m.set(c[0], []); m.get(c[0]).push([c[1], +c[2]]); } });
+  return m.size ? m : null;
+}
+function sitGap(keys) { const g = []; for (let i = Math.max(1, keys.length - 60); i < keys.length; i++) g.push(sitI(keys[i]) - sitI(keys[i - 1])); g.sort((a, b) => a - b); return g.length ? g[g.length >> 1] : 30; }
+function sitPerEnd(k, gap) {
+  const y = +k.slice(0, 4), m = +k.slice(5, 7);
+  if (gap < 10) return k;
+  if (gap < 45) return sitS(Date.UTC(y, m, 0) / SIT_DAY);
+  if (gap < 120) return sitS(Date.UTC(y, m + 2, 0) / SIT_DAY);
+  return y + '-12-31';
+}
+function sitAddM(k, n) { const y = +k.slice(0, 4), m = +k.slice(5, 7) - 1 + n; return (y + Math.floor(m / 12)) + '-' + String(((m % 12) + 12) % 12 + 1).padStart(2, '0') + '-01'; }
+function sitWeekly(raw) {      // 일간 → 토~금 주간 평균, 금요일 날짜 (PCE 대시보드의 FRED 주간 평균과 같은 묶음)
+  const b = new Map();
+  raw.forEach(([d, v]) => { const i = sitI(d), wd = new Date(i * SIT_DAY).getUTCDay(), k = sitS(i + ((5 - wd + 7) % 7)); const a = b.get(k) || [0, 0]; a[0] += v; a[1]++; b.set(k, a); });
+  return [...b.entries()].sort((a, c) => a[0] < c[0] ? -1 : 1).map(([k, [s, n]]) => [k, s / n]);
+}
+
+// ── 발표일 규칙 (FRED 밖 자료) ──
+function sitBizDay(y, m0, d) {   // y년 m0월(0부터) d일부터 첫 영업일 — 1/1·1/2(월 대체휴일)·노동절(9월 첫 월요일) 제외
+  let t = Date.UTC(y, m0, d);
+  for (;;) {
+    const D = new Date(t), wd = D.getUTCDay(), mo = D.getUTCMonth(), dd = D.getUTCDate();
+    const hol = (mo === 0 && (dd === 1 || (dd === 2 && wd === 1))) || (mo === 8 && wd === 1 && dd <= 7);
+    if (wd !== 0 && wd !== 6 && !hol) return sitS(t / SIT_DAY);
+    t += SIT_DAY;
+  }
+}
+function sitNthWd(y, m0, wd, n) { const f = new Date(Date.UTC(y, m0, 1)).getUTCDay(); return sitS(Date.UTC(y, m0, 1 + ((wd - f + 7) % 7) + 7 * (n - 1)) / SIT_DAY); }
+function sitLastWd(y, m0, wd) { const L = new Date(Date.UTC(y, m0 + 1, 0)); return sitS(Date.UTC(y, m0, L.getUTCDate() - ((L.getUTCDay() - wd + 7) % 7)) / SIT_DAY); }
+const SIT_RULE = {
+  ism:  [k => sitBizDay(+k.slice(0, 4), +k.slice(5, 7), 1), 'ISM 발표 규칙 — 다음 달 첫 영업일'],
+  rich: [k => sitNthWd(+k.slice(0, 4), +k.slice(5, 7) - 1, 2, 4), '리치먼드 연은 발표 규칙 — 그달 넷째 화요일'],
+  cb:   [k => sitLastWd(+k.slice(0, 4), +k.slice(5, 7) - 1, 2), '컨퍼런스보드 발표 규칙 — 그달 마지막 화요일'],
+  wk:   [k => sitS(sitI(k) + 4), '주간 시세 — 그 주 금요일 종가'],
+};
+// 발표일 함수: 'fred:ID'(ALFRED 첫 발표) · 규칙 이름 · 'mkt'(시세 = 그날) · 배열(재료 중 늦은 쪽)
+async function sitRelFn(spec, keys) {
+  if (spec === 'mkt') return k => ({ d: k, e: false, how: '시장 자료 — 그날 값' });
+  if (SIT_RULE[spec]) { const [f, how] = SIT_RULE[spec]; return k => ({ d: f(k), e: true, how }); }
+  if (Array.isArray(spec)) {
+    const fs = await Promise.all(spec.map(s => sitRelFn(s, keys)));
+    return k => { let best = null; fs.forEach(f => { const r = f(k); if (!best || r.d > best.d) best = r; }); return best; };
+  }
+  const id = spec.slice(5), rel = await sitRelMap(id), gap = sitGap(keys);
+  let lag = gap < 10 ? 5 : 30, have = false;
+  if (rel) {
+    const L = []; rel.forEach((r, k) => { if (!r.e) L.push(sitI(r.d) - sitI(sitPerEnd(k, gap))); });
+    if (L.length) { const z = L.slice(-36).sort((a, b) => a - b); lag = z[z.length >> 1]; have = true; }
+  }
+  return k => {
+    const r = rel && rel.get(k);
+    if (r) return { d: r.d, e: r.e, f: r.f, how: r.e ? 'ALFRED 기록 시작 전 — 보통 발표 지연 ' + lag + '일로 추정' : 'ALFRED 첫 발표일' };
+    // 값은 미러에 들어왔는데 발표일 자료가 아직이면(발표 당일 밤 등) 추정일이 미래로 가지 않게 오늘로 막음
+    return { d: sitS(Math.min(sitI(sitPerEnd(k, gap)) + lag, sitTodayI())), e: true, how: have ? '발표일 자료 갱신 전 — 보통 지연 ' + lag + '일로 추정' : '발표일 자료 없음 — 기간 끝 + ' + lag + '일 추정' };
+  };
+}
+
+// ── 원천 → 시계열 묶음 {raw, map, gap, per, step, rel, vintId} ──
+function sitPack(raw, gap, rel, vintId) {
+  const per = gap < 10 ? 52 : gap < 45 ? 12 : gap < 120 ? 4 : 1;
+  const step = gap < 10 ? (k, n) => sitS(sitI(k) - 7 * n) : gap < 45 ? (k, n) => sitAddM(k, -n) : gap < 120 ? (k, n) => sitAddM(k, -3 * n) : (k, n) => (+k.slice(0, 4) - n) + k.slice(4);
+  return { raw, map: new Map(raw), gap, per, step, rel, vintId };
+}
+const sitSrcCache = {};
+function sitSource(src) { if (!sitSrcCache[src]) sitSrcCache[src] = sitSourceLoad(src).catch(e => { console.error('sit', src, e); return null; }); return sitSrcCache[src]; }
+async function sitSourceLoad(src) {
+  const c = src.indexOf(':'), kind = src.slice(0, c), id = src.slice(c + 1);
+  if (kind === 'fred' || kind === 'file') {
+    let raw = await sitRaw(id);
+    if (!raw || !raw.length) return null;
+    let gap = sitGap(raw.map(r => r[0]));
+    if (gap < 6) return sitPack(sitWeekly(raw), 7, 'mkt', null);   // 일간 시세 → 주간 평균(금요일)
+    const rel = kind === 'fred' ? 'fred:' + id : /^ISMM_/.test(id) ? 'ism' : /^RICH_/.test(id) ? 'rich' : /^CB_/.test(id) ? 'cb' : /^CASS_/.test(id) ? 'fred:FRGSHPUSM649NCIS' : 'mkt';
+    return sitPack(raw, gap, rel, kind === 'fred' ? id : null);
+  }
+  if (kind === 'yd') {           // 야후 일간 종가 → 월말 종가 (그달 마지막 거래일에 '발표')
+    const raw = await sitRaw('yahoo_' + id + '_d');
+    if (!raw) return null;
+    const mm = new Map(); raw.forEach(([d, v]) => mm.set(d.slice(0, 7) + '-01', [d, v]));
+    const P = sitPack([...mm.entries()].map(([k, a]) => [k, a[1]]), 30, 'mkt', null);
+    P.relOverride = k => ({ d: (mm.get(k) || [k])[0], e: false, how: '그달 마지막 거래일 종가' });
+    P.mkt = true;
+    return P;
+  }
+  if (kind === 'calc' && id === 'NFPBE') {   // 고용 손익분기선 = 12개월 평균 증감 + 고용 × 실업률 12개월 변화 ÷ 100 ÷ 12 (PCE 대시보드 build_payroll.py)
+    const P = await sitSource('fred:PAYEMS'), U = await sitRaw('UNRATE');
+    if (!P || !U) return null;
+    const um = new Map(U), ks = P.raw.map(r => r[0]), out = [];
+    for (let i = 12; i < ks.length; i++) {
+      const k = ks[i], k12 = ks[i - 12];
+      if (k >= '2020-03-01' && k <= '2022-03-01') continue;   // 코로나로 참가율이 급변해 식이 깨지는 구간은 비움
+      if (!um.has(k) || !um.has(k12)) continue;
+      out.push([k, (P.map.get(k) - P.map.get(k12)) / 12 + P.map.get(k) * (um.get(k) - um.get(k12)) / 100 / 12]);
+    }
+    const R = sitPack(out, 30, 'fred:PAYEMS', null); R.calc = true; return R;
+  }
+  if (kind === 'ind') {          // 사이트 지표 목록의 다른 지표 (＋ 지표 추가)
+    const ind = INDICATORS.find(i => i.id === id);
+    if (!ind) return null;
+    if (!ind.source) return sitSource('fred:' + ind.id);
+    if (ind.source === 'fredlin' && ind.fredId === 'BSCICP02USM460S') return sitSource('file:ISMM_PMI');
+    const fn = LINE_SOURCES[ind.source];
+    if (!fn) return null;
+    let raw = (await fn(ind)).map(p => [p.x.slice(0, 10), p.y]).filter(p => isFinite(p[1]));
+    raw = [...new Map(raw).entries()].sort((a, b) => a[0] < b[0] ? -1 : 1);
+    let gap = sitGap(raw.map(r => r[0]));
+    let rel = 'mkt';
+    if (gap < 6) { raw = sitWeekly(raw); gap = 7; }
+    else if (ind.source === 'price' || ind.source === 'ratio') rel = 'wk';
+    else if (ind.source === 'fredchg') rel = 'fred:' + ind.fredId;
+    else if (ind.source === 'freddiff') rel = ['fred:' + ind.dfA, 'fred:' + ind.dfB];
+    else if (ind.source === 'fredratio') rel = [...[].concat(ind.fredNum), ind.fredDen].map(x => 'fred:' + x);
+    return sitPack(raw, gap, rel, null);
+  }
+  return null;
+}
+async function sitPolicy() {   // 기준금리: 1982-09-27 이전 실효금리 월평균(대용) → 단일 목표(DFEDTAR) → 목표범위(DFEDTARU·L)
+  if (sitSrcCache.policy) return sitSrcCache.policy;
+  return sitSrcCache.policy = (async () => {
+    const [U, Lo, T, F] = await Promise.all([sitRaw('DFEDTARU'), sitRaw('DFEDTARL'), sitRaw('DFEDTAR'), sitRaw('FEDFUNDS')]);
+    const pts = [];
+    (F || []).forEach(([k, v]) => { if (k < '1982-09-01') pts.push({ x: sitI(k), y: v, lo: null, hi: null, k, d: k, proxy: true }); });
+    let prev = null;
+    const push = (k, lo, hi) => { const s = lo + '~' + hi; if (s === prev) return; prev = s; pts.push({ x: sitI(k), y: lo == null ? hi : (lo + hi) / 2, lo, hi, k, d: k }); };
+    (T || []).forEach(([k, v]) => push(k, null, v));
+    const lm = new Map(Lo || []);
+    (U || []).forEach(([k, v]) => push(k, lm.has(k) ? lm.get(k) : null, v));
+    if (pts.length) { const z = pts[pts.length - 1]; pts.push({ ...z, x: Math.max(z.x, sitTodayI()), tail: true }); }
+    return pts;
+  })();
+}
+
+// ── 변환 (최신 수정치로 계산, 그 관측의 발표일에 찍음) ──
+const SIT_TFN = { lvl: '수준', yoy: '전년비', ann3: '3개월 연율', mom: '전월비', chg: '전월 증감', avg3chg: '3개월 평균 증감', chg12: '1년 변화', sum12: '12개월 합' };
+function sitTfKeys(tf, k, S) {   // 이 변환에 쓰이는 관측들 (수정 이력 계산용)
+  const n = tf === 'yoy' || tf === 'chg12' ? S.per : tf === 'ann3' ? Math.max(1, Math.round(S.per / 4)) : tf === 'avg3chg' ? 3 : tf === 'mom' || tf === 'chg' ? 1 : tf === 'sum12' ? S.per - 1 : 0;
+  if (tf === 'sum12') { const o = []; for (let i = 0; i <= n; i++) o.push(S.step(k, i)); return o; }
+  return n ? [k, S.step(k, n)] : [k];
+}
+function sitTf(tf, get, k, S) {
+  const v = get(k);
+  if (v == null) return null;
+  const back = n => get(S.step(k, n));
+  if (tf === 'lvl' || !tf) return v;
+  if (tf === 'yoy') { const a = back(S.per); return a > 0 && v > 0 ? (v / a - 1) * 100 : null; }
+  if (tf === 'ann3') { const n = Math.max(1, Math.round(S.per / 4)), a = back(n); return a > 0 && v > 0 ? (Math.pow(v / a, S.per / n) - 1) * 100 : null; }
+  if (tf === 'mom') { const a = back(1); return a > 0 && v > 0 ? (v / a - 1) * 100 : null; }
+  if (tf === 'chg') { const a = back(1); return a == null ? null : v - a; }
+  if (tf === 'avg3chg') { const a = back(3); return a == null ? null : (v - a) / 3; }
+  if (tf === 'chg12') { const a = back(S.per); return a == null ? null : v - a; }
+  if (tf === 'sum12') { let s = 0; for (let i = 0; i < S.per; i++) { const a = back(i); if (a == null) return null; s += a; } return s; }
+  return null;
+}
+// 선 하나의 점들 [{x 발표일, y, k 관측일, d, e 추정, how, raw}]
+async function sitBuildLine(L) {
+  if (L.src === 'policy') { L._pts = await sitPolicy(); L._S = null; return L._pts; }
+  const S = await sitSource(L.src);
+  if (!S || !S.raw.length) { L._pts = []; L._S = null; L._err = true; return L._pts; }
+  const relF = S.relOverride || await sitRelFn(L.rel || S.rel, S.raw.map(r => r[0]));
+  const get = k => S.map.has(k) ? S.map.get(k) : null;
+  let pts = [];
+  for (const [k] of S.raw) {
+    const y = sitTf(L.tf || 'lvl', get, k, S);
+    if (y == null || !isFinite(y)) continue;
+    const r = relF(k);
+    pts.push({ x: sitI(r.d), y, k, d: r.d, e: r.e, how: r.how });
+  }
+  if (L.sig) {    // σ 단위: 변환값 ÷ 그 변환값의 표준편차(전체 기간, 2020-03~12 코로나 제외) — 0 = 제자리
+    const v = pts.filter(p => !(p.k >= '2020-03-01' && p.k <= '2020-12-31')).map(p => p.y);
+    const m = v.reduce((a, b) => a + b, 0) / (v.length || 1);
+    const sd = Math.sqrt(v.reduce((a, b) => a + (b - m) * (b - m), 0) / (v.length || 1)) || 1;
+    pts.forEach(p => { p.raw = p.y; p.y = p.y / sd; });
+    L._sd = sd;
+  }
+  pts.sort((a, b) => a.x - b.x || (a.k < b.k ? -1 : 1));
+  const out = [];
+  pts.forEach(p => { const z = out[out.length - 1]; if (z && z.x === p.x) { p.dup = (z.dup || 1) + 1; out[out.length - 1] = p; } else out.push(p); });  // 같은 날 여러 달치 발표(셧다운 등) → 최근 관측만, 툴팁에 알림
+  L._S = S; L._pts = out;
+  const g = []; for (let i = Math.max(1, out.length - 40); i < out.length; i++) g.push(out[i].x - out[i - 1].x); g.sort((a, b) => a - b);
+  L._age = Math.max(12, (g.length ? g[g.length >> 1] : 30) * 2.4);
+  return out;
+}
+// 클릭 → 수정 이력 (vint 있으면 변환값의 1차·2차·벤치마크 수정까지, rel 만 있으면 첫 발표 수준)
+async function sitRevInfo(L, p) {
+  const S = L._S;
+  if (L.src === 'policy') return { note: '기준금리는 수정이 없음 (FRED 적용일 기준)' };
+  if (!S || S.mkt || S.rel === 'mkt' || S.rel === 'wk') return { note: '시장 시세 — 수정 없음' };
+  if (!S.vintId) return { note: S.calc ? '계산값 — 재료(고용·실업률) 수정을 따라 바뀜' : '수정 이력 자료 없음 (FRED 밖 자료 · 발표일은 ' + (p.how || '규칙') + ')' };
+  const V = await sitVintMap(S.vintId);
+  if (!V) {
+    const rel = await sitRelMap(S.vintId), r = rel && rel.get(p.k);
+    if (!r || r.f == null) return { note: '첫 발표치 기록 없음 (ALFRED 기록 시작 전)' };
+    const now = S.map.get(p.k);
+    return { first: r.f, now, lvlOnly: (L.tf || 'lvl') !== 'lvl' };
+  }
+  const asOf = (k, D) => { const h = V.get(k); if (!h) return null; let v = null; for (const [rt, x] of h) { if (rt <= D) v = x; else break; } return v; };
+  const ks = sitTfKeys(L.tf || 'lvl', p.k, S), dates = new Set();
+  ks.forEach(k => (V.get(k) || []).forEach(([rt]) => { if (rt >= p.d) dates.add(rt); }));
+  const hist = []; let prev = null;
+  [...dates].sort().forEach(D => {
+    let y = sitTf(L.tf || 'lvl', k => asOf(k, D), p.k, S);
+    if (y == null) return;
+    if (L.sig) y = y / L._sd;
+    const s = sitFmt(L, y);
+    if (s !== prev) hist.push([D, y]);
+    prev = s;
+  });
+  return { hist };
+}
+
+// ── 숫자 형식 ──
+function sitFmt(L, y) {
+  if (y == null || !isFinite(y)) return '-';
+  if (L.sig) return (y > 0 ? '+' : '') + y.toFixed(2) + 'σ';
+  const tf = L.tf || 'lvl';
+  if (tf === 'yoy' || tf === 'ann3' || tf === 'mom') return (y > 0 ? '+' : '') + y.toFixed(tf === 'mom' ? 2 : 1) + '%';
+  if (L.unit === 'k') return (y > 0 && tf !== 'lvl' ? '+' : '') + (y / 10).toFixed(1) + '만 명';
+  if (L.unit === '%') return y.toFixed(2) + '%';
+  if (L.unit === '%p') return (y > 0 ? '+' : '') + y.toFixed(2) + '%p';
+  if (Math.abs(y) >= 1000) return Math.round(y).toLocaleString();
+  return y.toFixed(Math.abs(y) < 10 ? 2 : 1);
+}
+const sitRawFmt = (L, y) => sitFmt({ ...L, sig: false }, y);
+function sitDiffFmt(L, d) {   // 두 값의 차이 (변화율끼리면 %p)
+  const tf = L.tf || 'lvl', sg = d > 0 ? '+' : '';
+  if (L.sig) return sg + d.toFixed(2) + 'σ';
+  if (tf === 'yoy' || tf === 'ann3' || tf === 'mom' || L.unit === '%' || L.unit === '%p') return sg + d.toFixed(2) + '%p';
+  if (L.unit === 'k') return sg + (d / 10).toFixed(1) + '만 명';
+  return sg + (Math.abs(d) >= 1000 ? Math.round(d).toLocaleString() : d.toFixed(2));
+}
+function sitObsLbl(L, p) {
+  const g = L._S ? L._S.gap : 30;
+  if (L.src === 'policy') return p.proxy ? '실효금리 월평균 ' + p.k.slice(0, 7) : '적용 ' + p.k;
+  if (L._S && L._S.mkt) return p.d.slice(0, 7) + ' 말 종가';
+  if (g < 10) return p.k + ' 주';
+  if (g < 45) return p.k.slice(0, 4) + '년 ' + (+p.k.slice(5, 7)) + '월분';
+  if (g < 120) return p.k.slice(0, 4) + '년 ' + (Math.floor((+p.k.slice(5, 7) - 1) / 3) + 1) + '분기';
+  return p.k.slice(0, 4) + '년';
+}
+
+// ── 세로축 ──
+const SIT_AX = {
+  pct:  { pri: 0, t: '% 변화율', f: v => v.toFixed(1) + '%' },
+  rate: { pri: 1, t: '금리·실업률 %', f: v => v.toFixed(1) },
+  gap:  { pri: 1, t: '괴리 %p', f: v => (v > 0 ? '+' : '') + v.toFixed(1), zero: true },
+  k:    { pri: 2, t: '만 명', f: v => { const x = v / 10; return Math.abs(x) >= 10 ? String(Math.round(x)) : x.toFixed(1); }, zero: true },
+  pmi:  { pri: 3, t: 'PMI', f: v => v.toFixed(0), anchor: 50 },
+  sig:  { pri: 4, t: 'σ', f: v => (v > 0 ? '+' : '') + v.toFixed(1), anchor: 0, zero: true },
+  rich: { pri: 5, t: '리치먼드', f: v => v.toFixed(0), anchor: 0 },
+};
+function sitAxDef(key) {
+  return SIT_AX[key] || { pri: 9, t: key.startsWith('u:') ? (key.split(':')[2] || '') : key, f: v => Math.abs(v) >= 1000 ? Math.round(v).toLocaleString() : v.toFixed(Math.abs(v) < 10 ? 2 : 1) };
+}
+function sitNice(x) { const p = Math.pow(10, Math.floor(Math.log10(x || 1))), f = x / p; return (f < 1.5 ? 1 : f < 3.5 ? 2 : f < 7.5 ? 5 : 10) * p; }
+function sitTicks(lo, hi, n) { const st = sitNice((hi - lo) / n), o = []; for (let v = Math.ceil(lo / st) * st; v <= hi + 1e-9; v += st) o.push(+v.toFixed(8)); return o; }
+function sitAt(pts, i) { let lo = 0, hi = pts.length - 1, r = -1; while (lo <= hi) { const m = (lo + hi) >> 1; if (pts[m].x <= i) { r = m; lo = m + 1; } else hi = m - 1; } return r < 0 ? null : pts[r]; }
+
+// ── 10년·2년 주간 (커브 국면·역전 배경, 화면 ② 괴리) ──
+let sitRatesP = null;
+function sitRates() {
+  if (!sitRatesP) sitRatesP = (async () => {
+    const [a, b] = await Promise.all([sitRaw('DGS10'), sitRaw('DGS2')]);
+    if (!a || !b) return null;
+    const A = new Map(sitWeekly(a)), B = new Map(sitWeekly(b));
+    const rows = [...A.keys()].filter(k => B.has(k)).sort().map(k => ({ k, i: sitI(k), t: A.get(k), s2: B.get(k), sp: A.get(k) - B.get(k) }));
+    return { rows, pts: rows.map(r => ({ x: r.i, r })) };
+  })();
+  return sitRatesP;
+}
+let SIT_R = null;              // 불러온 뒤 채움 (그림은 동기로 씀)
+const sitRgCache = {};
+function sitRegimes(win) {     // PCE 대시보드 regimes() 와 같은 식: 판정 창 동안 장단기차 변화 ≥ 0.05%p, 더 많이 움직인 쪽으로 이름
+  if (!SIT_R) return null;
+  if (sitRgCache[win]) return sitRgCache[win];
+  const m = new Map(), rows = SIT_R.rows;
+  for (let j = 0; j < rows.length; j++) {
+    const r = rows[j], t = r.i - win * 7;
+    let lo = 0, hi = j, q = -1;
+    while (lo <= hi) { const mid = (lo + hi) >> 1; if (rows[mid].i <= t) { q = mid; lo = mid + 1; } else hi = mid - 1; }
+    if (q < 0) continue;
+    const p = rows[q], ds = r.sp - p.sp, d10 = r.t - p.t, d2 = r.s2 - p.s2;
+    if (Math.abs(ds) < 0.05) continue;
+    const sl = Math.abs(d2) >= Math.abs(d10);
+    m.set(r.i, ds > 0 ? (sl ? 'bullsteep' : 'bearsteep') : (sl ? 'bearflat' : 'bullflat'));
+  }
+  return sitRgCache[win] = m;
+}
+
+// ── 아래 띠 자료: 고용(3개월 평균 vs 손익분기) · PMI(50) · 경기선행지수(100) — 판정점도 발표일에 ──
+const SIT_BANDS = {};
+async function sitLoadBands() {
+  const mk = async (L, test) => { const pts = await sitBuildLine({ ...L }); return pts.map(p => ({ x: p.x, up: test(p) })); };
+  const be = await sitBuildLine({ src: 'calc:NFPBE', tf: 'lvl' }), bm = new Map(be.map(p => [p.k, p.y]));
+  const m3 = await sitBuildLine({ src: 'fred:PAYEMS', tf: 'avg3chg' });
+  SIT_BANDS.emp = m3.filter(p => bm.has(p.k)).map(p => ({ x: p.x, up: p.y > bm.get(p.k) }));
+  SIT_BANDS.pmi = await mk({ src: 'file:ISMM_PMI', tf: 'lvl' }, p => p.y > 50);
+  SIT_BANDS.cli = await mk({ src: 'fred:USALOLITOAASTSAM', tf: 'lvl' }, p => p.y > 100);
+}
+const SIT_BAND_DEF = {
+  emp: { t1: '■ 고용 3개월 평균 > 손익분기', t2: '■ < 손익분기', cu: '220,38,38', cd: '37,99,235', when: L => L.src === 'fred:PAYEMS' || L.src === 'ind:PAYEMS' },
+  pmi: { t1: '■ ISM 제조업 PMI > 50 (확장)', t2: '■ ≤ 50 (수축)', cu: '234,88,12', cd: '124,58,237', when: L => L.src === 'file:ISMM_PMI' || L.src === 'ind:ISM_PMI' },
+  cli: { t1: '■ OECD 경기선행지수 > 100 (추세보다 빠름)', t2: '■ ≤ 100', cu: '22,163,74', cd: '107,114,128', when: L => /USALOLITOAASTSAM/.test(L.src) && (L.tf || 'lvl') === 'lvl' },
+};
+
+// ── 그림 묶음: 같은 화면의 그림들은 가로축(기간)·배경 설정을 함께 쓴다 ──
+class SitGroup {
+  constructor(st, save) { this.st = st; this.save = save; this.charts = []; this.hoverI = null; this.pin = null; }
+  bounds() {
+    let lo = Infinity, hi = -Infinity;
+    this.charts.forEach(c => c.lines.forEach(L => { if (!L.on || !L._pts || !L._pts.length || L.src === 'policy') return; lo = Math.min(lo, L._pts[0].x); hi = Math.max(hi, L._pts[L._pts.length - 1].x); }));
+    return isFinite(lo) ? [lo, Math.max(hi, sitTodayI()) + 10] : null;
+  }
+  clamp(v) { const B = this.bounds(); if (!B) return v; let [a, b] = v; a = Math.max(B[0], a); b = Math.min(B[1], b); if (b - a < 60) { b = Math.min(B[1], a + 60); a = Math.max(B[0], b - 60); } return [a, b]; }
+  view() {
+    const B = this.bounds(); if (!B) return null;
+    if (this.st.vx) return this.clamp(this.st.vx);
+    let a = B[0], b = B[1];
+    if (this.st.y0) a = Math.max(a, sitI(this.st.y0 + '-01-01'));
+    if (this.st.y1) b = Math.min(b, sitI(this.st.y1 + '-12-31'));
+    return this.clamp([a, b]);
+  }
+  draw() { this.charts.forEach(c => c.draw()); if (this.onDraw) this.onDraw(); }
+}
+
+class SitChart {
+  constructor(host, grp, o) {
+    this.grp = grp; this.o = o || {}; this.lines = []; this.VY = {}; this.M = null;
+    host.innerHTML = '<div class="sc-box"><canvas class="sc-cv"></canvas><div class="sc-tip"></div></div>';
+    this.cv = host.querySelector('canvas'); this.tip = host.querySelector('.sc-tip');
+    this.cv.style.height = (this.o.h || 420) + 'px';
+    grp.charts.push(this);
+    this.bind();
+  }
+  draw() {
+    const cv = this.cv, g = this.grp, st = g.st, dpr = window.devicePixelRatio || 1, W = cv.clientWidth, H = cv.clientHeight;
+    if (!W || !H) return;
+    cv.width = W * dpr; cv.height = H * dpr;
+    const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+    const V = g.view();
+    const on = this.lines.filter(L => L.on && L._pts && L._pts.length);
+    if (!V || !on.length) { this.M = null; ctx.fillStyle = '#8b949e'; ctx.font = '13px sans-serif'; ctx.fillText(this.lines.some(L => L.on && !L._pts) ? '자료 불러오는 중…' : '켜진 선이 없습니다 — 위 칩을 눌러 켜세요', 20, 34); return; }
+    const [x0, x1] = V;
+    const order = [];
+    on.forEach(L => { if (!order.includes(L.axis)) order.push(L.axis); });
+    order.sort((a, b) => sitAxDef(a).pri - sitAxDef(b).pri);
+    const strip = st.shade === 'strip';
+    const pad = { t: 30, b: 32, l: 62, r: Math.max(20, (order.length - 1) * 62 + 12) };
+    const cw = W - pad.l - pad.r, ch = H - pad.t - pad.b;
+    const X = i => pad.l + (i - x0) / (x1 - x0) * cw;
+    // 축 범위 (보이는 기간 기준 · 코로나 급변 구간은 길게 볼 때 범위에서 뺌 · 기준선 맞추기)
+    const AX = {}, longView = x1 - x0 > 365 * 3;
+    order.forEach(key => {
+      const D = sitAxDef(key); let lo = Infinity, hi = -Infinity; const clip = new Set();
+      on.filter(L => L.axis === key).forEach(L => L._pts.forEach(p => {
+        if (p.x < x0 - 45 || p.x > x1) return;
+        if ((L.covid || L.sig) && longView && p.k >= '2020-03-01' && p.k <= '2021-12-01') { clip.add(L.label); return; }
+        const vs = p.lo != null ? [p.lo, p.hi] : [p.y];
+        vs.forEach(v => { if (v < lo) lo = v; if (v > hi) hi = v; });
+      }));
+      if (!isFinite(lo)) { lo = 0; hi = 1; }
+      if (D.zero) { lo = Math.min(lo, 0); hi = Math.max(hi, 0); }
+      if (D.anchor != null) { lo = Math.min(lo, D.anchor); hi = Math.max(hi, D.anchor); }
+      const m = (hi - lo) * 0.07 || 1; lo -= m; hi += m;
+      AX[key] = { key, D, lo, hi, user: !!this.VY[key], clip: [...clip] };
+      if (this.VY[key]) { AX[key].lo = this.VY[key][0]; AX[key].hi = this.VY[key][1]; }
+    });
+    if (st.align) {       // 기준선 맞추기: PMI 50 · σ 0 · 리치먼드 0 이 같은 높이에 오게 (양쪽 범위만 늘림)
+      const A = order.map(k => AX[k]).filter(a => a.D.anchor != null && !a.user);
+      if (A.length > 1) {
+        let F = 0; A.forEach(a => { const n = a.D.anchor - a.lo, p = a.hi - a.D.anchor; F = Math.max(F, n / (n + p)); });
+        F = Math.min(0.92, Math.max(0.08, F));
+        A.forEach(a => { const n = a.D.anchor - a.lo, p = a.hi - a.D.anchor; const n2 = Math.max(n, F / (1 - F) * p), p2 = n2 * (1 - F) / F; a.lo = a.D.anchor - n2; a.hi = a.D.anchor + Math.max(p, p2); const nn = a.D.anchor - a.lo, pp = a.hi - a.D.anchor; if (nn / (nn + pp) < F - 1e-6) a.lo = a.D.anchor - F / (1 - F) * pp; });
+      }
+    }
+    order.forEach((key, i) => {
+      const A = AX[key], ls = on.filter(L => L.axis === key);
+      A.Y = v => pad.t + ch - (v - A.lo) / (A.hi - A.lo) * ch;
+      A.x = i === 0 ? pad.l : pad.l + cw + 10 + (i - 1) * 62;
+      A.col = i === 0 ? '#8b949e' : (ls.length === 1 || new Set(ls.map(L => L.color)).size === 1) ? ls[0].color : '#a8b3bd';
+    });
+    const L0 = AX[order[0]];
+    // 배경: 커브 국면 · 역전 · NBER 침체 (PCE 대시보드와 같은 칠하기 — '상단 띠'는 위쪽 띠로만)
+    ctx.save(); ctx.beginPath(); ctx.rect(pad.l, pad.t, cw, ch); ctx.clip();
+    if (st.shade !== 'none' && SIT_R) {
+      const RG = st.shade === 'inv' ? null : sitRegimes(st.win), rows = SIT_R.rows;
+      const runs = val => { const out = []; let run = null; rows.forEach(r => { if (r.i < x0 - 14 || r.i > x1 + 7) return; const v = val(r); if (v == null) { run = null; return; } if (run && run.v === v && r.i - run.b <= 11) run.b = r.i; else { run = { v, a: r.i, b: r.i }; out.push(run); } }); return out.map(q => ({ v: q.v, x0: Math.max(pad.l, X(q.a - 7)), x1: Math.min(pad.l + cw, X(q.b)) })).filter(q => q.x1 > q.x0); };
+      if (RG) runs(r => RG.get(r.i) || null).forEach(q => { ctx.fillStyle = 'rgba(' + SIT_RGC[q.v] + ',' + (strip ? .9 : .24) + ')'; ctx.fillRect(q.x0, pad.t, q.x1 - q.x0, strip ? 12 : ch); });
+      runs(r => r.sp < 0 ? 1 : null).forEach(q => { if (strip) { ctx.fillStyle = '#e6edf3'; ctx.fillRect(q.x0, pad.t + 13, q.x1 - q.x0, 4); } else { ctx.fillStyle = 'rgba(200,205,210,.22)'; for (let y = pad.t; y < pad.t + ch; y += 6) ctx.fillRect(q.x0, y, q.x1 - q.x0, 1.2); } });
+    }
+    if (st.rec) SIT_REC.forEach(([a, b]) => {
+      const ia = sitI(a), bd = new Date(sitI(b) * SIT_DAY), ib = Math.round(Date.UTC(bd.getUTCFullYear(), bd.getUTCMonth() + 1, 0) / SIT_DAY);
+      if (ib < x0 || ia > x1) return;
+      const xa = Math.max(pad.l, X(ia)), xb = Math.min(pad.l + cw, X(ib)); if (xb <= xa) return;
+      if (strip) { ctx.fillStyle = 'rgba(160,165,170,.8)'; ctx.fillRect(xa, pad.t + 19, xb - xa, 5); return; }
+      ctx.fillStyle = 'rgba(139,148,158,.16)'; ctx.fillRect(xa, pad.t, xb - xa, ch);
+      ctx.save(); ctx.beginPath(); ctx.rect(xa, pad.t, xb - xa, ch); ctx.clip(); ctx.strokeStyle = 'rgba(139,148,158,.22)'; ctx.lineWidth = 1; ctx.beginPath();
+      for (let d = -ch; d < xb - xa; d += 7) { ctx.moveTo(xa + d, pad.t + ch); ctx.lineTo(xa + d + ch, pad.t); } ctx.stroke(); ctx.restore();
+      ctx.fillStyle = 'rgba(160,165,170,.75)'; ctx.fillRect(xa, pad.t, xb - xa, 4);
+      if (xb - xa > 28) { ctx.fillStyle = 'rgba(200,205,210,.85)'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'left'; ctx.fillText('침체', xa + 3, pad.t + 15); }
+    });
+    ctx.restore();
+    // 격자·눈금
+    ctx.font = '11px SFMono-Regular, Consolas, monospace'; ctx.lineWidth = 1;
+    sitTicks(L0.lo, L0.hi, 6).forEach(v => { const y = L0.Y(v); ctx.strokeStyle = 'rgba(139,148,158,.14)'; ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + cw, y); ctx.stroke(); ctx.fillStyle = '#8b949e'; ctx.textAlign = 'right'; ctx.fillText(L0.D.f(v), pad.l - 7, y + 4); });
+    order.slice(1).forEach(key => {
+      const A = AX[key];
+      ctx.save(); ctx.strokeStyle = A.col; ctx.globalAlpha = .45; ctx.setLineDash([2, 3]); ctx.beginPath(); ctx.moveTo(A.x - 4, pad.t); ctx.lineTo(A.x - 4, pad.t + ch); ctx.stroke(); ctx.restore();
+      ctx.fillStyle = A.col; ctx.textAlign = 'left';
+      sitTicks(A.lo, A.hi, 6).forEach(v => ctx.fillText(A.D.f(v), A.x, A.Y(v) + 4));
+    });
+    ctx.font = 'bold 11px sans-serif';
+    order.forEach((key, i) => { const A = AX[key]; ctx.fillStyle = i === 0 ? '#a8b3bd' : A.col; ctx.textAlign = i === 0 ? 'right' : 'left'; ctx.fillText(A.D.t, i === 0 ? pad.l - 7 : A.x, pad.t - 10); });
+    // 연도 눈금
+    const yrs = (x1 - x0) / 365.25, ys = yrs > 40 ? 5 : yrs > 15 ? 2 : 1;
+    ctx.font = '11px SFMono-Regular, Consolas, monospace'; ctx.fillStyle = '#8b949e'; ctx.textAlign = 'center';
+    for (let y = +sitS(x0).slice(0, 4); y <= +sitS(x1).slice(0, 4) + 1; y++) {
+      const i = sitI(y + '-01-01'); if (i < x0 || i > x1) continue;
+      const x = X(i); ctx.strokeStyle = 'rgba(139,148,158,.12)'; ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, pad.t + ch); ctx.stroke();
+      if (y % ys === 0) ctx.fillText(String(y), x, H - 10);
+    }
+    if (yrs < 3) { ctx.font = '10px sans-serif'; for (let i = Math.ceil(x0); i <= x1; i++) { const k = sitS(i); if (k.slice(8) !== '01' || k.slice(5, 7) === '01') continue; const x = X(i); ctx.strokeStyle = 'rgba(139,148,158,.12)'; ctx.beginPath(); ctx.moveTo(x, pad.t + ch - 5); ctx.lineTo(x, pad.t + ch); ctx.stroke(); ctx.fillText((+k.slice(5, 7)) + '월', x, H - 22); } }
+    // 기준선 (같은 높이에 겹치면 이름을 합쳐 한 줄로)
+    const refs = [];
+    on.forEach(L => (L.refs || []).forEach(r => { const A = AX[L.axis]; if (r.v <= A.lo || r.v >= A.hi) return; const y = A.Y(r.v); const z = refs.find(q => Math.abs(q.y - y) < 2.5); if (z) { if (!z.labels.includes(r.label)) z.labels.push(r.label); } else refs.push({ y, labels: [r.label], col: r.col || L.color, solid: r.solid }); }));
+    refs.forEach(r => { ctx.save(); ctx.strokeStyle = r.col; ctx.globalAlpha = .75; ctx.lineWidth = 1.2; if (!r.solid) ctx.setLineDash([6, 4]); ctx.beginPath(); ctx.moveTo(pad.l, r.y); ctx.lineTo(pad.l + cw, r.y); ctx.stroke(); ctx.restore(); ctx.fillStyle = r.col; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'right'; ctx.fillText(r.labels.join(' = '), pad.l + cw - 6, r.y - 5); });
+    // 아래 띠 (고용·PMI·경기선행) — 판정점도 발표일에 찍음
+    const BASE = pad.t + ch - (st.qe && !strip ? 29 : 15); let row = 0;
+    (this.o.bands || []).forEach(b => {
+      const B = SIT_BAND_DEF[b], pts = SIT_BANDS[b];
+      if (!B || !pts || !on.some(B.when)) return;
+      const by = BASE - 24 * row, bh = 9; row++;
+      ctx.save();
+      for (let j = 0; j < pts.length; j++) { const a = pts[j].x, e = j + 1 < pts.length ? Math.min(pts[j + 1].x, a + 62) : Math.min(a + 31, sitTodayI()); if (e < x0 || a > x1) continue; const xa = Math.max(pad.l, X(a)), xb = Math.min(pad.l + cw, X(e)); if (xb <= xa) continue; ctx.fillStyle = 'rgba(' + (pts[j].up ? B.cu : B.cd) + ',.78)'; ctx.fillRect(xa, by, xb - xa, bh); }
+      ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'left'; const w1 = ctx.measureText(B.t1 + '  ').width;
+      ctx.fillStyle = 'rgba(13,17,23,.78)'; ctx.fillRect(pad.l + 4, by - 15, w1 + ctx.measureText(B.t2).width + 12, 14);
+      ctx.fillStyle = 'rgba(' + B.cu + ',1)'; ctx.fillText(B.t1, pad.l + 10, by - 4); ctx.fillStyle = 'rgba(' + B.cd + ',1)'; ctx.fillText(B.t2, pad.l + 10 + w1, by - 4);
+      ctx.restore();
+    });
+    // 선 (오른쪽 축 → 왼쪽 축 → '맨 위' 표시 선 순서. 점은 발표일에)
+    ctx.save(); ctx.beginPath(); ctx.rect(pad.l, pad.t, cw, ch); ctx.clip(); ctx.lineJoin = 'round';
+    const drawOrder = [...on].sort((a, b) => (a.top ? 1 : 0) - (b.top ? 1 : 0) || (order.indexOf(b.axis) - order.indexOf(a.axis)));
+    drawOrder.forEach(L => {
+      const A = AX[L.axis], P = L._pts;
+      ctx.globalAlpha = L.alpha || 1; ctx.strokeStyle = L.color; ctx.lineWidth = L.w || 2; ctx.setLineDash(L.dash || []);
+      if (L.src === 'policy') {     // 기준금리: 목표범위 회색 띠 + 계단선 (1982-09 이전 실효금리는 잔점선)
+        ctx.fillStyle = 'rgba(139,148,158,.20)';
+        for (let j = 0; j + 1 < P.length; j++) { const p = P[j], q = P[j + 1]; if (p.lo == null || q.x < x0 || p.x > x1) continue; ctx.fillRect(X(p.x), A.Y(p.hi), X(q.x) - X(p.x), A.Y(p.lo) - A.Y(p.hi)); }
+        ctx.beginPath(); let pen = false, py = 0, proxy = null;
+        for (let j = 0; j < P.length; j++) { const p = P[j]; if (P[j + 1] && P[j + 1].x < x0 - 40) continue; if (p.x > x1 + 40) break; if (proxy !== !!p.proxy) { if (pen) { ctx.lineTo(X(p.x), py); ctx.stroke(); ctx.beginPath(); ctx.moveTo(X(p.x), py); } ctx.setLineDash(p.proxy ? [2, 3] : []); proxy = !!p.proxy; } const x = X(p.x), y = A.Y(p.y); if (!pen) { ctx.moveTo(x, y); pen = true; } else { ctx.lineTo(x, py); ctx.lineTo(x, y); } py = y; }
+        ctx.stroke(); ctx.setLineDash([]);
+        if (this.o.decisions) (this.o.decisions() || []).forEach(d => { if (d.x < x0 || d.x > x1) return; const x = X(d.x), y = A.Y(d.to); ctx.fillStyle = d.ch > 0 ? '#f85149' : '#58a6ff'; ctx.beginPath(); if (d.ch > 0) { ctx.moveTo(x, y - 12); ctx.lineTo(x - 5, y - 4); ctx.lineTo(x + 5, y - 4); } else { ctx.moveTo(x, y + 12); ctx.lineTo(x - 5, y + 4); ctx.lineTo(x + 5, y + 4); } ctx.closePath(); ctx.fill(); });
+        return;
+      }
+      const gapMax = (L._S ? L._S.gap : 30) * 2.6;
+      ctx.beginPath(); let pen = false, pk = null;
+      for (const p of P) {
+        if (p.x < x0 - 400 || p.x > x1 + 400) { pen = false; continue; }
+        if (pk && sitI(p.k) - sitI(pk) > gapMax) pen = false;
+        pk = p.k;
+        const x = X(p.x), y = A.Y(p.y);
+        if (!pen) { ctx.moveTo(x, y); pen = true; } else ctx.lineTo(x, y);
+      }
+      ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
+    });
+    ctx.restore();
+    // 연준 QE·QT 리본 (x축 바로 위, '상단 띠' 모드에선 위쪽)
+    if (st.qe) {
+      const yb = strip ? pad.t + 26 : pad.t + ch - 16, hb = strip ? 5 : 11;
+      SIT_QE.forEach(q => {
+        const ia = sitI(q.a), ib = Math.min(sitI(q.b), x1 + 30); if (ib < x0 || ia > x1) return;
+        const xa = Math.max(pad.l, X(ia)), xb = Math.min(pad.l + cw, X(ib)); if (xb <= xa) return;
+        ctx.fillStyle = SIT_QEC[q.t]; ctx.fillRect(xa, yb, xb - xa, hb);
+        if (q.t === 'TAPER' || q.t === 'RMP') { ctx.save(); ctx.beginPath(); ctx.rect(xa, yb, xb - xa, hb); ctx.clip(); ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.beginPath(); for (let d = -hb; d < xb - xa; d += 5) { ctx.moveTo(xa + d, yb + hb); ctx.lineTo(xa + d + hb, yb); } ctx.stroke(); ctx.restore(); }
+        if (!strip && xb - xa > 34) { ctx.fillStyle = '#fff'; ctx.font = 'bold 9.5px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(ctx.measureText(q.l).width < xb - xa - 6 ? q.l : q.l.slice(0, 3), (xa + xb) / 2, yb + hb - 2); }
+      });
+    }
+    // 코로나 구간을 축 범위에서 뺐다는 안내
+    const clipped = [...new Set(order.flatMap(k => AX[k].clip))];
+    if (clipped.length) { const tx = '2020~21년 코로나 급변 구간은 축 범위에서 뺌 — 그때 ' + (clipped.length > 2 ? '선 ' + clipped.length + '개' : clipped.join(' · ')) + '가 화면 밖으로 나감'; ctx.font = 'bold 10.5px sans-serif'; ctx.textAlign = 'left'; const tw = ctx.measureText(tx).width; const bx = pad.l + 6, by = pad.t + (strip ? 44 : 30); ctx.fillStyle = 'rgba(13,17,23,.82)'; ctx.fillRect(bx - 4, by - 12, tw + 8, 17); ctx.fillStyle = '#d2a8ff'; ctx.fillText(tx, bx, by); }
+    // 마우스 세로선·고정 표시
+    const hi = g.pin ? g.pin.i : g.hoverI;
+    if (hi != null && hi >= x0 && hi <= x1) { ctx.save(); ctx.strokeStyle = g.pin ? '#e3b341' : 'rgba(200,205,210,.55)'; ctx.setLineDash(g.pin ? [] : [3, 3]); ctx.lineWidth = g.pin ? 1.4 : 1; ctx.beginPath(); ctx.moveTo(X(hi), pad.t); ctx.lineTo(X(hi), pad.t + ch); ctx.stroke(); ctx.restore(); }
+    this.M = { pad, cw, ch, x0, x1, X, AX, order, on };
+  }
+  // 툴팁: 그 날짜에 '이미 발표돼 있던' 값 (발표일 기준 — 아직 안 나온 달은 안 보임)
+  rowsAt(i) {
+    const rows = [];
+    (this.M ? this.M.on : []).forEach(L => { const p = sitAt(L._pts, i); if (!p) return; if (L.src !== 'policy' && i - p.x > L._age) return; rows.push({ L, p }); });
+    return rows;
+  }
+  tipHTML(i, pinned) {
+    const d = sitS(i), R = SIT_R, rg = this.grp.st.shade !== 'none' && R ? (() => { const row = sitAt(R.pts, i); return row ? row.r : null; })() : null;
+    const RG = rg && this.grp.st.shade !== 'inv' ? sitRegimes(this.grp.st.win) : null;
+    const rec = this.grp.st.rec && SIT_REC.some(([a, b]) => i >= sitI(a) && i <= sitI(b) + 31);
+    const q = this.grp.st.qe ? SIT_QE.find(q => i >= sitI(q.a) && i <= sitI(q.b)) : null;
+    let h = '<div class="d">' + d + (RG && RG.get(rg.i) ? ' · ' + SIT_RGN[RG.get(rg.i)] : '') + (rg && rg.sp < 0 ? ' · 역전' : '') + (rec ? ' · <b>NBER 침체</b>' : '') + (q ? ' · <span style="color:' + (q.t === 'QT' ? '#f0b072' : '#5eead4') + '">' + q.l + '</span>' : '') + (pinned ? '<button class="sc-x" title="닫기 (Esc)">×</button>' : '') + '</div>';
+    this.rowsAt(i).forEach(({ L, p }, n) => {
+      let val = L.src === 'policy' ? (p.lo != null ? p.lo.toFixed(2) + '~' + p.hi.toFixed(2) + '%' : p.y.toFixed(2) + '%') : sitFmt(L, p.y);
+      if (L.sig && p.raw != null) val += ' <span class="m">(' + sitRawFmt(L, p.raw) + ')</span>';
+      h += '<div class="r"><span><i style="background:' + L.color + '"></i>' + sitEsc(L.label) + '</span><span class="num">' + val + '</span></div>';
+      const meta = L.src === 'policy' ? sitObsLbl(L, p) : (L._S && (L._S.rel === 'mkt' || L._S.mkt)) ? sitObsLbl(L, p) : sitObsLbl(L, p) + ' · ' + (p.e ? '발표일 추정 ' : '발표 ') + p.d + (p.dup ? ' · 같은 날 ' + p.dup + '개월치 발표' : '');
+      h += '<div class="s">' + meta + '</div>';
+      if (pinned) h += '<div class="rv" data-n="' + n + '">수정 이력 불러오는 중…</div>';
+    });
+    if (!pinned) h += '<div class="hint">클릭 = 이 날짜 고정 + 수정 전 값 보기</div>';
+    return h;
+  }
+  async fillRev(i) {
+    const rows = this.rowsAt(i);
+    for (let n = 0; n < rows.length; n++) {
+      const { L, p } = rows[n], el = this.tip.querySelector('.rv[data-n="' + n + '"]');
+      if (!el) continue;
+      let info; try { info = await sitRevInfo(L, p); } catch (e) { info = { note: '수정 이력 읽기 실패' }; }
+      if (!this.grp.pin || this.grp.pin.i !== i) return;
+      if (info.note) { el.textContent = info.note; continue; }
+      if (info.hist) {
+        if (!info.hist.length) { el.textContent = '수정 이력 없음'; continue; }
+        const last = info.hist[info.hist.length - 1];
+        const parts = info.hist.map(([D, y], j) => '<span title="' + D + '">' + (j === 0 ? '첫 발표 ' : '') + D.slice(2).replace(/-/g, '.') + ' <b>' + sitFmt(L, y) + '</b></span>');
+        el.innerHTML = (info.hist.length === 1 ? '수정 없음 · ' : '수정 ' + (info.hist.length - 1) + '번 · ') + parts.join(' → ') + (info.hist.length > 1 ? ' <span class="m">(첫 발표 대비 ' + sitDiffFmt(L, last[1] - info.hist[0][1]) + ')</span>' : '');
+        continue;
+      }
+      if (info.first != null) el.innerHTML = '첫 발표 수준 <b>' + sitRawFmt({ ...L, tf: 'lvl' }, info.first) + '</b> → 지금 <b>' + sitRawFmt({ ...L, tf: 'lvl' }, info.now) + '</b>' + (info.lvlOnly ? ' <span class="m">(이 지표는 첫 발표 수준만 보관 — 변환값 이력은 주요 지표만)</span>' : '');
+    }
+  }
+  showTip(i, mx, my, pinned) {
+    const tip = this.tip;
+    tip.innerHTML = this.tipHTML(i, pinned); tip.style.display = 'block'; tip.classList.toggle('pin', !!pinned);
+    const bw = this.cv.clientWidth, tw = tip.offsetWidth;
+    tip.style.left = (mx + 18 + tw > bw ? Math.max(4, mx - tw - 14) : mx + 18) + 'px';
+    tip.style.top = Math.max(6, Math.min(my - 30, this.cv.clientHeight - tip.offsetHeight - 6)) + 'px';
+    if (pinned) { const x = tip.querySelector('.sc-x'); if (x) x.onclick = () => this.unpin(); this.fillRev(i); }
+  }
+  unpin() { this.grp.pin = null; this.grp.charts.forEach(c => { c.tip.style.display = 'none'; c.tip.classList.remove('pin'); }); this.grp.draw(); }
+  bind() {
+    const cv = this.cv, g = this.grp;
+    const idxAt = mx => { const M = this.M; return Math.round(M.x0 + (mx - M.pad.l) / M.cw * (M.x1 - M.x0)); };
+    cv.addEventListener('wheel', e => {
+      const M = this.M; if (!M) return; e.preventDefault();
+      const b = cv.getBoundingClientRect(), mx = e.clientX - b.left, my = e.clientY - b.top, k = Math.exp((e.deltaY > 0 ? 1 : -1) * 0.18), { pad, cw, ch } = M;
+      let ax = null;
+      if (mx < pad.l) ax = M.order[0];
+      else if (mx > pad.l + cw) { for (let j = M.order.length - 1; j >= 1; j--) if (mx >= M.AX[M.order[j]].x - 8) { ax = M.order[j]; break; } if (!ax) ax = M.order[1] || M.order[0]; }
+      else if (e.shiftKey) ax = M.order[0];
+      if (ax) { const A = M.AX[ax], v = A.lo + (A.hi - A.lo) * (1 - (my - pad.t) / ch); this.VY[ax] = [v - (v - A.lo) * k, v + (A.hi - v) * k]; this.draw(); return; }
+      const c = M.x0 + (M.x1 - M.x0) * (mx - pad.l) / cw; g.st.vx = g.clamp([c - (c - M.x0) * k, c + (M.x1 - c) * k]); g.draw(); g.save();
+    }, { passive: false });
+    let drag = null;
+    cv.addEventListener('mousedown', e => { const M = this.M; if (!M) return; const L0 = M.AX[M.order[0]]; drag = { x: e.clientX, y: e.clientY, x0: M.x0, x1: M.x1, lo: L0.lo, hi: L0.hi, ax: M.order[0], shift: e.shiftKey, moved: false }; cv.style.cursor = 'grabbing'; });
+    window.addEventListener('mousemove', e => {
+      if (!drag || !this.M) return;
+      if (Math.abs(e.clientX - drag.x) + Math.abs(e.clientY - drag.y) > 4) drag.moved = true;
+      if (!drag.moved) return;
+      if (drag.shift) { const dv = (e.clientY - drag.y) / this.M.ch * (drag.hi - drag.lo); this.VY[drag.ax] = [drag.lo + dv, drag.hi + dv]; this.draw(); return; }
+      const dm = -(e.clientX - drag.x) / this.M.cw * (drag.x1 - drag.x0), B = g.bounds(), w = drag.x1 - drag.x0;
+      let a = drag.x0 + dm, b = drag.x1 + dm; if (B) { if (a < B[0]) { a = B[0]; b = a + w; } if (b > B[1]) { b = B[1]; a = b - w; } }
+      g.st.vx = [a, b]; g.draw();
+    });
+    window.addEventListener('mouseup', e => {
+      if (!drag) return;
+      const d = drag; drag = null; cv.style.cursor = 'crosshair';
+      if (d.moved) { g.save(); return; }
+      const M = this.M; if (!M) return;
+      const b = cv.getBoundingClientRect(), mx = e.clientX - b.left, my = e.clientY - b.top;
+      if (mx < M.pad.l || mx > M.pad.l + M.cw) return;
+      const i = idxAt(mx);
+      g.charts.forEach(c => { if (c !== this) { c.tip.style.display = 'none'; c.tip.classList.remove('pin'); } });
+      g.pin = { i, chart: this }; g.hoverI = null; g.draw(); this.showTip(i, mx, my, true);
+    });
+    cv.addEventListener('mousemove', e => {
+      if (drag && drag.moved) return;
+      const M = this.M; if (!M || g.pin) return;
+      const b = cv.getBoundingClientRect(), mx = e.clientX - b.left, my = e.clientY - b.top;
+      if (mx < M.pad.l || mx > M.pad.l + M.cw) { if (g.hoverI != null) { g.hoverI = null; this.tip.style.display = 'none'; g.draw(); } return; }
+      g.hoverI = idxAt(mx); g.draw(); this.showTip(g.hoverI, mx, my, false);
+    });
+    cv.addEventListener('mouseleave', () => { if (g.pin) return; g.hoverI = null; this.tip.style.display = 'none'; g.draw(); });
+    cv.addEventListener('dblclick', () => { g.st.vx = null; g.charts.forEach(c => { c.VY = {}; }); g.pin = null; g.charts.forEach(c => { c.tip.style.display = 'none'; }); g.draw(); g.save(); });
+    let tch = null;
+    cv.addEventListener('touchstart', e => { const M = this.M; if (!M) return; if (e.touches.length === 1) tch = { x: e.touches[0].clientX, x0: M.x0, x1: M.x1 }; else if (e.touches.length === 2) tch = { pinch: Math.abs(e.touches[0].clientX - e.touches[1].clientX), x0: M.x0, x1: M.x1, cx: (e.touches[0].clientX + e.touches[1].clientX) / 2 }; }, { passive: true });
+    cv.addEventListener('touchmove', e => { const M = this.M; if (!tch || !M) return; e.preventDefault(); const b = cv.getBoundingClientRect();
+      if (e.touches.length === 1 && tch.x != null) { const dm = -(e.touches[0].clientX - tch.x) / M.cw * (tch.x1 - tch.x0); g.st.vx = g.clamp([tch.x0 + dm, tch.x1 + dm]); }
+      else if (e.touches.length === 2 && tch.pinch) { const k = tch.pinch / Math.max(10, Math.abs(e.touches[0].clientX - e.touches[1].clientX)), c = tch.x0 + (tch.x1 - tch.x0) * ((tch.cx - b.left - M.pad.l) / M.cw); g.st.vx = g.clamp([c - (c - tch.x0) * k, c + (tch.x1 - c) * k]); }
+      g.draw(); }, { passive: false });
+    cv.addEventListener('touchend', () => { tch = null; g.save(); });
+  }
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && SIT.groups) Object.values(SIT.groups).forEach(g => { if (g.pin) g.pin.chart.unpin(); }); });
+
+// ── 상태 저장 (이 브라우저) ──
+const SIT = { inited: false, tab: '1', groups: {}, charts: {}, st: null };
+const SIT_LS = 'sitView_v1';
+const SIT_DEF_LINES = {
+  s1: [
+    { id: 'fed', src: 'policy', label: '기준금리 (목표범위 · 회색 띠)', color: '#e6edf3', axis: 'rate', w: 2.2, on: true },
+    { id: 't10y2y', src: 'fred:T10Y2Y', tf: 'lvl', unit: '%p', label: '장단기 스프레드 10년−2년', color: '#bc8cff', axis: 'rate', w: 1.8, dash: [7, 4], on: true, refs: [{ v: 0, label: '스프레드 0', col: '#bc8cff', solid: true }] },
+    { id: 'unrate', src: 'fred:UNRATE', tf: 'lvl', unit: '%', label: '실업률', color: '#ff7b72', axis: 'rate', w: 2, covid: true, on: true },
+    { id: 'pceh', src: 'fred:PCEPI', tf: 'yoy', label: 'PCE 헤드라인 (전년비)', color: '#58a6ff', axis: 'pct', w: 2.2, on: true, refs: [{ v: 2, label: '연준 목표 2%', col: '#3fb950' }] },
+    { id: 'pcec', src: 'fred:PCEPILFE', tf: 'yoy', label: 'PCE 코어 (전년비)', color: '#a5d6ff', axis: 'pct', w: 2.6, on: true, refs: [{ v: 2, label: '연준 목표 2%', col: '#3fb950' }] },
+    { id: 'nfp3', src: 'fred:PAYEMS', tf: 'avg3chg', unit: 'k', label: '비농업 고용 3개월 평균 증감', color: '#39c5cf', axis: 'k', w: 2.2, covid: true, on: true },
+    { id: 'nfpm', src: 'fred:PAYEMS', tf: 'chg', unit: 'k', label: '비농업 고용 전월 증감 (점선)', color: '#39c5cf', axis: 'k', w: 1, dash: [2, 3], alpha: .75, covid: true, on: true },
+    { id: 'pmi', src: 'file:ISMM_PMI', tf: 'lvl', label: 'ISM 제조업 PMI', color: '#f0883e', axis: 'pmi', w: 2, on: true, refs: [{ v: 50, label: 'PMI 50 = 확장/수축 경계', col: '#d29922' }] },
+    { id: 'nfpbe', src: 'calc:NFPBE', tf: 'lvl', unit: 'k', label: '고용 손익분기선 (실업률 유지에 필요한 월 고용)', color: '#f778ba', axis: 'k', w: 1.4, dash: [6, 3], covid: true, on: false },
+  ],
+  s3a: [
+    { id: 'pmi', src: 'file:ISMM_PMI', tf: 'lvl', label: 'ISM 제조업 PMI', color: '#e6edf3', axis: 'pmi', w: 2.8, top: true, on: true, refs: [{ v: 50, label: 'PMI 50', col: '#d29922' }] },
+    { id: 'no', src: 'file:ISMM_NEWORD', tf: 'lvl', label: '신규주문', color: '#58a6ff', axis: 'pmi', w: 1.7, on: true },
+    { id: 'pr', src: 'file:ISMM_PROD', tf: 'lvl', label: '생산', color: '#3fb950', axis: 'pmi', w: 1.7, on: true },
+    { id: 'em', src: 'file:ISMM_EMP', tf: 'lvl', label: '고용', color: '#d2a8ff', axis: 'pmi', w: 1.7, on: true },
+    { id: 'sd', src: 'file:ISMM_SUPDEL', tf: 'lvl', label: '공급자 배송', color: '#f0883e', axis: 'pmi', w: 1.7, on: true },
+    { id: 'iv', src: 'file:ISMM_INV', tf: 'lvl', label: '재고', color: '#e3b341', axis: 'pmi', w: 1.7, on: true },
+    { id: 'bl', src: 'file:ISMM_BACKLOG', tf: 'lvl', label: '수주잔고', color: '#ff7b72', axis: 'pmi', w: 1.5, on: false },
+    { id: 'ci', src: 'file:ISMM_CUSTINV', tf: 'lvl', label: '고객 재고', color: '#8b949e', axis: 'pmi', w: 1.5, on: false },
+    { id: 'pc', src: 'file:ISMM_PRICES', tf: 'lvl', label: '가격', color: '#f778ba', axis: 'pmi', w: 1.5, on: false },
+    { id: 'ex', src: 'file:ISMM_EXPORT', tf: 'lvl', label: '수출 주문', color: '#39c5cf', axis: 'pmi', w: 1.5, on: false },
+    { id: 'im', src: 'file:ISMM_IMPORT', tf: 'lvl', label: '수입', color: '#a5d6ff', axis: 'pmi', w: 1.5, on: false },
+  ],
+  s3b: [
+    { id: 'pmi', src: 'file:ISMM_PMI', tf: 'lvl', label: 'ISM 제조업 PMI (기준)', color: '#e6edf3', axis: 'pmi', w: 2.6, top: true, on: true, refs: [{ v: 50, label: 'PMI 50', col: '#d29922' }] },
+    { id: 'cli', src: 'fred:USALOLITOAASTSAM', tf: 'mom', sig: true, label: 'OECD 경기선행지수 전월비 (σ)', color: '#3fb950', axis: 'sig', w: 1.9, on: true, refs: [{ v: 0, label: '0σ', col: '#8b949e' }] },
+    { id: 'cass', src: 'fred:FRGSHPUSM649NCIS', tf: 'yoy', sig: true, label: '캐스 화물 출하량 전년비 (σ)', color: '#e3b341', axis: 'sig', w: 1.9, on: true, refs: [{ v: 0, label: '0σ', col: '#8b949e' }] },
+    { id: 'rich', src: 'file:RICH_COMP', tf: 'lvl', label: '리치먼드 연은 제조업 종합 (값 그대로)', color: '#58a6ff', axis: 'rich', w: 1.9, on: true, refs: [{ v: 0, label: '리치먼드 0', col: '#58a6ff' }] },
+  ],
+  s3c: [
+    { id: 'pmi', src: 'file:ISMM_PMI', tf: 'lvl', label: 'ISM 제조업 PMI (기준)', color: '#e6edf3', axis: 'pmi', w: 2.6, top: true, on: true, refs: [{ v: 50, label: 'PMI 50', col: '#d29922' }] },
+    { id: 'nw3', src: 'fred:NEWORDER', tf: 'ann3', sig: true, label: '핵심 자본재 주문 3개월 연율 (σ)', color: '#bc8cff', axis: 'sig', w: 2, on: true, refs: [{ v: 0, label: '0σ', col: '#8b949e' }] },
+    { id: 'nwm', src: 'fred:NEWORDER', tf: 'mom', sig: true, label: '핵심 자본재 주문 전월비 (σ·점선)', color: '#bc8cff', axis: 'sig', w: 1, dash: [2, 3], alpha: .5, on: true },
+    { id: 'fx3', src: 'yd:FDX', tf: 'ann3', sig: true, label: '페덱스 주가 3개월 연율 (σ)', color: '#f0883e', axis: 'sig', w: 2, on: true },
+    { id: 'fxm', src: 'yd:FDX', tf: 'mom', sig: true, label: '페덱스 주가 전월비 (σ·점선)', color: '#f0883e', axis: 'sig', w: 1, dash: [2, 3], alpha: .5, on: true },
+    { id: 'rt3', src: 'yd:RUT', tf: 'ann3', sig: true, label: '러셀 2000 3개월 연율 (σ)', color: '#39c5cf', axis: 'sig', w: 2, on: true },
+    { id: 'rtm', src: 'yd:RUT', tf: 'mom', sig: true, label: '러셀 2000 전월비 (σ·점선)', color: '#39c5cf', axis: 'sig', w: 1, dash: [2, 3], alpha: .5, on: true },
+  ],
+};
+const SIT_DEF_ST = {
+  g1: { y0: null, y1: null, vx: null, shade: 'strip', win: 13, rec: true, qe: true, align: false, years: 20 },
+  g2: { y0: null, y1: null, vx: null, shade: 'strip', win: 13, rec: true, qe: true, align: false, years: 20, pm: 'mid' },
+  g3: { y0: null, y1: null, vx: null, shade: 'none', win: 13, rec: true, qe: false, align: true, years: 10 },
+};
+function sitLoadState() {
+  let s = {}; try { s = JSON.parse(localStorage.getItem(SIT_LS) || '{}'); } catch (e) {}
+  const st = { tab: s.tab || '1', g: {}, lines: {} };
+  Object.keys(SIT_DEF_ST).forEach(k => { st.g[k] = { ...SIT_DEF_ST[k], ...(s.g && s.g[k] || {}) }; st.g[k].vx = null; });
+  Object.keys(SIT_DEF_LINES).forEach(k => {
+    const def = SIT_DEF_LINES[k], saved = s.lines && s.lines[k];
+    if (!Array.isArray(saved)) { st.lines[k] = def.map(L => ({ ...L })); return; }
+    // 기본 선은 코드 값 + 사용자가 바꾼 표시(색·굵기·모양·축·켜짐)만, 추가한 선은 저장값 그대로
+    st.lines[k] = saved.map(v => { const d = def.find(L => L.id === v.id); return d ? { ...d, on: v.on, color: v.color || d.color, w: v.w || d.w, dash: v.dash !== undefined ? v.dash : d.dash, axis: v.axis || d.axis, tf: v.tf || d.tf } : v.user ? v : null; }).filter(Boolean);
+    def.forEach(d => { if (!saved.some(v => v.id === d.id)) st.lines[k].push({ ...d }); });
+  });
+  return st;
+}
+function sitSave() {
+  if (!SIT.st) return;
+  const strip = L => { const o = {}; Object.keys(L).forEach(k => { if (k[0] !== '_') o[k] = L[k]; }); return o; };
+  const g = {}; Object.keys(SIT.st.g).forEach(k => { const { vx, ...rest } = SIT.st.g[k]; g[k] = rest; });
+  try { localStorage.setItem(SIT_LS, JSON.stringify({ tab: SIT.tab, g, lines: Object.fromEntries(Object.entries(SIT.charts).map(([k, c]) => [k, c.lines.map(strip)])) })); } catch (e) {}
+}
+
+// ── 화면 구성 ──
+const SIT_PAL = ['#e6edf3', '#58a6ff', '#a5d6ff', '#3fb950', '#39c5cf', '#bc8cff', '#d2a8ff', '#f778ba', '#ff7b72', '#f0883e', '#e3b341', '#8b949e'];
+const SIT_DASH = { solid: [], dash: [5, 3], long: [10, 5], dot: [2, 3] };
+const sitDashKey = d => !d || !d.length ? 'solid' : d[0] === 5 ? 'dash' : d[0] === 10 ? 'long' : d[0] === 2 ? 'dot' : 'dash';
+const SIT_LEGEND = `
+  <span><i style="background:rgba(70,130,255,.9)"></i>불 스티프닝 (장단기차 확대, 2년물이 더 움직임 — 흔한 해석: 완화 기대)</span>
+  <span><i style="background:rgba(255,221,0,.9)"></i>베어 스티프닝 (확대, 10년물이 더 움직임 — 기간 프리미엄·재정)</span>
+  <span><i style="background:rgba(150,220,40,.9)"></i>불 플래트닝 (축소, 10년물이 더 움직임 — 성장 둔화)</span>
+  <span><i style="background:rgba(255,130,30,.9)"></i>베어 플래트닝 (축소, 2년물이 더 움직임 — 긴축)</span>
+  <span><i style="background:#e6edf3"></i>10년−2년 역전 (상단 띠의 흰 막대 · 커브 국면 모드에선 빗금)</span>
+  <span><i style="background:rgba(160,165,170,.8)"></i>NBER 경기침체</span>
+  <span>연준 리본 <i style="background:#0d9488"></i>QE · <i style="background:rgba(13,148,136,.45)"></i>테이퍼링·단기채 매입 · <i style="background:#6b7280"></i>만기연장 · <i style="background:#92400e"></i>QT</span>
+  <span class="sit-rule"><b>모든 점 = 그 값이 처음 발표된 날</b> · 값 = 지금 수정치 · <b>클릭</b> = 그 날짜 고정 + 수정 전 값(첫 발표 → 수정 경로)</span>`;
+
+function sitControls(host, g, o) {
+  const st = g.st;
+  host.innerHTML = `
+    <label>기간 <span class="seg q">${[[2, '2년'], [5, '5년'], [10, '10년'], [20, '20년'], [0, '전체']].map(([n, t]) => `<button data-n="${n}">${t}</button>`).join('')}</span></label>
+    <label><input type="number" class="y0" min="1940" max="2035"> ~ <input type="number" class="y1" min="1940" max="2035"></label>
+    <label>배경 <span class="seg sh">${[['regime', '커브 국면'], ['strip', '상단 띠'], ['inv', '역전만'], ['none', '없음']].map(([v, t]) => `<button data-v="${v}">${t}</button>`).join('')}</span></label>
+    <label>국면 판정 창 <select class="win">${[4, 13, 26, 52].map(w => `<option value="${w}">${w}주${w === 13 ? ' (1분기)' : ''}</option>`).join('')}</select></label>
+    <label><input type="checkbox" class="rec"> NBER 침체</label>
+    <label><input type="checkbox" class="qe"> 연준 QE·QT</label>
+    ${o.align ? '<label title="PMI 50 · 0σ · 리치먼드 0 이 같은 높이에 오게 축을 맞춤"><input type="checkbox" class="al"> 기준선 맞추기</label>' : ''}
+    ${o.pm ? '<label>기준금리 <select class="pm"><option value="mid">목표범위 중간값</option><option value="up">상단</option><option value="lo">하단</option></select></label>' : ''}
+    <span class="hint">휠 = 가로 확대 · 축 위 휠 = 그 축만 · Shift+휠 = 세로 · 드래그 = 이동(Shift: 세로) · 더블클릭 = 처음대로${o.linked ? ' · 그림들은 가로축이 같이 움직임' : ''}</span>`;
+  const $q = s => host.querySelector(s);
+  const sync = () => {
+    host.querySelectorAll('.q button').forEach(b => b.classList.toggle('on', !st.vx && +b.dataset.n === (st.years || 0) && (st.years ? st.y0 != null : st.y0 == null)));
+    host.querySelectorAll('.sh button').forEach(b => b.classList.toggle('on', b.dataset.v === st.shade));
+    const V = g.view(); if (V) { $q('.y0').value = sitS(V[0]).slice(0, 4); $q('.y1').value = sitS(V[1]).slice(0, 4); }
+    $q('.win').value = st.win; $q('.rec').checked = st.rec; $q('.qe').checked = st.qe;
+    if (o.align) $q('.al').checked = st.align;
+    if (o.pm) $q('.pm').value = st.pm || 'mid';
+  };
+  const redraw = () => { g.draw(); g.save(); };
+  host.querySelector('.q').onclick = e => { const b = e.target.closest('button'); if (!b) return; const n = +b.dataset.n; st.years = n; st.vx = null; st.y1 = null; st.y0 = n ? new Date().getUTCFullYear() - n : null; g.charts.forEach(c => { c.VY = {}; }); redraw(); };
+  const yr = () => { const a = +$q('.y0').value, z = +$q('.y1').value; if (!a || !z || z < a) return; st.vx = null; st.y0 = a; st.y1 = z; st.years = -1; g.charts.forEach(c => { c.VY = {}; }); redraw(); };
+  $q('.y0').onchange = yr; $q('.y1').onchange = yr;
+  host.querySelector('.sh').onclick = e => { const b = e.target.closest('button'); if (!b) return; st.shade = b.dataset.v; redraw(); };
+  $q('.win').onchange = e => { st.win = +e.target.value; redraw(); };
+  $q('.rec').onchange = e => { st.rec = e.target.checked; redraw(); };
+  $q('.qe').onchange = e => { st.qe = e.target.checked; redraw(); };
+  if (o.align) $q('.al').onchange = e => { st.align = e.target.checked; redraw(); };
+  if (o.pm) $q('.pm').onchange = e => { st.pm = e.target.value; if (o.onPm) o.onPm(); redraw(); };
+  if (st.y0 == null && st.years > 0) st.y0 = new Date().getUTCFullYear() - st.years;
+  const prev = g.onDraw; g.onDraw = () => { if (prev) prev(); sync(); };
+  sync();
+}
+
+function sitAxName(key) { return { pct: '왼쪽 % 변화율', rate: '금리·실업률 %', gap: '괴리 %p', k: '만 명', pmi: 'PMI', sig: 'σ', rich: '리치먼드' }[key] || ('따로 · ' + (sitAxDef(key).t || '')); }
+function sitChips(host, c, o) {
+  host.innerHTML = c.lines.map(L => `<span class="sc-chip${L.on ? '' : ' off'}" data-id="${L.id}" title="${sitEsc(L.label)} — 이름 클릭 = 켜기/끄기 · 색 네모 = 색·굵기·계산·축"><i class="sw" style="--c:${L.color}${L.dash && L.dash.length ? ';border-style:dashed' : ''}"></i><span class="nm">${sitEsc(L.label)}</span><span class="ax">${sitEsc(sitAxName(L.axis))}</span>${L._err ? '<span class="er">자료 없음</span>' : ''}</span>`).join('')
+    + (o.add ? '<button class="sc-add">＋ 지표 추가</button>' : '');
+  host.querySelectorAll('.sc-chip').forEach(el => {
+    const L = c.lines.find(x => x.id === el.dataset.id);
+    el.querySelector('.nm').onclick = () => { L.on = !L.on; el.classList.toggle('off', !L.on); c.grp.draw(); sitSave(); };
+    el.querySelector('.sw').onclick = e => { e.stopPropagation(); sitStylePop(c, L, el.querySelector('.sw'), () => sitChips(host, c, o)); };
+    el.oncontextmenu = e => { e.preventDefault(); sitStylePop(c, L, el.querySelector('.sw'), () => sitChips(host, c, o)); };
+  });
+  const add = host.querySelector('.sc-add');
+  if (add) add.onclick = e => { e.stopPropagation(); sitPicker(c, add, () => sitChips(host, c, o)); };
+}
+
+let SIT_POP = null;
+function sitClosePop() { if (SIT_POP) { SIT_POP.remove(); SIT_POP = null; } }
+document.addEventListener('mousedown', e => { if (SIT_POP && !SIT_POP.contains(e.target) && !e.target.closest('.sw') && !e.target.closest('.sc-add')) sitClosePop(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') sitClosePop(); });
+function sitPlace(p, anchor) { const b = anchor.getBoundingClientRect(); p.style.left = Math.max(8, Math.min(innerWidth - p.offsetWidth - 8, b.left)) + 'px'; p.style.top = Math.max(8, Math.min(innerHeight - p.offsetHeight - 8, b.bottom + 6)) + 'px'; }
+function sitStylePop(c, L, anchor, rerender) {
+  sitClosePop();
+  const p = document.createElement('div'); p.className = 'sit-pop'; SIT_POP = p;
+  const canTf = L.src !== 'policy' && !String(L.src).startsWith('calc:') && L.src !== 'calc:y2';
+  const axes = [...new Set(c.lines.map(x => x.axis).concat([L.axis, 'pct', 'rate']))];
+  const ownAx = 'u:' + L.id + ':' + (sitAxDef(L.axis).t || '');
+  p.innerHTML = `<h4>${sitEsc(L.label)}</h4>
+    <div class="rw"><span>색</span><input type="color" value="${L.color}"><span class="pal">${SIT_PAL.map(x => `<b style="background:${x}" data-c="${x}"></b>`).join('')}</span></div>
+    <div class="rw"><span>선 모양</span><select class="d"><option value="solid">실선 ━━</option><option value="dash">점선 ┅┅</option><option value="long">긴 점선 ╍ ╍</option><option value="dot">잔점선 ····</option></select></div>
+    <div class="rw"><span>굵기</span><select class="w"><option value="1">얇게</option><option value="1.6">조금 얇게</option><option value="2.2">보통</option><option value="3">굵게</option><option value="4.5">아주 굵게</option></select></div>
+    ${canTf ? `<div class="rw"><span>계산</span><select class="tf">${Object.entries(SIT_TFN).map(([k, t]) => `<option value="${k}">${t}</option>`).join('')}</select><label><input type="checkbox" class="sg"> σ 단위</label></div>` : ''}
+    <div class="rw"><span>세로축</span><select class="ax">${axes.map(a => `<option value="${a}">${sitEsc(sitAxName(a))}</option>`).join('')}${axes.includes(ownAx) ? '' : `<option value="${ownAx}">따로 새 축</option>`}</select></div>
+    <div class="btns">${L.user ? '<button class="rm">이 선 빼기</button>' : ''}<button class="cl">닫기</button></div>`;
+  document.body.appendChild(p); sitPlace(p, anchor);
+  const $p = s => p.querySelector(s);
+  $p('.d').value = sitDashKey(L.dash);
+  $p('.w').value = String([1, 1.6, 2.2, 3, 4.5].reduce((a, b) => Math.abs(b - (L.w || 2)) < Math.abs(a - (L.w || 2)) ? b : a));
+  $p('.ax').value = L.axis;
+  if (canTf) { $p('.tf').value = L.tf || 'lvl'; $p('.sg').checked = !!L.sig; }
+  const done = async rebuild => { if (rebuild) await sitBuildLine(L); rerender(); c.grp.draw(); sitSave(); };
+  const col = $p('input[type=color]');
+  col.oninput = () => { L.color = col.value; done(false); };
+  p.querySelectorAll('.pal b').forEach(b => b.onclick = () => { L.color = col.value = b.dataset.c; done(false); });
+  $p('.d').onchange = e => { L.dash = SIT_DASH[e.target.value]; done(false); };
+  $p('.w').onchange = e => { L.w = +e.target.value; done(false); };
+  $p('.ax').onchange = e => { L.axis = e.target.value; c.VY = {}; done(false); };
+  if (canTf) {
+    $p('.tf').onchange = e => { L.tf = e.target.value; if (['yoy', 'ann3', 'mom'].includes(L.tf) && !L.sig && L.axis !== 'pct' && L.user) L.axis = 'pct'; c.VY = {}; done(true); };
+    $p('.sg').onchange = e => { L.sig = e.target.checked; if (L.sig) L.axis = 'sig'; c.VY = {}; done(true); };
+  }
+  if ($p('.rm')) $p('.rm').onclick = () => { c.lines.splice(c.lines.indexOf(L), 1); sitClosePop(); done(false); };
+  $p('.cl').onclick = sitClosePop;
+}
+
+// ＋ 지표 추가: 사이트에 넣어 둔 미국 지표 전부 + FRED 밖 서베이·시세
+const SIT_EXTRA = [
+  { src: 'calc:NFPBE', name: '고용 손익분기선 (실업률 유지에 필요한 월 고용)', cat: '고용 / EMPLOYMENT', tf: 'lvl', axis: 'k', unit: 'k' },
+  { src: 'file:RICH_COMP', name: '리치먼드 연은 제조업 종합', cat: '서베이 (FRED 밖)', tf: 'lvl', axis: 'rich' },
+  { src: 'file:CB_CCI', name: '컨퍼런스보드 소비자신뢰', cat: '서베이 (FRED 밖)', tf: 'lvl', axis: 'u:CB_CCI:CB' },
+  { src: 'fred:FRGSHPUSM649NCIS', name: '캐스 화물 출하량', cat: '서베이 (FRED 밖)', tf: 'yoy', axis: 'pct' },
+  { src: 'yd:FDX', name: '페덱스 주가 (월말 종가)', cat: '시세 (월말 종가)', tf: 'yoy', axis: 'pct' },
+  { src: 'yd:RUT', name: '러셀 2000 (월말 종가)', cat: '시세 (월말 종가)', tf: 'yoy', axis: 'pct' },
+  ...[['NEWORD', '신규주문'], ['PROD', '생산'], ['EMP', '고용'], ['SUPDEL', '공급자 배송'], ['INV', '재고'], ['CUSTINV', '고객 재고'], ['PRICES', '가격'], ['BACKLOG', '수주잔고'], ['EXPORT', '수출 주문'], ['IMPORT', '수입']]
+    .map(([k, n]) => ({ src: 'file:ISMM_' + k, name: 'ISM ' + n + ' (2022-02~)', cat: 'ISM 세부지표', tf: 'lvl', axis: 'pmi' })),
+];
+function sitIndChoice(ind) {
+  const tf = ind.transform === 'yoy' ? 'yoy' : ind.transform === 'sum12' ? 'sum12' : ind.diffMode ? 'chg' : 'lvl';
+  const unit = ind.unit === '%' ? '%' : ind.unit === '%p' ? '%p' : (ind.diffMode && ind.unit === 'K') ? 'k' : '';
+  const axis = ['yoy', 'ann3', 'mom'].includes(tf) ? 'pct' : ind.id === 'ISM_PMI' ? 'pmi' : (unit === '%' || unit === '%p') ? 'rate' : unit === 'k' ? 'k' : 'u:' + ind.id + ':' + (ind.unit || '');
+  return { src: 'ind:' + ind.id, name: ind.name, cat: ind.category, tf, axis, unit };
+}
+function sitPicker(c, anchor, rerender) {
+  sitClosePop();
+  const items = INDICATORS.filter(i => (i.country || 'US') === 'US' && !['fiscalmap', 'situation', 'cot', 'tsa', 'cnn'].includes(i.source)).map(sitIndChoice).concat(SIT_EXTRA);
+  const p = document.createElement('div'); p.className = 'sit-pop sit-pick'; SIT_POP = p;
+  p.innerHTML = '<h4>지표 추가 — 이 그림에 겹치기</h4><input class="qs" placeholder="이름·ID 검색 (예: 소매, CPI, 주택)"><div class="ls"></div><div class="nt">점은 모두 발표일에 찍힘 · 계산(전년비 등)·축은 추가 뒤 색 네모로 바꿈</div>';
+  document.body.appendChild(p); sitPlace(p, anchor);
+  const ls = p.querySelector('.ls'), qs = p.querySelector('.qs');
+  const render = () => {
+    const q = qs.value.trim().toLowerCase(); let h = '', cat = null;
+    items.filter(it => !q || it.name.toLowerCase().includes(q) || it.src.toLowerCase().includes(q) || (it.cat || '').toLowerCase().includes(q)).forEach((it, n) => {
+      if (it.cat !== cat) { cat = it.cat; h += '<div class="ct">' + sitEsc(cat || '') + '</div>'; }
+      h += '<div class="it" data-n="' + items.indexOf(it) + '">' + sitEsc(it.name) + ' <span>' + sitEsc(it.src.replace(/^\w+:/, '')) + (it.tf !== 'lvl' ? ' · ' + SIT_TFN[it.tf] : '') + '</span></div>';
+    });
+    ls.innerHTML = h || '<div class="nt">찾는 지표가 없음</div>';
+    ls.querySelectorAll('.it').forEach(el => el.onclick = async () => {
+      const it = items[+el.dataset.n], used = new Set(c.lines.map(L => L.color));
+      const L = { id: 'u' + Date.now().toString(36), user: true, src: it.src, tf: it.tf, unit: it.unit || '', axis: it.axis, label: it.name + (it.tf !== 'lvl' ? ' (' + SIT_TFN[it.tf] + ')' : ''), color: SIT_PAL.find(x => !used.has(x)) || '#8b949e', w: 1.8, on: true };
+      c.lines.push(L); sitClosePop(); rerender();
+      await sitBuildLine(L); rerender(); c.VY = {}; c.grp.draw(); sitSave();
+    });
+  };
+  qs.oninput = render; render(); qs.focus();
+}
+
+async function sitLoadLines(g) { await Promise.all(g.charts.flatMap(c => c.lines.map(L => L._pts || L.src.startsWith('calc:gap') ? null : sitBuildLine(L)))); g.draw(); }
+
+// ── 화면 ① 경제 대시보드 ──
+function sitBuild1() {
+  const v = document.getElementById('sit-v1');
+  v.innerHTML = `<div class="sit-read">PCE 대시보드와 같은 방식 — 선마다 자기 세로축(왼쪽 % 변화율 · 오른쪽 금리·실업률 %, 만 명, PMI)을 씀. 칩 이름 = 켜기/끄기 · <b>색 네모</b> = 색·굵기·계산(전년비·3개월 연율…)·축 · <b>＋ 지표 추가</b> = 이 사이트에 넣어 둔 지표 겹치기.
+    아래 띠 = 고용 3개월 평균 vs 손익분기(빨강/파랑) · PMI 50 위/아래(주황/보라) · 경기선행지수를 켜면 100 위/아래. 맨 위 띠 = 커브 국면·역전·침체·QE.</div>
+    <div class="sit-bar" id="sit-b1"></div><div class="sit-chips" id="sit-c1"></div><div id="sit-ch1"></div>
+    <div class="sit-legend">${SIT_LEGEND}<span><i style="background:rgba(220,38,38,.8)"></i>고용 3개월 평균 > 손익분기 · <i style="background:rgba(37,99,235,.8)"></i>&lt; 손익분기 (손익분기 = 12개월 평균 증감 + 고용 × 실업률 12개월 변화 — 실업률을 그대로 두는 데 필요한 고용)</span><span><i style="background:rgba(234,88,12,.8)"></i>PMI > 50 · <i style="background:rgba(124,58,237,.8)"></i>≤ 50</span></div>`;
+  const g = new SitGroup(SIT.st.g.g1, sitSave); SIT.groups.g1 = g;
+  const c = new SitChart(document.getElementById('sit-ch1'), g, { h: 600, bands: ['emp', 'pmi', 'cli'] });
+  c.lines = SIT.st.lines.s1; SIT.charts.s1 = c;
+  sitControls(document.getElementById('sit-b1'), g, {});
+  sitChips(document.getElementById('sit-c1'), c, { add: true });
+  sitLoadLines(g).then(() => sitChips(document.getElementById('sit-c1'), c, { add: true }));
+}
+
+// ── 화면 ② 채권시장 × FOMC ──
+let SIT_GAP = null, SIT_DEC = [];
+async function sitGapRows() {
+  const R = SIT_R || (SIT_R = await sitRates()), P = await sitPolicy(), pm = SIT.st.g.g2.pm || 'mid';
+  if (!R || !P.length) return [];
+  return R.rows.map(r => {
+    const p = sitAt(P, r.i); if (!p) return null;
+    const v = p.proxy || p.lo == null ? p.y : pm === 'up' ? p.hi : pm === 'lo' ? p.lo : (p.lo + p.hi) / 2;
+    return { k: r.k, i: r.i, y2: r.s2, y10: r.t, p: v, pu: p.hi, pl: p.lo, proxy: !!p.proxy, g2: r.s2 - v, g10: r.t - v, s: r.sp };
+  }).filter(Boolean);
+}
+function sitDecisions(P) {
+  const out = [];
+  for (let j = 1; j < P.length; j++) { const a = P[j - 1], b = P[j]; if (b.proxy || a.proxy || b.tail || b.k < '1982-09-28') continue; const ch = b.y - a.y; if (Math.abs(ch) < 1e-9) continue; out.push({ x: b.x, k: b.k, from: a.y, to: b.y, ch, rng: b.lo != null ? b.lo.toFixed(2) + '~' + b.hi.toFixed(2) : b.hi.toFixed(2) }); }
+  return out;
+}
+const sitBp = v => (v >= 0 ? '+' : '') + Math.round(v * 100);
+const sitF2 = v => (v >= 0 ? '+' : '') + v.toFixed(2);
+const sitCls = v => v < 0 ? 'neg' : v > 0 ? 'pos' : '';
+function sitEpisodes(rows, cond, minW) {
+  const eps = []; let a = -1;
+  for (let j = 0; j <= rows.length; j++) {
+    const ok = j < rows.length && rows[j].k >= '1983-01-01' && cond(rows[j]);
+    if (ok) { if (a < 0) a = j; } else if (a >= 0) { if (j - a >= minW) eps.push({ a, b: j - 1, c: a + minW - 1, open: j === rows.length }); a = -1; }
+  }
+  const out = [];
+  eps.forEach(e => {
+    const t = rows[e.c].i, prev = [...SIT_DEC].reverse().find(d => d.x <= t), next = SIT_DEC.find(d => d.x > t);
+    const z = out[out.length - 1];
+    // 같은 직전·다음 결정 사이에서 잠깐 끊겼다 다시 켜진 신호는 한 사례로 (대기 개월은 처음 4주째 된 날부터)
+    if (z && z.prev === prev && z.next === next) { z.b = e.b; z.open = e.open; z.n++; return; }
+    out.push({ ...e, k: rows[e.a].k, prev, next, wait: next ? (next.x - t) / 30.44 : null, n: 1 });
+  });
+  out.forEach(e => { e.kb = rows[e.b].k; });
+  return out;
+}
+async function sitBuild2() {
+  const v = document.getElementById('sit-v2');
+  v.innerHTML = `<div class="sit-read"><b>괴리 = 국채금리 − 기준금리</b>(%p, 1%p = 100bp). <b>2년물 − 기준금리</b>가 양수면 채권시장이 앞으로 2년 평균 기준금리를 지금보다 <b>높게</b>(인상 쪽), 음수면 <b>낮게</b>(인하 쪽) 가격에 넣고 있다는 뜻(기간 프리미엄이 섞인 대략치). <b>10년물 − 기준금리</b>는 장기 성장·물가 기대까지, <b>10년 − 2년</b>은 장단기 스프레드(음수 = 역전).</div>
+    <div class="sit-cards" id="sit-cards"></div>
+    <div class="sit-two"><div class="sit-box"><h3>지금 채권시장은 FOMC를 어떻게 보나 <span class="sub">자동 요약</span></h3><div id="sit-sum2">불러오는 중…</div></div>
+      <div class="sit-box"><h3>예측시장 실시간 — 폴리마켓 <span class="sub" id="sit-pm-t"></span></h3><div id="sit-pm">불러오는 중…</div></div></div>
+    <div class="sit-bar" id="sit-b2"></div>
+    <div class="sit-ttl"><b>금리 수준</b> 기준금리(회색 띠 = 목표범위, ▲인상 ▼인하) · 2년물 · 10년물 — 주간 평균, 금요일</div><div id="sit-ch2a"></div>
+    <div class="sit-ttl"><b>괴리 (%p)</b> 2년물 − 기준금리 · 10년물 − 기준금리 · 10년물 − 2년물(점선) — 0선 아래 = 기준금리보다 낮음</div><div id="sit-ch2b"></div>
+    <div class="sit-legend">${SIT_LEGEND}</div>
+    <div class="sit-two"><div class="sit-box"><h3>과거 같은 상황에서 연준은 <span class="sub">1983~ · 4주 이상 이어진 경우 · 그 뒤 첫 금리 변경</span></h3><div id="sit-eps"></div></div>
+      <div class="sit-box"><h3>금리 결정일별 괴리 <span class="sub" id="sit-decn"></span></h3><div class="sit-scroll"><table id="sit-dect"></table></div><div class="n">국채금리 = 결정 직전 주 평균, 괴리 = <b>결정 전 기준금리</b> 대비 — 결정 전에 시장이 얼마나 미리 반영했나. 날짜 = FRED 적용일(결정 다음 날).</div></div></div>
+    <div class="n" style="margin-top:8px">자료: 국채 = FRED 일간(DGS2·DGS10)의 토~금 평균 · 기준금리 = 목표범위(DFEDTARU·L, 2008-12~)·목표(DFEDTAR, 1982-09~), 그 전은 실효금리 월평균(FEDFUNDS) · 예측시장 = 폴리마켓 공개 API(브라우저에서 바로, 1분마다 새로고침). 해석은 사실 정리일 뿐 매매 판단이 아님.</div>`;
+  const g = new SitGroup(SIT.st.g.g2, sitSave); SIT.groups.g2 = g;
+  const cA = new SitChart(document.getElementById('sit-ch2a'), g, { h: 330, decisions: () => SIT_DEC }), cB = new SitChart(document.getElementById('sit-ch2b'), g, { h: 270 });
+  SIT.charts.s2a = cA; SIT.charts.s2b = cB;
+  sitControls(document.getElementById('sit-b2'), g, { pm: true, linked: true, onPm: () => sitGapRefresh() });
+  const P = await sitPolicy(); SIT_DEC = sitDecisions(P);
+  await sitGapRefresh();
+  g.onDraw = (prev => () => { if (prev) prev(); sitDecTable(); })(g.onDraw);
+  g.draw();
+  sitPoly();
+}
+async function sitGapRefresh() {
+  SIT_GAP = await sitGapRows();
+  const mk = (id, key, label, color, axis, w, dash) => ({ id, src: 'calc:gap' + key, label, color, axis, w, dash, on: true, unit: axis === 'gap' ? '%p' : '%', _S: { gap: 7, rel: 'mkt', mkt: false }, _age: 20, _pts: SIT_GAP.map(r => ({ x: r.i, y: r[key], k: r.k, d: r.k })) });
+  const A = SIT.charts.s2a, B = SIT.charts.s2b;
+  A.lines = [{ id: 'fed', src: 'policy', label: '기준금리 (목표범위)', color: '#e6edf3', axis: 'rate', w: 2.4, on: true, _pts: await sitPolicy() }, mk('y2', 'y2', '2년물', '#58a6ff', 'rate', 2), mk('y10', 'y10', '10년물', '#f0883e', 'rate', 2)];
+  B.lines = [mk('g2', 'g2', '2년물 − 기준금리', '#58a6ff', 'gap', 2.4), mk('g10', 'g10', '10년물 − 기준금리', '#f0883e', 'gap', 2), mk('s', 's', '10년물 − 2년물', '#bc8cff', 'gap', 1.8, [6, 4])];
+  B.lines[0].refs = [{ v: 0, label: '0 = 기준금리와 같음', col: '#8b949e', solid: true }];
+  sitCards(); sitEpsTable(); sitSummary2();
+  SIT.groups.g2.draw();
+}
+function sitCards() {
+  const R = SIT_GAP; if (!R || !R.length) return;
+  const L = R[R.length - 1], ago = n => R[Math.max(0, R.length - 1 - n)], base = R.filter(r => r.k >= '1983-01-01');
+  const pct = k => Math.round(base.filter(r => r[k] <= L[k]).length / base.length * 100), ch = (k, n) => sitBp(L[k] - ago(n)[k]);
+  const ld = SIT_DEC[SIT_DEC.length - 1], pm = { mid: '중간값', up: '상단', lo: '하단' }[SIT.st.g.g2.pm || 'mid'];
+  const lvl = (k, n, c) => `<div class="sit-card"><div class="k"><i style="background:${c}"></i>${n}</div><div class="v">${L[k].toFixed(2)}<small>%</small></div><div class="d">4주 ${ch(k, 4)} · 13주 ${ch(k, 13)} · 52주 ${ch(k, 52)}bp</div></div>`;
+  const gp = (k, n, c) => `<div class="sit-card gap" style="border-color:${c}"><div class="k"><i style="background:${c}"></i>${n}</div><div class="v ${sitCls(L[k])}">${sitF2(L[k])}<small>%p</small></div><div class="d">${sitBp(L[k])}bp · 1983~ 백분위 ${pct(k)}%<br>4주 ${ch(k, 4)} · 13주 ${ch(k, 13)} · 52주 ${ch(k, 52)}bp</div></div>`;
+  document.getElementById('sit-cards').innerHTML = `<div class="sit-card"><div class="k"><i style="background:#e6edf3"></i>기준금리 (목표범위)</div><div class="v">${L.pl != null ? L.pl.toFixed(2) + '~' + L.pu.toFixed(2) : L.p.toFixed(2)}<small>%</small></div><div class="d">계산 기준 ${pm} ${+L.p.toFixed(3)}%<br>마지막 변경 ${ld ? ld.k + ' (' + sitBp(ld.ch) + 'bp)' : '-'}</div></div>`
+    + lvl('y2', '2년물', '#58a6ff') + lvl('y10', '10년물', '#f0883e') + gp('g2', '2년물 − 기준금리', '#58a6ff') + gp('g10', '10년물 − 기준금리', '#f0883e') + gp('s', '10년물 − 2년물', '#bc8cff');
+}
+let SIT_PM = null, SIT_PM_EPS = null;
+function sitEpsTable() {
+  const R = SIT_GAP; if (!R || !R.length) return;
+  const L = R[R.length - 1];
+  const run = cond => { let n = 0; for (let j = R.length - 1; j >= 0 && cond(R[j]); j--) n++; return n; };
+  const rowsOf = (eps, want) => { const done = eps.filter(e => !e.open), n = done.length, hit = done.filter(e => e.next && Math.sign(e.next.ch) === want).length, other = done.filter(e => e.next && Math.sign(e.next.ch) === -want).length, ws = done.filter(e => e.next && Math.sign(e.next.ch) === want).map(e => e.wait).sort((a, b) => a - b); return { n, hit, other, none: n - hit - other, med: ws.length ? ws[ws.length >> 1] : null, list: done }; };
+  const cut = sitEpisodes(R, r => r.g2 <= -0.5, 4), hike = sitEpisodes(R, r => r.g2 >= 0.75, 4);
+  const hikeIn = hike.filter(e => e.prev && e.prev.ch > 0), hikeAfter = hike.filter(e => !e.prev || e.prev.ch < 0);
+  const A = rowsOf(cut, -1), B = rowsOf(hikeIn, 1), C = rowsOf(hikeAfter, 1);
+  const nowCut = run(r => r.g2 <= -0.5), nowHike = run(r => r.g2 >= 0.75), lastDec = SIT_DEC[SIT_DEC.length - 1];
+  const tr = (t, S, want, now) => `<tr><td>${t}</td><td class="num">${S.n}</td><td class="num">${S.hit}</td><td class="num">${S.other}</td><td class="num">${S.none}</td><td class="num">${S.med != null ? S.med.toFixed(1) + '개월' : '-'}</td><td>${now}</td></tr>`;
+  const nowTxt = (n, ok) => n >= 4 ? `<b class="${ok}">해당 — ${n}주째</b>` : n > 0 ? `${n}주째 (4주 되면 해당)` : '아님';
+  document.getElementById('sit-eps').innerHTML = `<table><tr><th>조건 (2년물 − 기준금리)</th><th>사례</th><th>다음 변경 = 예상 방향</th><th>반대</th><th>없음</th><th>중앙 대기</th><th>지금 (${sitF2(L.g2)}%p)</th></tr>`
+    + tr('≤ −0.50%p → 인하 쪽', A, -1, nowTxt(nowCut, 'neg'))
+    + tr('≥ +0.75%p · 직전 변경이 인상(인상 사이클 안)', B, 1, lastDec && lastDec.ch > 0 ? nowTxt(nowHike, 'pos') : '직전 변경이 인하라 이 줄 아님')
+    + tr('≥ +0.75%p · 직전 변경이 인하(인하 뒤)', C, 1, lastDec && lastDec.ch < 0 ? nowTxt(nowHike, 'pos') : '직전 변경이 인상이라 이 줄 아님') + '</table>'
+    + `<div class="n">사례 = 조건이 4주 넘게 이어진 구간(지금 진행 중인 것은 뺌 · 같은 결정 앞에서 잠깐 끊겼다 다시 켜진 것은 한 사례). '다음 변경' = 4주째 된 날 뒤 첫 기준금리 변경의 방향, 중앙 대기 = 그 변경까지 걸린 개월(예상 방향인 사례만). 같은 조건이라도 '인상 사이클 안'과 '인하 뒤'는 뜻이 달라 나눔(과거 케이스 조사 10/26).</div>`
+    + (() => { const odd = [...A.list.filter(e => e.next && e.next.ch > 0).map(e => '≤ −0.5%p ' + e.k.slice(0, 7) + '~' + e.kb.slice(0, 7) + ' → ' + e.next.k.slice(0, 7) + ' 인상'), ...B.list.concat(C.list).filter(e => e.next && e.next.ch < 0).map(e => '≥ +0.75%p ' + e.k.slice(0, 7) + '~' + e.kb.slice(0, 7) + ' → ' + e.next.k.slice(0, 7) + ' 인하')]; return odd.length ? '<div class="n">반대로 간 사례: ' + odd.join(' · ') + '</div>' : ''; })();
+  SIT_PM_EPS = { A, B, C, nowCut, nowHike };
+}
+function sitSummary2() {
+  const el = document.getElementById('sit-sum2'), R = SIT_GAP; if (!el || !R || !R.length) return;
+  const L = R[R.length - 1], ago = n => R[Math.max(0, R.length - 1 - n)], base = R.filter(r => r.k >= '1983-01-01');
+  const pct = Math.round(base.filter(r => r.g2 <= L.g2).length / base.length * 100), d13 = L.g2 - ago(13).g2, d4 = L.g2 - ago(4).g2;
+  const rg = sitRegimes(SIT.st.g.g2.win || 13), cur = rg && rg.get(L.i);
+  const ds = L.s - ago(SIT.st.g.g2.win || 13).s;
+  const dir = L.g2 > 0.25 ? '높게 — 추가 인상 쪽' : L.g2 < -0.25 ? '낮게 — 인하 쪽' : '비슷하게 — 동결 쪽';
+  const out = [];
+  if (SIT_PM && SIT_PM.next) { const m = SIT_PM.next; out.push(`<li><b>다음 회의 ${m.when}</b> — 폴리마켓 인상 <b class="pos">${m.up}%</b> · 동결 <b>${m.hold}%</b> · 인하 <b class="neg">${m.down}%</b> (가장 큰 쪽: ${m.top})</li>`); }
+  out.push(`<li><b>2년물 ${L.y2.toFixed(2)}%</b> − 기준금리 ${+L.p.toFixed(3)}% = <b class="${sitCls(L.g2)}">${sitF2(L.g2)}%p</b> (1983~ 백분위 ${pct}%) → 채권시장은 앞으로 2년 평균 기준금리를 지금보다 <b>${dir}</b>으로 봄</li>`);
+  const trend = Math.abs(d13) < 0.1 ? '13주 동안 크게 안 바뀜' + (Math.abs(d4) >= 0.1 ? ', 최근 4주는 ' + (d4 > 0 ? '인상 쪽으로' : '인하 쪽으로') + ' 움직임' : '')
+    : d13 > 0 ? (d4 <= -0.05 ? '13주 동안 인상 기대가 커졌다가 최근 4주는 일부 되돌리는 중' : '인상 기대가 커지는(인하 기대가 줄어드는) 중')
+    : (d4 >= 0.05 ? '13주 동안 인하 기대가 커졌다가 최근 4주는 일부 되돌리는 중' : '인하 기대가 커지는(인상 기대가 줄어드는) 중');
+  out.push(`<li>2년물 괴리 변화: 최근 4주 ${sitBp(d4)}bp · 13주 ${sitBp(d13)}bp → ${trend}</li>`);
+  out.push(`<li>커브(${SIT.st.g.g2.win || 13}주): 10년−2년 ${sitF2(L.s)}%p, ${sitBp(ds)}bp 변화${cur ? ' — <b>' + SIT_RGN[cur] + '</b> (' + { bullsteep: '2년물이 더 많이 내림 — 흔한 해석: 완화 기대', bearsteep: '10년물이 더 많이 오름 — 기간 프리미엄·재정', bullflat: '10년물이 더 많이 내림 — 성장 둔화', bearflat: '2년물이 더 많이 오름 — 긴축 기대' }[cur] + ')' : ' (변화 0.05%p 미만 — 국면 없음)'}</li>`);
+  const E = SIT_PM_EPS;
+  if (E) { if (E.nowHike >= 4) { const S = SIT_DEC.length && SIT_DEC[SIT_DEC.length - 1].ch > 0 ? E.B : E.C; out.push(`<li>과거 규칙: 2년물 괴리 ≥ +0.75%p가 4주 넘게 → 1983년 이후 ${S.n}번 중 ${S.hit}번은 다음 변경이 <b>인상</b>${S.med != null ? ' (중앙 ' + S.med.toFixed(1) + '개월 뒤)' : ''} — 지금 ${E.nowHike}주째</li>`); }
+    else if (E.nowCut >= 4) out.push(`<li>과거 규칙: 2년물 괴리 ≤ −0.5%p가 4주 넘게 → 1983년 이후 ${E.A.n}번 중 ${E.A.hit}번은 다음 변경이 <b>인하</b>${E.A.med != null ? ' (중앙 ' + E.A.med.toFixed(1) + '개월 뒤)' : ''} — 지금 ${E.nowCut}주째</li>`);
+    else out.push(`<li>과거 규칙(≤ −0.5%p 또는 ≥ +0.75%p가 4주 넘게): 지금은 둘 다 아님</li>`); }
+  let one = '';
+  if (SIT_PM && SIT_PM.next) { const bond = L.g2 > 0.25 ? 1 : L.g2 < -0.25 ? -1 : 0, mk = SIT_PM.next.up > 50 ? 1 : SIT_PM.next.down > 50 ? -1 : 0; one = bond === mk ? (bond > 0 ? '채권시장·예측시장 모두 <b>추가 인상 쪽</b>' : bond < 0 ? '채권시장·예측시장 모두 <b>인하 쪽</b>' : '채권시장·예측시장 모두 <b>동결 쪽</b>') : '채권시장(2년물)과 예측시장(다음 회의)이 <b>엇갈림</b> — 2년물은 2년 평균, 폴리마켓은 다음 한 번이라 기간이 다름'; }
+  el.innerHTML = '<ul class="sit-ul">' + out.join('') + '</ul>' + (one ? '<div class="sit-one">→ ' + one + '</div>' : '');
+}
+function sitDecTable() {
+  const el = document.getElementById('sit-dect'); if (!el || !SIT_GAP) return;
+  const V = SIT.groups.g2.view(); if (!V) return;
+  const ds = SIT_DEC.filter(d => d.x >= V[0] && d.x <= V[1]).reverse();
+  document.getElementById('sit-decn').textContent = '(보이는 기간 ' + ds.length + '번, 최신순)';
+  let t = '<tr><th>적용일</th><th>변경</th><th>변경 후</th><th>2년물</th><th>10년물</th><th>2년−기준</th><th>10년−기준</th><th>10년−2년</th></tr>';
+  const GP = SIT_GAP.map(q => ({ x: q.i, q }));
+  ds.forEach(d => { const r = sitAt(GP, d.x - 1); if (!r) return; const q = r.q; t += `<tr><td class="num">${d.k}</td><td class="num ${d.ch > 0 ? 'pos' : 'neg'}">${d.ch > 0 ? '▲' : '▼'} ${sitBp(d.ch)}bp</td><td class="num">${d.rng}</td><td class="num">${q.y2.toFixed(2)}</td><td class="num">${q.y10.toFixed(2)}</td><td class="num ${sitCls(q.y2 - d.from)}">${sitF2(q.y2 - d.from)}</td><td class="num ${sitCls(q.y10 - d.from)}">${sitF2(q.y10 - d.from)}</td><td class="num ${sitCls(q.s)}">${sitF2(q.s)}</td></tr>`; });
+  if (!ds.length) t += '<tr><td colspan="8" style="text-align:center;color:var(--text-muted)">이 기간엔 금리 결정이 없음</td></tr>';
+  el.innerHTML = t;
+}
+// 폴리마켓: '연준 금리' 태그의 열린 시장 — 회의별 결정 확률(합계 100%로 맞춤) + 연말 금리
+let SIT_PM_TIMER = null;
+async function sitPoly() {
+  const el = document.getElementById('sit-pm'); if (!el) return;
+  try {
+    const ev = await (await fetch('https://gamma-api.polymarket.com/events?closed=false&limit=200&tag_slug=fed-rates', { cache: 'no-store' })).json();
+    const price = m => { try { return +JSON.parse(m.outcomePrices)[0]; } catch (e) { return NaN; } };
+    const cls = t => { t = (t || '').toLowerCase(); if (/no change/.test(t)) return 'hold'; const n = /50/.test(t) ? 2 : 1; return /decrease|cut/.test(t) ? (n === 2 ? 'd2' : 'd1') : /increase|hike/.test(t) ? (n === 2 ? 'u2' : 'u1') : null; };
+    const meets = ev.filter(e => /^fed decision in /i.test(e.title || '')).sort((a, b) => a.endDate < b.endDate ? -1 : 1).slice(0, 4).map(e => {
+      const P = { d2: 0, d1: 0, hold: 0, u1: 0, u2: 0 }; let vol = 0, chg = {};
+      (e.markets || []).filter(m => !m.closed).forEach(m => { const c = cls(m.groupItemTitle || m.question); const p = price(m); if (!c || !isFinite(p)) return; P[c] += p; chg[c] = (chg[c] || 0) + (+m.oneDayPriceChange || 0); vol += +m.volume || 0; });
+      const s = Object.values(P).reduce((a, b) => a + b, 0) || 1; Object.keys(P).forEach(k => { P[k] = P[k] / s * 100; });
+      const et = new Date(new Date(e.endDate).getTime() - 5 * 3600 * 1000), mon = +et.toISOString().slice(5, 7), day = +et.toISOString().slice(8, 10);
+      const ev25 = (25 * P.u1 + 50 * P.u2 - 25 * P.d1 - 50 * P.d2) / 100;
+      return { slug: e.slug, when: et.getUTCFullYear() + '년 ' + mon + '월 (' + mon + '/' + day + ' 결정)', P, chg, vol, ev25 };
+    });
+    const ye = ev.filter(e => /fed rate be at the end of \d{4}/i.test(e.title || '')).sort((a, b) => a.endDate < b.endDate ? -1 : 1)[0];
+    const hike = ev.find(e => /another fed rate hike in \d{4}/i.test(e.title || ''));
+    const pr = v => Math.round(v) + '%';
+    const seg = [['d2', '50bp+ 인하', '#1f6feb'], ['d1', '25bp 인하', '#58a6ff'], ['hold', '동결', '#6e7681'], ['u1', '25bp 인상', '#f0883e'], ['u2', '50bp+ 인상', '#f85149']];
+    const pol = (await sitPolicy()).slice(-1)[0], mid = pol ? (pol.lo != null ? (pol.lo + pol.hi) / 2 : pol.y) : null;
+    let path = mid, h = '';
+    meets.forEach((m, j) => {
+      path = path == null ? null : path + m.ev25 / 100;
+      const up = m.P.u1 + m.P.u2, dn = m.P.d1 + m.P.d2, top = seg.slice().sort((a, b) => m.P[b[0]] - m.P[a[0]])[0];
+      if (j === 0) SIT_PM = { next: { when: m.when, up: Math.round(up), hold: Math.round(m.P.hold), down: Math.round(dn), top: top[1] + ' ' + pr(m.P[top[0]]) } };
+      h += `<div class="pm-m"><div class="pm-h"><a href="https://polymarket.com/event/${encodeURIComponent(m.slug)}" target="_blank" rel="noopener">${m.when}</a><span>인상 <b class="pos">${pr(up)}</b> · 동결 <b>${pr(m.P.hold)}</b> · 인하 <b class="neg">${pr(dn)}</b></span></div>`
+        + `<div class="pm-bar">${seg.map(([k, t, c]) => m.P[k] >= 0.5 ? `<i style="width:${m.P[k]}%;background:${c}" title="${t} ${m.P[k].toFixed(1)}%">${m.P[k] >= 9 ? t + ' ' + pr(m.P[k]) : ''}</i>` : '').join('')}</div>`
+        + `<div class="pm-s">기대값 ${m.ev25 >= 0 ? '+' : ''}${m.ev25.toFixed(1)}bp${path != null ? ' → 이 회의 뒤 기대 기준금리(중간값) ' + path.toFixed(2) + '%' : ''} · 거래액 $${Math.round(m.vol).toLocaleString()}</div></div>`;
+    });
+    if (ye) { const o = (ye.markets || []).filter(m => !m.closed).map(m => ({ t: m.groupItemTitle, p: price(m) })).filter(x => isFinite(x.p)).sort((a, b) => b.p - a.p), s = o.reduce((a, b) => a + b.p, 0) || 1; h += `<div class="pm-y"><b>${(ye.title.match(/\d{4}/) || [''])[0]}년 말 목표범위 상단</b> ${o.slice(0, 4).map(x => sitEsc(x.t) + ' ' + pr(x.p / s * 100)).join(' · ')}</div>`; }
+    if (hike) { const m = (hike.markets || [])[0], p = m ? price(m) : NaN; if (isFinite(p)) h += `<div class="pm-y"><b>${sitEsc(hike.title.replace(/\?$/, ''))}</b> → 예 ${pr(p * 100)}</div>`; }
+    el.innerHTML = (h || '열린 연준 결정 시장을 못 찾음') + '<div class="n">확률 = 각 결과의 \'예\' 가격(합을 100%로 맞춤). 기대값 = 25·인상25 + 50·인상50 − 25·인하25 − 50·인하50 (bp). 회의별 시장이라 여러 회의를 합친 경로는 기대값을 더한 것.</div>';
+    document.getElementById('sit-pm-t').textContent = '갱신 ' + new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+    sitSummary2();
+  } catch (e) {
+    el.innerHTML = '폴리마켓 불러오기 실패 — ' + sitEsc(e.message) + ' <span class="n">(1분 뒤 다시 시도)</span>';
+  }
+  clearTimeout(SIT_PM_TIMER);
+  SIT_PM_TIMER = setTimeout(() => { if (SIT.tab === '2' && document.getElementById('sit-panel').classList.contains('show')) sitPoly(); }, 60000);
+}
+
+// ── 화면 ③ PMI 예측 ──
+function sitBuild3() {
+  const v = document.getElementById('sit-v3');
+  v.innerHTML = `<div class="sit-read"><b>PMI(흰 굵은 선)를 기준선으로</b> — 위: ISM 세부지표(같은 0~100 눈금, 50 = 경계 · 세부지표는 ISM 보도자료 기준 2022-02부터) · 가운데: 선행(경기선행지수 전월비·화물 전년비는 <b>σ</b>, 리치먼드는 값 그대로) · 아래: 설비투자·주가(3개월 연율 실선 · 전월비 얇은 점선, σ).
+    <b>σ</b> = 그 지표 변환값 ÷ 전체 기간 표준편차(2020년 코로나 구간 제외) — 0 = 제자리, PMI 고저점 페이지의 기울기 선과 같은 방식. <b>기준선 맞추기</b> = PMI 50 · 0σ · 리치먼드 0 을 같은 높이에. 세 그림은 가로축이 같이 움직임.</div>
+    <div class="sit-bar" id="sit-b3"></div>
+    <div class="sit-ttl"><b>① ISM 제조업 PMI · 세부지표</b> <span>PMI = 신규주문·생산·고용·공급자 배송·재고 5개 평균</span></div><div class="sit-chips" id="sit-c3a"></div><div id="sit-ch3a"></div>
+    <div class="sit-ttl"><b>② 선행 — 경기선행지수 · 화물 · 리치먼드 연은</b></div><div class="sit-chips" id="sit-c3b"></div><div id="sit-ch3b"></div>
+    <div class="sit-ttl"><b>③ 설비투자·주가 — 핵심 자본재 주문 · 페덱스 · 러셀 2000</b> <span>실선 = 3개월 연율 · 점선 = 전월비</span></div><div class="sit-chips" id="sit-c3c"></div><div id="sit-ch3c"></div>
+    <div class="sit-legend">${SIT_LEGEND}</div>
+    <div class="n">발표일: ISM = 다음 달 첫 영업일(규칙) · 리치먼드 = 그달 넷째 화요일(규칙) · 경기선행지수·화물·핵심 자본재 = ALFRED 첫 발표일(기록 전은 보통 지연으로 추정) · 주가 = 그달 마지막 거래일 종가.</div>`;
+  const g = new SitGroup(SIT.st.g.g3, sitSave); SIT.groups.g3 = g;
+  [['a', 380, ['pmi']], ['b', 340, []], ['c', 360, []]].forEach(([k, h, bands]) => {
+    const c = new SitChart(document.getElementById('sit-ch3' + k), g, { h, bands }); c.lines = SIT.st.lines['s3' + k]; SIT.charts['s3' + k] = c;
+    sitChips(document.getElementById('sit-c3' + k), c, { add: true });
+  });
+  sitControls(document.getElementById('sit-b3'), g, { align: true, linked: true });
+  sitLoadLines(g).then(() => ['a', 'b', 'c'].forEach(k => sitChips(document.getElementById('sit-c3' + k), SIT.charts['s3' + k], { add: true })));
+}
+
+// ── 경기 국면 요약·메모 (미국 지도와 같은 칸) ──
+function sitNote() {
+  const t = fmCenterUserText('FISCAL_MAP'), el = document.getElementById('sit-sum-text');
+  el.textContent = t || '아직 요약이 없습니다 — ✎ 고치기(또는 지도 가운데 박스 더블클릭)로 쓰면 여기와 지도에 같이 보입니다.';
+  el.classList.toggle('empty', !t);
+  const m = document.getElementById('sit-memo'); if (document.activeElement !== m) m.value = localStorage.getItem('fmMemo_v1') || '';
+}
+function sitTab(v) {
+  SIT.tab = v;
+  document.querySelectorAll('#sit-tabs button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+  document.querySelectorAll('.sit-view').forEach(s => s.classList.toggle('show', s.id === 'sit-v' + v));
+  if (v === '1' && !SIT.groups.g1) sitBuild1();
+  if (v === '2' && !SIT.groups.g2) sitBuild2();
+  if (v === '3' && !SIT.groups.g3) sitBuild3();
+  if (v === '2' && SIT.groups.g2 && SIT_GAP) sitPoly();
+  const g = SIT.groups['g' + v]; if (g) requestAnimationFrame(() => g.draw());
+  sitSave();
+}
+async function showSituation(ind) {
+  currentIndicator = ind;
+  hideFiscalMap();
+  document.querySelectorAll('.indicator-item').forEach(el => el.classList.toggle('active', el.dataset.id === ind.id));
+  ['topbar', 'chart-area', 'legend-area'].forEach(id => { document.getElementById(id).style.display = 'none'; });
+  document.getElementById('sit-panel').classList.add('show');
+  if (!SIT.inited) {
+    SIT.inited = true; SIT.st = sitLoadState(); SIT.tab = SIT.st.tab;
+    document.getElementById('sit-tabs').onclick = e => { const b = e.target.closest('button'); if (b) sitTab(b.dataset.v); };
+    document.getElementById('sit-map').onclick = () => { const m = INDICATORS.find(i => i.id === 'FISCAL_MAP'); if (m) selectIndicator(m); };
+    document.getElementById('sit-sum-edit').onclick = () => { if (fmEditCenterSummary('FISCAL_MAP')) sitNote(); };
+    document.getElementById('sit-sum-hist').onclick = () => { if (window.fmHistOpenFor) window.fmHistOpenFor('FISCAL_MAP'); };
+    document.getElementById('sit-memo').addEventListener('input', e => localStorage.setItem('fmMemo_v1', e.target.value));
+    new ResizeObserver(() => { const g = SIT.groups['g' + SIT.tab]; if (g && document.getElementById('sit-panel').classList.contains('show')) g.draw(); }).observe(document.getElementById('sit-panel'));
+    SIT_R = await sitRates();
+    sitLoadBands().then(() => Object.values(SIT.groups).forEach(g => g.draw()));
+    const asof = await sitFetch('reports/data/_mirror_time.txt');
+    document.getElementById('sit-asof').textContent = asof ? '자료 미러 ' + asof.trim().slice(0, 16).replace('T', ' ') + ' UTC · 수정 이력 ALFRED' : '';
+  }
+  sitNote();
+  sitTab(SIT.tab);
+}
+function hideSituation() {
+  const p = document.getElementById('sit-panel');
+  if (!p || !p.classList.contains('show')) return;
+  p.classList.remove('show');
+  sitClosePop();
+  ['topbar', 'chart-area', 'legend-area'].forEach(id => { document.getElementById(id).style.display = ''; });
+}
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 buildSidebar();
