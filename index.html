@@ -792,6 +792,11 @@
     .sit-pick .it:hover { background:var(--active-bg); }
     .sit-pick .it span { color:#6e7681; font-size:11px; }
     .sit-pick .nt { font-size:11px; color:#6e7681; margin-top:6px; }
+    .sit-npbox { margin:0 0 10px; }
+    .sit-npbox i { display:inline-block; width:12px; height:10px; border-radius:2px; margin:0 4px 0 6px; vertical-align:-1px; }
+    .sit-npnow { font-size:12.5px; color:#c9d1d9; margin:2px 0 6px; }
+    .sit-npbox table td:not(:first-child), .sit-npbox table th:not(:first-child) { text-align:right; }
+    .sit-npbox .m { color:#6e7681; font-size:10.5px; }
   </style>
 </head>
 <body>
@@ -4850,6 +4855,44 @@ async function sitLoadBands() {
   SIT_BANDS.emp = m3.filter(p => bm.has(p.k)).map(p => ({ x: p.x, up: p.y > bm.get(p.k) }));
   SIT_BANDS.pmi = await mk({ src: 'file:ISMM_PMI', tf: 'lvl' }, p => p.y > 50);
   SIT_BANDS.cli = await mk({ src: 'fred:USALOLITOAASTSAM', tf: 'lvl' }, p => p.y > 100);
+  await sitLoadNP();
+}
+// ── 위 띠(화면 ③): 신규주문 − 생산 (2026-11-03 사용자 "신규주문>생산이면 오르는 경향, 반대면 내려가는 경향 — 상단 띠로")
+// 2022-02~ = ISM 보도자료 값, 그 전 = OECD 사본(BSOITE02·BSPRTE02, 50+값/2 — 재계절조정이라 ISM 원값과 조금 다름 → 연하게).
+// 칸은 ISM 발표일(다음 달 첫 영업일)부터. 과거 통계(1968~ 6개월 뒤 PMI 변화)도 같은 자료로 여기서 계산해 띠 설명에 보임.
+const SIT_NPC = { up: '29,158,117', dn: '216,90,48', mid: '110,118,129' };
+const SIT_NPN = { up: '일감 쌓임 (주문 > 생산)', dn: '일감 줄어듦 (생산 > 주문)', mid: '비슷 (차이 2 미만)' };
+let SIT_NP_STATS = null;
+async function sitLoadNP() {
+  const [ino, ipr, ono, opr, pmi] = await Promise.all(['ISMM_NEWORD', 'ISMM_PROD', 'BSOITE02USM460S', 'BSPRTE02USM460S', 'ISMM_PMI'].map(sitRaw));
+  const IM = new Map(ino || []), IP = new Map(ipr || []), OM = new Map((ono || []).map(([k, v]) => [k, 50 + v / 2])), OP = new Map((opr || []).map(([k, v]) => [k, 50 + v / 2]));
+  const pts = [];
+  [...new Set([...OM.keys(), ...IM.keys()])].sort().forEach(k => {
+    const ism = IM.has(k) && IP.has(k);
+    if (!ism && !(OM.has(k) && OP.has(k))) return;
+    const no = ism ? IM.get(k) : OM.get(k), pr = ism ? IP.get(k) : OP.get(k), d = no - pr;
+    pts.push({ x: sitI(SIT_RULE.ism[0](k)), k, d, no, pr, src: ism ? 'ism' : 'oecd', st: d >= 2 ? 'up' : d <= -2 ? 'dn' : 'mid' });
+  });
+  SIT_BANDS.np = pts;
+  // 1968~ 각 달의 칸 → 6개월 뒤 PMI 변화 (PMI 50 위·아래 나눔) + PMI 수준을 같이 넣은 회귀(주문−생산 1포인트당 효과)
+  const PM = new Map(pmi || []), G = { all: { up: [], mid: [], dn: [] }, hi: { up: [], mid: [], dn: [] }, lo: { up: [], mid: [], dn: [] } }, XY = [];
+  pts.forEach(p => { if (p.k < '1968-01-01') return; const k6 = sitAddM(p.k, 6); if (!PM.has(k6) || !PM.has(p.k)) return; const lv = PM.get(p.k), ch = PM.get(k6) - lv; G.all[p.st].push(ch); (lv >= 50 ? G.hi : G.lo)[p.st].push(ch); XY.push([p.d, lv - 50, ch]); });
+  const n = XY.length, m = [0, 1, 2].map(j => XY.reduce((a, r) => a + r[j], 0) / (n || 1));
+  const s = (i, j) => XY.reduce((a, r) => a + (r[i] - m[i]) * (r[j] - m[j]), 0), det = s(0, 0) * s(1, 1) - s(0, 1) * s(0, 1);
+  const b = det ? (s(0, 2) * s(1, 1) - s(1, 2) * s(0, 1)) / det : null, c = det ? (s(0, 0) * s(1, 2) - s(0, 1) * s(0, 2)) / det : null;
+  SIT_NP_STATS = { G, n, b, c, from: pts.find(p => p.k >= '1968-01-01'), last: pts[pts.length - 1] };
+  sitNPLine();
+}
+function sitNPLine() {
+  const el = document.getElementById('sit-np-stat'); if (!el || !SIT_NP_STATS) return;
+  const S = SIT_NP_STATS, av = a => a.reduce((x, y) => x + y, 0) / a.length;
+  const f = a => a.length ? `${av(a) >= 0 ? '+' : ''}${av(a).toFixed(1)} <span class="m">(오름 ${Math.round(a.filter(x => x > 0).length / a.length * 100)}% · ${a.length}달)</span>` : '-';
+  const row = (nm, g) => `<tr><td>${nm}</td><td class="num">${f(g.up)}</td><td class="num">${f(g.mid)}</td><td class="num">${f(g.dn)}</td></tr>`;
+  const sw = st => `<i style="background:rgb(${SIT_NPC[st]})"></i>`, L = S.last;
+  el.innerHTML = `<div class="sit-nh"><b>위 띠 = ISM 신규주문 − 생산</b><span>${sw('up')}+2 이상 일감 쌓임 · ${sw('dn')}−2 이하 일감 줄어듦 · ${sw('mid')}그 사이 · 연한 칸 = 2022-02 전 OECD판 · 칸은 ISM 발표일부터 다음 발표까지</span></div>`
+    + (L ? `<div class="sit-npnow">가장 최근 ${L.k.slice(0, 4)}년 ${+L.k.slice(5, 7)}월분: 신규주문 ${L.no.toFixed(1)} − 생산 ${L.pr.toFixed(1)} = <b style="color:rgb(${SIT_NPC[L.st]})">${(L.d >= 0 ? '+' : '') + L.d.toFixed(1)} → ${SIT_NPN[L.st]}</b></div>` : '')
+    + `<table><tr><th>그달 PMI · 6개월 뒤 PMI 평균 변화 (1968~)</th><th>${sw('up')}일감 쌓임</th><th>${sw('mid')}비슷</th><th>${sw('dn')}일감 줄어듦</th></tr>${row('전체', S.G.all)}${row('PMI 50 이상인 달', S.G.hi)}${row('PMI 50 미만인 달', S.G.lo)}</table>`
+    + `<div class="n">읽는 법: 같은 줄에서 왼쪽(쌓임)이 오른쪽(줄어듦)보다 늘 높음 = <b>주문이 생산을 앞서면 PMI가 '상대적으로' 더 오르거나 덜 떨어짐</b>. 하지만 방향 자체는 PMI 수준이 더 크게 정함 — 50 이상인 달은 쌓임이어도 대개 내렸고, 50 미만인 달은 줄어듦이어도 대개 올랐음(50 쪽으로 돌아가려는 힘). PMI 수준을 같이 넣으면 6개월 뒤 PMI 변화 ≈ ${S.b != null ? (S.b >= 0 ? '+' : '') + S.b.toFixed(2) : '?'} × (주문 − 생산) ${S.c != null ? (S.c >= 0 ? '+ ' : '− ') + Math.abs(S.c).toFixed(2) : ''} × (PMI − 50) (${S.n}달 · 겹치는 6개월 구간이라 실제 표본은 이보다 적음). 자료 = 지금 수정치(당시 발표치 아님).</div>`;
 }
 const SIT_BAND_DEF = {
   emp: { t1: '■ 고용 3개월 평균 > 손익분기', t2: '■ < 손익분기', cu: '220,38,38', cd: '37,99,235', when: L => L.src === 'fred:PAYEMS' || L.src === 'ind:PAYEMS' },
@@ -4991,6 +5034,20 @@ class SitChart {
       ctx.fillStyle = 'rgba(' + B.cu + ',1)'; ctx.fillText(B.t1, pad.l + 10, by - 4); ctx.fillStyle = 'rgba(' + B.cd + ',1)'; ctx.fillText(B.t2, pad.l + 10 + w1, by - 4);
       ctx.restore();
     });
+    // 위 띠 (화면 ③: 신규주문 − 생산) — '상단 띠' 배경을 켰으면 그 아래에
+    let topUsed = strip ? 32 : 0;
+    (this.o.tops || []).forEach(b => {
+      const pts = SIT_BANDS[b]; if (b !== 'np' || !pts || !pts.length) return;
+      const by = pad.t + topUsed + 2, bh = 10; topUsed += 30;
+      ctx.save();
+      for (let j = 0; j < pts.length; j++) { const a = pts[j].x, e = j + 1 < pts.length ? Math.min(pts[j + 1].x, a + 62) : Math.min(a + 31, sitTodayI()); if (e < x0 || a > x1) continue; const xa = Math.max(pad.l, X(a)), xb = Math.min(pad.l + cw, X(e)); if (xb <= xa) continue; ctx.fillStyle = 'rgba(' + SIT_NPC[pts[j].st] + ',' + (pts[j].src === 'ism' ? .92 : .5) + ')'; ctx.fillRect(xa, by, xb - xa, bh); }
+      ctx.font = 'bold 10.5px sans-serif'; ctx.textAlign = 'left';
+      const ts = [['up', '■ 신규주문 > 생산 (일감 쌓임)'], ['dn', '■ 생산 > 신규주문 (일감 줄어듦)'], ['mid', '■ 비슷']];
+      const tw = ts.reduce((a, t) => a + ctx.measureText(t[1] + '   ').width, 0);
+      ctx.fillStyle = 'rgba(13,17,23,.8)'; ctx.fillRect(pad.l + 4, by + bh + 2, tw + 8, 15);
+      let tx = pad.l + 9; ts.forEach(([st, t]) => { ctx.fillStyle = 'rgb(' + SIT_NPC[st] + ')'; ctx.fillText(t, tx, by + bh + 13); tx += ctx.measureText(t + '   ').width; });
+      ctx.restore();
+    });
     // 선 (오른쪽 축 → 왼쪽 축 → '맨 위' 표시 선 순서. 점은 발표일에)
     ctx.save(); ctx.beginPath(); ctx.rect(pad.l, pad.t, cw, ch); ctx.clip(); ctx.lineJoin = 'round';
     const drawOrder = [...on].sort((a, b) => (a.top ? 1 : 0) - (b.top ? 1 : 0) || (order.indexOf(b.axis) - order.indexOf(a.axis)));
@@ -5031,7 +5088,7 @@ class SitChart {
     }
     // 코로나 구간을 축 범위에서 뺐다는 안내
     const clipped = [...new Set(order.flatMap(k => AX[k].clip))];
-    if (clipped.length) { const tx = '2020~21년 코로나 급변 구간은 축 범위에서 뺌 — 그때 ' + (clipped.length > 2 ? '선 ' + clipped.length + '개' : clipped.join(' · ')) + '가 화면 밖으로 나감'; ctx.font = 'bold 10.5px sans-serif'; ctx.textAlign = 'left'; const tw = ctx.measureText(tx).width; const bx = pad.l + 6, by = pad.t + (strip ? 44 : 30); ctx.fillStyle = 'rgba(13,17,23,.82)'; ctx.fillRect(bx - 4, by - 12, tw + 8, 17); ctx.fillStyle = '#d2a8ff'; ctx.fillText(tx, bx, by); }
+    if (clipped.length) { const tx = '2020~21년 코로나 급변 구간은 축 범위에서 뺌 — 그때 ' + (clipped.length > 2 ? '선 ' + clipped.length + '개' : clipped.join(' · ')) + '가 화면 밖으로 나감'; ctx.font = 'bold 10.5px sans-serif'; ctx.textAlign = 'left'; const tw = ctx.measureText(tx).width; const bx = pad.l + 6, by = pad.t + (topUsed ? topUsed + 14 : 30); ctx.fillStyle = 'rgba(13,17,23,.82)'; ctx.fillRect(bx - 4, by - 12, tw + 8, 17); ctx.fillStyle = '#d2a8ff'; ctx.fillText(tx, bx, by); }
     // 마우스 세로선·고정 표시
     const hi = g.pin ? g.pin.i : g.hoverI;
     if (hi != null && hi >= x0 && hi <= x1) { ctx.save(); ctx.strokeStyle = g.pin ? '#e3b341' : 'rgba(200,205,210,.55)'; ctx.setLineDash(g.pin ? [] : [3, 3]); ctx.lineWidth = g.pin ? 1.4 : 1; ctx.beginPath(); ctx.moveTo(X(hi), pad.t); ctx.lineTo(X(hi), pad.t + ch); ctx.stroke(); ctx.restore(); }
@@ -5049,6 +5106,10 @@ class SitChart {
     const rec = this.grp.st.rec && SIT_REC.some(([a, b]) => i >= sitI(a) && i <= sitI(b) + 31);
     const q = this.grp.st.qe ? SIT_QE.find(q => i >= sitI(q.a) && i <= sitI(q.b)) : null;
     let h = '<div class="d">' + d + (RG && RG.get(rg.i) ? ' · ' + SIT_RGN[RG.get(rg.i)] : '') + (rg && rg.sp < 0 ? ' · 역전' : '') + (rec ? ' · <b>NBER 침체</b>' : '') + (q ? ' · <span style="color:' + (q.t === 'QT' ? '#f0b072' : '#5eead4') + '">' + q.l + '</span>' : '') + (pinned ? '<button class="sc-x" title="닫기 (Esc)">×</button>' : '') + '</div>';
+    if ((this.o.tops || []).includes('np') && SIT_BANDS.np) {   // 위 띠: 그날 기준 마지막으로 발표된 신규주문 − 생산
+      const z = sitAt(SIT_BANDS.np, i);
+      if (z && i - z.x < 70) h += '<div class="r"><span><i style="background:rgb(' + SIT_NPC[z.st] + ')"></i>신규주문 − 생산 (위 띠)</span><span class="num">' + (z.d >= 0 ? '+' : '') + z.d.toFixed(1) + '</span></div><div class="s">' + z.k.slice(0, 4) + '년 ' + (+z.k.slice(5, 7)) + '월분 · ' + z.no.toFixed(1) + ' − ' + z.pr.toFixed(1) + ' → ' + SIT_NPN[z.st] + ' · ' + (z.src === 'ism' ? 'ISM 발표치' : 'OECD판') + ' · 발표일 추정 ' + sitS(z.x) + '</div>';
+    }
     this.rowsAt(i).forEach(({ L, p }, n) => {
       let val = L.src === 'policy' ? (p.lo != null ? p.lo.toFixed(2) + '~' + p.hi.toFixed(2) + '%' : p.y.toFixed(2) + '%') : sitFmt(L, p.y);
       if (L.sig && p.raw != null) val += ' <span class="m">(' + sitRawFmt(L, p.raw) + ')</span>';
@@ -5153,7 +5214,7 @@ const SIT_DEF_LINES = {
     { id: 'pceh', src: 'fred:PCEPI', tf: 'yoy', label: 'PCE 헤드라인 (전년비)', color: '#58a6ff', axis: 'pct', w: 2.2, on: true, refs: [{ v: 2, label: '연준 목표 2%', col: '#3fb950' }] },
     { id: 'pcec', src: 'fred:PCEPILFE', tf: 'yoy', label: 'PCE 코어 (전년비)', color: '#a5d6ff', axis: 'pct', w: 2.6, on: true, refs: [{ v: 2, label: '연준 목표 2%', col: '#3fb950' }] },
     { id: 'nfp3', src: 'fred:PAYEMS', tf: 'avg3chg', unit: 'k', label: '비농업 고용 3개월 평균 증감', color: '#39c5cf', axis: 'k', w: 2.2, covid: true, on: true },
-    { id: 'nfpm', src: 'fred:PAYEMS', tf: 'chg', unit: 'k', label: '비농업 고용 전월 증감 (점선)', color: '#39c5cf', axis: 'k', w: 1, dash: [2, 3], alpha: .75, covid: true, on: true },
+    { id: 'nfpm', src: 'fred:PAYEMS', tf: 'chg', unit: 'k', label: '비농업 고용 전월 증감 (점선)', color: '#39c5cf', axis: 'k', w: 1.5, dash: [5, 3], alpha: .9, covid: true, on: true },
     { id: 'pmi', src: 'file:ISMM_PMI', tf: 'lvl', label: 'ISM 제조업 PMI', color: '#f0883e', axis: 'pmi', w: 2, on: true, refs: [{ v: 50, label: 'PMI 50 = 확장/수축 경계', col: '#d29922' }] },
     { id: 'nfpbe', src: 'calc:NFPBE', tf: 'lvl', unit: 'k', label: '고용 손익분기선 (실업률 유지에 필요한 월 고용)', color: '#f778ba', axis: 'k', w: 1.4, dash: [6, 3], covid: true, on: false },
   ],
@@ -5179,11 +5240,11 @@ const SIT_DEF_LINES = {
   s3c: [
     { id: 'pmi', src: 'file:ISMM_PMI', tf: 'lvl', label: 'ISM 제조업 PMI (기준)', color: '#e6edf3', axis: 'pmi', w: 2.6, top: true, on: true, refs: [{ v: 50, label: 'PMI 50', col: '#d29922' }] },
     { id: 'nw3', src: 'fred:NEWORDER', tf: 'ann3', sig: true, label: '핵심 자본재 주문 3개월 연율 (σ)', color: '#bc8cff', axis: 'sig', w: 2, on: true, refs: [{ v: 0, label: '0σ', col: '#8b949e' }] },
-    { id: 'nwm', src: 'fred:NEWORDER', tf: 'mom', sig: true, label: '핵심 자본재 주문 전월비 (σ·점선)', color: '#bc8cff', axis: 'sig', w: 1, dash: [2, 3], alpha: .5, on: true },
+    { id: 'nwm', src: 'fred:NEWORDER', tf: 'mom', sig: true, label: '핵심 자본재 주문 전월비 (σ·점선)', color: '#bc8cff', axis: 'sig', w: 1.7, dash: [5, 3], alpha: .95, on: true },
     { id: 'fx3', src: 'yd:FDX', tf: 'ann3', sig: true, label: '페덱스 주가 3개월 연율 (σ)', color: '#f0883e', axis: 'sig', w: 2, on: true },
-    { id: 'fxm', src: 'yd:FDX', tf: 'mom', sig: true, label: '페덱스 주가 전월비 (σ·점선)', color: '#f0883e', axis: 'sig', w: 1, dash: [2, 3], alpha: .5, on: true },
+    { id: 'fxm', src: 'yd:FDX', tf: 'mom', sig: true, label: '페덱스 주가 전월비 (σ·점선)', color: '#f0883e', axis: 'sig', w: 1.7, dash: [5, 3], alpha: .95, on: true },
     { id: 'rt3', src: 'yd:RUT', tf: 'ann3', sig: true, label: '러셀 2000 3개월 연율 (σ)', color: '#39c5cf', axis: 'sig', w: 2, on: true },
-    { id: 'rtm', src: 'yd:RUT', tf: 'mom', sig: true, label: '러셀 2000 전월비 (σ·점선)', color: '#39c5cf', axis: 'sig', w: 1, dash: [2, 3], alpha: .5, on: true },
+    { id: 'rtm', src: 'yd:RUT', tf: 'mom', sig: true, label: '러셀 2000 전월비 (σ·점선)', color: '#39c5cf', axis: 'sig', w: 1.7, dash: [5, 3], alpha: .95, on: true },
   ],
 };
 const SIT_DEF_ST = {
@@ -5199,7 +5260,7 @@ function sitLoadState() {
     const def = SIT_DEF_LINES[k], saved = s.lines && s.lines[k];
     if (!Array.isArray(saved)) { st.lines[k] = def.map(L => ({ ...L })); return; }
     // 기본 선은 코드 값 + 사용자가 바꾼 표시(색·굵기·모양·축·켜짐)만, 추가한 선은 저장값 그대로
-    st.lines[k] = saved.map(v => { const d = def.find(L => L.id === v.id); return d ? { ...d, on: v.on, color: v.color || d.color, w: v.w || d.w, dash: v.dash !== undefined ? v.dash : d.dash, axis: v.axis || d.axis, tf: v.tf || d.tf } : v.user ? v : null; }).filter(Boolean);
+    st.lines[k] = saved.map(v => { const d = def.find(L => L.id === v.id); if (!d) return v.user ? v : null; return v.userStyle ? { ...d, on: v.on, color: v.color || d.color, w: v.w || d.w, dash: v.dash !== undefined ? v.dash : d.dash, axis: v.axis || d.axis, tf: v.tf || d.tf, sig: v.sig !== undefined ? v.sig : d.sig, userStyle: true } : { ...d, on: v.on }; }).filter(Boolean);
     def.forEach(d => { if (!saved.some(v => v.id === d.id)) st.lines[k].push({ ...d }); });
   });
   return st;
@@ -5299,7 +5360,7 @@ function sitStylePop(c, L, anchor, rerender) {
   $p('.w').value = String([1, 1.6, 2.2, 3, 4.5].reduce((a, b) => Math.abs(b - (L.w || 2)) < Math.abs(a - (L.w || 2)) ? b : a));
   $p('.ax').value = L.axis;
   if (canTf) { $p('.tf').value = L.tf || 'lvl'; $p('.sg').checked = !!L.sig; }
-  const done = async rebuild => { if (rebuild) await sitBuildLine(L); rerender(); c.grp.draw(); sitSave(); };
+  const done = async rebuild => { L.userStyle = true; if (rebuild) await sitBuildLine(L); rerender(); c.grp.draw(); sitSave(); };
   const col = $p('input[type=color]');
   col.oninput = () => { L.color = col.value; done(false); };
   p.querySelectorAll('.pal b').forEach(b => b.onclick = () => { L.color = col.value = b.dataset.c; done(false); });
@@ -5553,6 +5614,7 @@ function sitBuild3() {
   v.innerHTML = `<div class="sit-read"><b>PMI(흰 굵은 선)를 기준선으로</b> — 위: ISM 세부지표(같은 0~100 눈금, 50 = 경계 · 세부지표는 ISM 보도자료 기준 2022-02부터) · 가운데: 선행(경기선행지수 전월비·화물 전년비는 <b>σ</b>, 리치먼드는 값 그대로) · 아래: 설비투자·주가(3개월 연율 실선 · 전월비 얇은 점선, σ).
     <b>σ</b> = 그 지표 변환값 ÷ 전체 기간 표준편차(2020년 코로나 구간 제외) — 0 = 제자리, PMI 고저점 페이지의 기울기 선과 같은 방식. <b>기준선 맞추기</b> = PMI 50 · 0σ · 리치먼드 0 을 같은 높이에. 세 그림은 가로축이 같이 움직임.</div>
     <div class="sit-bar" id="sit-b3"></div>
+    <div class="sit-box sit-npbox" id="sit-np-stat">신규주문 − 생산 띠 불러오는 중…</div>
     <div class="sit-ttl"><b>① ISM 제조업 PMI · 세부지표</b> <span>PMI = 신규주문·생산·고용·공급자 배송·재고 5개 평균</span></div><div class="sit-chips" id="sit-c3a"></div><div id="sit-ch3a"></div>
     <div class="sit-ttl"><b>② 선행 — 경기선행지수 · 화물 · 리치먼드 연은</b></div><div class="sit-chips" id="sit-c3b"></div><div id="sit-ch3b"></div>
     <div class="sit-ttl"><b>③ 설비투자·주가 — 핵심 자본재 주문 · 페덱스 · 러셀 2000</b> <span>실선 = 3개월 연율 · 점선 = 전월비</span></div><div class="sit-chips" id="sit-c3c"></div><div id="sit-ch3c"></div>
@@ -5560,10 +5622,11 @@ function sitBuild3() {
     <div class="n">발표일: ISM = 다음 달 첫 영업일(규칙) · 리치먼드 = 그달 넷째 화요일(규칙) · 경기선행지수·화물·핵심 자본재 = ALFRED 첫 발표일(기록 전은 보통 지연으로 추정) · 주가 = 그달 마지막 거래일 종가.</div>`;
   const g = new SitGroup(SIT.st.g.g3, sitSave); SIT.groups.g3 = g;
   [['a', 380, ['pmi']], ['b', 340, []], ['c', 360, []]].forEach(([k, h, bands]) => {
-    const c = new SitChart(document.getElementById('sit-ch3' + k), g, { h, bands }); c.lines = SIT.st.lines['s3' + k]; SIT.charts['s3' + k] = c;
+    const c = new SitChart(document.getElementById('sit-ch3' + k), g, { h, bands, tops: ['np'] }); c.lines = SIT.st.lines['s3' + k]; SIT.charts['s3' + k] = c;
     sitChips(document.getElementById('sit-c3' + k), c, { add: true });
   });
   sitControls(document.getElementById('sit-b3'), g, { align: true, linked: true });
+  sitNPLine();
   sitLoadLines(g).then(() => ['a', 'b', 'c'].forEach(k => sitChips(document.getElementById('sit-c3' + k), SIT.charts['s3' + k], { add: true })));
 }
 
