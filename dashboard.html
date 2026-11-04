@@ -1019,11 +1019,11 @@ const INDICATORS = [
   { id:'GDPC1',       name:'실질 GDP',              unit:'% YoY', category:'성장 / GROWTH', transform:'yoy' },
 
   // PMI
-  // ISM 제조업 PMI — ISM 원자료는 유료지만 OECD가 같은 값을 '경기서베이 신뢰지표'로 받아 FRED에 올린다.
-  // PMI = 50 + 값/2 (1950-01~). 2025년 12개월이 ISM 공표치와 소수 1자리까지 일치(현재 개정치 기준, 2026-10-02 확인).
-  // 한계: OECD 갱신이 매달 중순이라 ISM 발표(매월 첫 영업일)보다 약 2주 늦게 들어온다.
+  // ISM 제조업 PMI — 2026-11-04부터 reports/data/ISMM_PMI.csv (ISM 보도자료 값, fetch_surveys.py — 발표 당일 갱신).
+  // 2022-02 이전은 같은 파일 안에서 OECD 사본(BSCICP02USM460S → 50 + 값/2, ISM 공표치와 소수 1자리 일치)으로 이어 붙여 있음.
+  // 예전엔 OECD 사본만 써서 ISM 발표(매월 첫 영업일)보다 약 2주 늦게 바뀌었음 — 10월분(11/2 발표)이 안 보여 사용자 질책(11/04).
   { id:'ISM_PMI',     name:'ISM 제조업 PMI',          unit:'Index', category:'PMI',              country:'US',
-    source:'fredlin', fredId:'BSCICP02USM460S', lin:[50, 0.5], noStats:true, lineRaw:true, yAuto:true,
+    source:'fredlin', fredId:'ISMM_PMI', lin:[0, 1], srcLabel:'ISM 보도자료 (2022-02 이전은 OECD 경유 50+값/2)', noStats:true, lineRaw:true, yAuto:true,
     refLines:[ {y:50, color:'#8b949e', label:'50 = 확장/위축 경계'} ] },
   // 필라델피아 연준 제조업 서베이 — 현재 경기 확산지수(계절조정). 0 = 확장/위축 경계. 매월 셋째 목요일 발표라 ISM보다 2주 빠름.
   // (2026-10-02 수정: 예전 ID 'MFGPHLX'는 FRED에 없는 ID라 미러가 매번 실패해 차트가 안 떴음)
@@ -2779,7 +2779,7 @@ async function selectIndicator(ind) {
 
   // Header
   chartTitle.textContent = ind.name;
-  chartSubtitle.textContent = `${ind.id} · ${ind.unit} · Source: ${SOURCE_LABEL[ind.source] || 'FRED'}`;
+  chartSubtitle.textContent = `${ind.id} · ${ind.unit} · Source: ${ind.srcLabel || SOURCE_LABEL[ind.source] || 'FRED'}`;
 
   // Show loading
   loadingEl.style.display = 'flex';
@@ -4658,7 +4658,7 @@ async function sitSourceLoad(src) {
     const ind = INDICATORS.find(i => i.id === id);
     if (!ind) return null;
     if (!ind.source) return sitSource('fred:' + ind.id);
-    if (ind.source === 'fredlin' && ind.fredId === 'BSCICP02USM460S') return sitSource('file:ISMM_PMI');
+    if (ind.source === 'fredlin' && (ind.fredId === 'BSCICP02USM460S' || ind.fredId === 'ISMM_PMI')) return sitSource('file:ISMM_PMI');
     const fn = LINE_SOURCES[ind.source];
     if (!fn) return null;
     let raw = (await fn(ind)).map(p => [p.x.slice(0, 10), p.y]).filter(p => isFinite(p[1]));
