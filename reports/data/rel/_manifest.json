@@ -1,139 +1,139 @@
 {
 "A091RC1Q027SBEA": {
 "est": 263,
-"hash": "cbc8298c98d5f10e2c544954af43525b",
+"hash": "a7fc0f49bc1e3903e0c30c3be345ef17",
 "lag": 29.0,
 "last": "2026-07-01",
-"src": "alfred",
-"t": "2026-11-04T22:57:41"
+"src": "api",
+"t": "2026-11-04T20:56:38"
 },
 "A679RC1Q027SBEA": {
 "est": 263,
-"hash": "f0cc54ac4df20cb57622b20bb23a43ee",
+"hash": "c257883a87e6470cba561abf4629e3c0",
 "lag": 29.0,
 "last": "2026-07-01",
-"src": "alfred",
-"t": "2026-11-04T22:56:01"
+"src": "api",
+"t": "2026-11-04T20:55:33"
 },
 "A679RX1Q020SBEA": {
 "est": 71,
-"hash": "6ead27e1e1dad0d5b54135eb88816bcb",
+"hash": "4cb368dfa9369b8f2ba17235360eec9b",
 "lag": 29.0,
 "last": "2026-07-01",
-"src": "alfred",
-"t": "2026-11-04T22:55:40"
+"src": "api",
+"t": "2026-11-04T20:55:23"
 },
 "A822RY2Q224SBEA": {
 "est": 262,
-"hash": "843f780cdef35649218d591f8ff3e137",
+"hash": "895286d031118fb7bc12ac42c326288e",
 "lag": 29.0,
 "last": "2026-07-01",
-"src": "alfred",
-"t": "2026-11-04T22:57:21"
+"src": "api",
+"t": "2026-11-04T20:56:28"
 },
 "B009RC1Q027SBEA": {
 "est": 263,
-"hash": "ca4dbfd6b169b1a722ec8f1d950d648e",
+"hash": "c16264d8bcafed844fa1ac241efb23a2",
 "lag": 29.0,
 "last": "2026-07-01",
-"src": "alfred",
-"t": "2026-11-04T22:55:57"
+"src": "api",
+"t": "2026-11-04T20:55:30"
 },
 "B009RX1Q020SBEA": {
 "est": 71,
-"hash": "719a0af6d28902db5504d955fbe0a23a",
+"hash": "fbf4cc8a299afb52dbb03789a908703e",
 "lag": 29.0,
 "last": "2026-07-01",
-"src": "alfred",
-"t": "2026-11-04T22:55:36"
+"src": "api",
+"t": "2026-11-04T20:55:21"
 },
 "B852RC1Q027SBEA": {
 "est": 183,
-"hash": "57161d6a4eb146c5cdec3933f08782aa",
+"hash": "a78404442c6c92652874c18de460dade",
 "lag": 29.0,
 "last": "2026-07-01",
-"src": "alfred",
-"t": "2026-11-04T22:56:31"
+"src": "api",
+"t": "2026-11-04T20:56:02"
 },
 "B935RC1Q027SBEA": {
 "est": 215,
-"hash": "ed2067ddcd14fd57245c25076ec56385",
+"hash": "e40ac404404af67b5eb561df40ab93ac",
 "lag": 29.0,
 "last": "2026-07-01",
-"src": "alfred",
-"t": "2026-11-04T22:56:03"
+"src": "api",
+"t": "2026-11-04T20:55:34"
 },
 "B935RX1Q020SBEA": {
 "est": 68,
-"hash": "e3e59192c6bea0f54d085d6572fa2510",
+"hash": "090ce3d600f1e8e8c9156dba6468d172",
 "lag": 28,
 "last": "2026-07-01",
-"src": "alfred",
-"t": "2026-11-04T22:55:42"
+"src": "api",
+"t": "2026-11-04T20:55:24"
 },
 "BOGMBASE": {
 "est": 653,
-"hash": "a0fe08bd61e912df3b8c2d6967b5cc5f",
+"hash": "b95da098e1186b9064c64f57c61566c1",
 "lag": 22.5,
 "last": "2026-09-01",
-"src": "alfred",
-"t": "2026-11-04T22:55:17"
+"src": "api",
+"t": "2026-11-04T20:55:11"
 },
 "BOPGSTB": {
 "est": 58,
-"hash": "cf2870f56ed04eefd21b378b1de4586e",
+"hash": "9097a67bfda9955c30fdc6f3ebc8db41",
 "lag": 36.0,
 "last": "2026-09-01",
-"src": "alfred",
-"t": "2026-11-04T22:56:49"
+"src": "api",
+"t": "2026-11-04T20:56:12"
 },
 "BOPGTB": {
 "est": 58,
-"hash": "78f6eb8d971fab855392a010dc237c9c",
+"hash": "e5e8ff341f3e0705421c823cfa4ee82b",
 "lag": 36.0,
 "last": "2026-09-01",
-"src": "alfred",
-"t": "2026-11-04T22:56:56"
+"src": "api",
+"t": "2026-11-04T20:56:15"
 },
 "BOPSTB": {
 "est": 58,
-"hash": "00fc0807ecfbe97901817144444a1853",
+"hash": "5b1db72eb6fa37892e89509a2a3876f7",
 "lag": 36.0,
 "last": "2026-09-01",
-"src": "alfred",
-"t": "2026-11-04T22:56:59"
+"src": "api",
+"t": "2026-11-04T20:56:16"
 },
 "BOPTEXP": {
 "est": 217,
-"hash": "6e4449f8df91a605b8ce10f494874bf0",
+"hash": "8a5c0c5b83249764c98bfa860f8e7cbb",
 "lag": 36.0,
 "last": "2026-09-01",
-"src": "alfred",
-"t": "2026-11-04T22:57:01"
+"src": "api",
+"t": "2026-11-04T20:56:18"
 },
 "BOPTIMP": {
 "est": 217,
-"hash": "ff05cffd9560ad57f520dc721f362275",
+"hash": "94bb1e37feb831d36065ba19f404f902",
 "lag": 36.0,
 "last": "2026-09-01",
-"src": "alfred",
-"t": "2026-11-04T22:57:03"
+"src": "api",
+"t": "2026-11-04T20:56:19"
 },
 "CBI": {
 "est": 32,
-"hash": "76d0dbfcfbd2cecb6d354b4b29ac0ce1",
+"hash": "1cfb3fa6818b7be0d8eaeebf144b23ae",
 "lag": 29.0,
 "last": "2026-07-01",
-"src": "alfred",
-"t": "2026-11-04T22:55:52"
+"src": "api",
+"t": "2026-11-04T20:55:28"
 },
 "CBIC1": {
 "est": 46,
-"hash": "b9c0a25f94d737d249059cab322a8a9e",
+"hash": "c62cd7f5d0335579ea7495ca12e18290",
 "lag": 29.0,
 "last": "2026-07-01",
-"src": "alfred",
-"t": "2026-11-04T22:55:32"
+"src": "api",
+"t": "2026-11-04T20:55:19"
 },
 "CCSA": {
 "est": 2225,
@@ -145,115 +145,115 @@
 },
 "CES0500000003": {
 "est": 59,
-"hash": "1fa436ef98de5d70c23e602c99f0b5ca",
+"hash": "a0d38f412712feb6e38f7ff41b298255",
 "lag": 5.0,
 "last": "2026-09-01",
-"src": "alfred",
-"t": "2026-11-04T22:53:05"
+"src": "api",
+"t": "2026-11-04T20:53:45"
 },
 "CIVPART": {
 "est": 588,
-"hash": "68458bb919f0e6cd3643f093490e65b3",
+"hash": "d597358e8f3f45817a4d7698ec64de00",
 "lag": 5.0,
 "last": "2026-09-01",
-"src": "alfred",
-"t": "2026-11-04T22:52:55"
+"src": "api",
+"t": "2026-11-04T20:53:39"
 },
 "CPATAX": {
 "est": 138,
-"hash": "58dac7798c53b492221e171d98b6fd9f",
+"hash": "2b8fe30e99bd927c4d7c295c30bfa10c",
 "lag": 60.0,
 "last": "2026-04-01",
-"src": "alfred",
-"t": "2026-11-04T22:56:42"
+"src": "api",
+"t": "2026-11-04T20:56:08"
 },
 "CPIAUCSL": {
 "est": 305,
-"hash": "ccbc1a0bd854dfa3902e86204eda4791",
+"hash": "30a88cade3f0b0bf69860bc5ef4c282d",
 "lag": 12.0,
 "last": "2026-09-01",
-"src": "alfred",
-"t": "2026-11-04T22:52:36"
+"src": "api",
+"t": "2026-11-04T20:53:30"
 },
 "CPILFESL": {
 "est": 478,
-"hash": "e5ecb3f5c386520375b3a32b23fcf3ec",
+"hash": "f62e3a5146ef91e545eacc8b2ba014e0",
 "lag": 12.0,
 "last": "2026-09-01",
-"src": "alfred",
-"t": "2026-11-04T22:52:38"
+"src": "api",
+"t": "2026-11-04T20:53:31"
 },
 "CPROFIT": {
 "est": 118,
-"hash": "899478ff2eb68b68f42c4e2665f82040",
+"hash": "80e3ef942aa1049cfed3ef5fe2671f58",
 "lag": 60.0,
 "last": "2026-04-01",
-"src": "alfred",
-"t": "2026-11-04T22:56:45"
+"src": "api",
+"t": "2026-11-04T20:56:09"
 },
 "CSUSHPINSA": {
 "est": 476,
-"hash": "95a31a8aef52853683d22f580ed6ba1d",
+"hash": "6a02d95e86bb8d11e3470fec94825490",
 "lag": 58.0,
 "last": "2026-08-01",
-"src": "alfred",
-"t": "2026-11-04T22:54:19"
+"src": "api",
+"t": "2026-11-04T20:54:46"
 },
 "DFSARX1Q020SBEA": {
 "est": 71,
-"hash": "f0db1cdff5e1420983f607bb45c61995",
+"hash": "8efc18279d6365c793f1569440aeabe5",
 "lag": 29.0,
 "last": "2026-07-01",
-"src": "alfred",
-"t": "2026-11-04T22:54:38"
+"src": "api",
+"t": "2026-11-04T20:54:54"
 },
 "DGORDER": {
 "est": 496,
-"hash": "962d2227eb0754f4a7c6e354da806e3f",
+"hash": "7cde48822a0bc0bbb0cc86222663f716",
 "lag": 26.0,
 "last": "2026-09-01",
-"src": "alfred",
-"t": "2026-11-04T22:56:36"
+"src": "api",
+"t": "2026-11-04T20:56:05"
 },
 "DHLCRX1Q020SBEA": {
 "est": 71,
-"hash": "c8c5a2d34f499c563a70208fe276885e",
+"hash": "f8dae71a832c3510c20d05d0d8c8fd64",
 "lag": 29.0,
 "last": "2026-07-01",
-"src": "alfred",
-"t": "2026-11-04T22:54:42"
+"src": "api",
+"t": "2026-11-04T20:54:55"
 },
 "DHUTRX1Q020SBEA": {
 "est": 71,
-"hash": "54d9a6d418c1600be4eaf0c01b548745",
+"hash": "23f8913648821f2741716d5110ac47d5",
 "lag": 29.0,
 "last": "2026-07-01",
-"src": "alfred",
-"t": "2026-11-04T22:54:40"
+"src": "api",
+"t": "2026-11-04T20:54:55"
 },
 "DRCCLACBS": {
 "est": 80,
-"hash": "c58797a1095c9f15ca6566c25473fa57",
+"hash": "d59b34c7d0690d580bf710ec82cd62f9",
 "lag": 50.0,
 "last": "2026-04-01",
-"src": "alfred",
-"t": "2026-11-04T22:54:56"
+"src": "api",
+"t": "2026-11-04T20:55:03"
 },
 "DRSFRMACBS": {
 "est": 80,
-"hash": "53b46b64a0dd96142137847a141fa8e1",
+"hash": "a64037af7873d3fc52d4ff204ee3e7eb",
 "lag": 50.0,
 "last": "2026-04-01",
-"src": "alfred",
-"t": "2026-11-04T22:55:04"
+"src": "api",
+"t": "2026-11-04T20:55:07"
 },
 "DRTSCILM": {
 "est": 147,
-"hash": "4a276ad47a64d4e813ef5f820ad711ce",
+"hash": "6ba7c9b102826872c64dc040a604d0c5",
 "lag": -56,
 "last": "2026-10-01",
-"src": "alfred",
-"t": "2026-11-04T22:56:38"
+"src": "api",
+"t": "2026-11-04T20:56:06"
 },
 "DSPIC96": {
 "est": 249,
@@ -265,107 +265,107 @@
 },
 "FDEFX": {
 "est": 77,
-"hash": "f4b7fb828cb851fb19402c6e650014bb",
+"hash": "d9343c3461c66dc7257bbecb9a6cf0c1",
 "lag": 29.0,
 "last": "2026-07-01",
-"src": "alfred",
-"t": "2026-11-04T22:57:31"
+"src": "api",
+"t": "2026-11-04T20:56:33"
 },
 "FEDFUNDS": {
 "est": 508,
-"hash": "8dcf9a6a9d50c112a03d11ed56460345",
+"hash": "7ac03783d1ac53b05e2d2f575cea1f92",
 "lag": 1.0,
 "last": "2026-10-01",
-"src": "alfred",
-"t": "2026-11-04T22:53:12"
+"src": "api",
+"t": "2026-11-04T20:53:48"
 },
 "FGCE": {
 "est": 77,
-"hash": "5530c1baf7e0c6578c7d8096a2831792",
+"hash": "008eaa3cbe59109654d3ad3b30bd4302",
 "lag": 29.0,
 "last": "2026-07-01",
-"src": "alfred",
-"t": "2026-11-04T22:57:26"
+"src": "api",
+"t": "2026-11-04T20:56:31"
 },
 "FNDEFX": {
 "est": 77,
-"hash": "bbce64ba5f93e83f9ddb81b9529c4642",
+"hash": "a2d2800a07ce32c12b2bbd89fc192e3b",
 "lag": 29.0,
 "last": "2026-07-01",
-"src": "alfred",
-"t": "2026-11-04T22:57:33"
+"src": "api",
+"t": "2026-11-04T20:56:34"
 },
 "FRGSHPUSM649NCIS": {
 "est": 280,
-"hash": "77bba1da8db503e88ad2b74d7f1a2d3f",
+"hash": "58abbb57d73314365077e07d8035cfb3",
 "lag": 15.0,
 "last": "2026-09-01",
-"src": "alfred",
-"t": "2026-11-04T22:57:46"
+"src": "api",
+"t": "2026-11-04T20:56:40"
 },
 "GACDFSA066MSFRBPHI": {
 "est": 699,
-"hash": "609de296cc795c7cfd0515bd4d715d37",
+"hash": "aab41a5f911fdb44dba478e04b701274",
 "lag": -12.0,
 "last": "2026-10-01",
-"src": "alfred",
-"t": "2026-11-04T22:53:09"
+"src": "api",
+"t": "2026-11-04T20:53:47"
 },
 "GCE": {
 "est": 32,
-"hash": "17ab46953bdacb6cf3edc63a41b74810",
+"hash": "d3ca39d0ac0f242be006fabf1bf81920",
 "lag": 29.0,
 "last": "2026-07-01",
-"src": "alfred",
-"t": "2026-11-04T22:57:19"
+"src": "api",
+"t": "2026-11-04T20:56:27"
 },
 "GDPC1": {
 "est": 178,
-"hash": "09b94fa878e7a8a51a6950658f94c576",
+"hash": "b36232ce024f144ceb995b7c6c49c2bb",
 "lag": 29.0,
 "last": "2026-07-01",
-"src": "alfred",
-"t": "2026-11-04T22:53:07"
+"src": "api",
+"t": "2026-11-04T20:53:46"
 },
 "GFDEGDQ188S": {
 "est": 185,
-"hash": "6500904c35265f1630c3c971aa8e9ba0",
+"hash": "798008861df44585ae1d03d4c676782e",
 "lag": 63,
 "last": "2026-04-01",
-"src": "alfred",
-"t": "2026-11-04T22:57:39"
+"src": "api",
+"t": "2026-11-04T20:56:37"
 },
 "GPDI": {
 "est": 32,
-"hash": "0b7726aa5d60c500e1ab1ca430a5d82f",
+"hash": "6d4298b8ecd4dddad03e795637f4c2a5",
 "lag": 29.0,
 "last": "2026-07-01",
-"src": "alfred",
-"t": "2026-11-04T22:55:45"
+"src": "api",
+"t": "2026-11-04T20:55:25"
 },
 "GPDIC1": {
 "est": 46,
-"hash": "adff0d1366a12b450e3641700748b701",
+"hash": "8f091337599414482e0fd786c667df56",
 "lag": 29.0,
 "last": "2026-07-01",
-"src": "alfred",
-"t": "2026-11-04T22:55:24"
+"src": "api",
+"t": "2026-11-04T20:55:15"
 },
 "HOUST": {
 "est": 17,
-"hash": "79db663bdd4c6212b87c84c793cbf196",
+"hash": "9414e3ae7161f990486e665187c6bbf0",
 "lag": 18.0,
 "last": "2026-09-01",
-"src": "alfred",
-"t": "2026-11-04T22:53:19"
+"src": "api",
+"t": "2026-11-04T20:53:51"
 },
 "HSN1F": {
 "est": 437,
-"hash": "37bccfbd5618f92bd1f473710d063602",
+"hash": "36d4d77e525d1f85768e3425a6faa7a9",
 "lag": 25.0,
 "last": "2026-09-01",
-"src": "alfred",
-"t": "2026-11-04T22:53:22"
+"src": "api",
+"t": "2026-11-04T20:53:52"
 },
 "ICSA": {
 "est": 2211,
@@ -377,67 +377,67 @@
 },
 "IEABC": {
 "est": 60,
-"hash": "dd0fc8636d0dc583ecb98cc53ea73f42",
+"hash": "769528b7cb8248ada51e3bb2db1390c6",
 "lag": 81.0,
 "last": "2026-04-01",
-"src": "alfred",
-"t": "2026-11-04T22:56:54"
+"src": "api",
+"t": "2026-11-04T20:56:14"
 },
 "IIPASSEQ": {
 "est": 36,
-"hash": "b6cb75d409f10c07244644bf2c971d7e",
+"hash": "540a5209b36e77f4b6fc866f372ad1a8",
 "lag": 89.0,
 "last": "2026-04-01",
-"src": "alfred",
-"t": "2026-11-04T22:57:07"
+"src": "api",
+"t": "2026-11-04T20:56:21"
 },
 "IIPDIREAMVQ": {
 "est": 36,
-"hash": "a45252198e7dd24aaa9dc75b6cd5c615",
+"hash": "be9dde834cb093fc0eb6317993247cc4",
 "lag": 89.0,
 "last": "2026-04-01",
-"src": "alfred",
-"t": "2026-11-04T22:57:15"
+"src": "api",
+"t": "2026-11-04T20:56:25"
 },
 "IIPDIRELMVQ": {
 "est": 36,
-"hash": "341687a9a0dca5b97a80108344d2e24b",
+"hash": "8eb18c7e56b5bc24402ad1760fb60d18",
 "lag": 89.0,
 "last": "2026-04-01",
-"src": "alfred",
-"t": "2026-11-04T22:57:16"
+"src": "api",
+"t": "2026-11-04T20:56:26"
 },
 "IIPLIABQ": {
 "est": 36,
-"hash": "a3f461d6e8232367c37f69995657c2c8",
+"hash": "73b110148abcb29c187cda43e2f38062",
 "lag": 89.0,
 "last": "2026-04-01",
-"src": "alfred",
-"t": "2026-11-04T22:57:09"
+"src": "api",
+"t": "2026-11-04T20:56:22"
 },
 "IIPPORTAQ": {
 "est": 36,
-"hash": "c2366e773126444a52ee59ec80007114",
+"hash": "6305d98a7c9890ad93927e24f9f7a5ea",
 "lag": 89.0,
 "last": "2026-04-01",
-"src": "alfred",
-"t": "2026-11-04T22:57:11"
+"src": "api",
+"t": "2026-11-04T20:56:23"
 },
 "IIPPORTLQ": {
 "est": 36,
-"hash": "33656d581a0321c5eb33bfdc27c8f3c0",
+"hash": "fe23c5c2f48858f9eddd0f1b090e5bbf",
 "lag": 89.0,
 "last": "2026-04-01",
-"src": "alfred",
-"t": "2026-11-04T22:57:12"
+"src": "api",
+"t": "2026-11-04T20:56:24"
 },
 "IIPUSNETIQ": {
 "est": 36,
-"hash": "adda744096a9d08a7cf96888239c672d",
+"hash": "6e05b4bbdc42e07ed1b9b325a55b393d",
 "lag": 89.0,
 "last": "2026-04-01",
-"src": "alfred",
-"t": "2026-11-04T22:57:05"
+"src": "api",
+"t": "2026-11-04T20:56:20"
 },
 "INDPRO": {
 "est": 95,
@@ -449,43 +449,43 @@
 },
 "ISRATIO": {
 "est": 588,
-"hash": "a0b8e01de70e1f410cac0c55b13b973b",
+"hash": "7bfb0a5d32f649ff004e33ea174e464d",
 "lag": 46.0,
 "last": "2026-08-01",
-"src": "alfred",
-"t": "2026-11-04T22:56:47"
+"src": "api",
+"t": "2026-11-04T20:56:11"
 },
 "JTSHIL": {
 "est": 114,
-"hash": "f07ef1ca3a82d178e31bb049ea1be8e1",
+"hash": "b87e2266d1abfa3838d597de76bd156c",
 "lag": 37.0,
 "last": "2026-09-01",
-"src": "alfred",
-"t": "2026-11-04T22:52:59"
+"src": "api",
+"t": "2026-11-04T20:53:41"
 },
 "JTSJOL": {
 "est": 114,
-"hash": "739cb6a10beaf62b852b3e48c6c581d4",
+"hash": "7fa72556ca7ce101deae69f17b347a67",
 "lag": 37.0,
 "last": "2026-09-01",
-"src": "alfred",
-"t": "2026-11-04T22:52:57"
+"src": "api",
+"t": "2026-11-04T20:53:40"
 },
 "JTSLDL": {
 "est": 114,
-"hash": "697882a87c564019a1324f6fc744db19",
+"hash": "009a14b01b254dcd1645bc2648ee74da",
 "lag": 37.0,
 "last": "2026-09-01",
-"src": "alfred",
-"t": "2026-11-04T22:53:01"
+"src": "api",
+"t": "2026-11-04T20:53:42"
 },
 "JTSQUL": {
 "est": 114,
-"hash": "82e0dee45d02518b603443faa323a838",
+"hash": "6a91979b9936b566f3ffb2f2a28ef8e3",
 "lag": 37.0,
 "last": "2026-09-01",
-"src": "alfred",
-"t": "2026-11-04T22:53:03"
+"src": "api",
+"t": "2026-11-04T20:53:43"
 },
 "M2SL": {
 "est": 251,
@@ -497,59 +497,59 @@
 },
 "M2V": {
 "est": 205,
-"hash": "b9638ddd2671ae3671309eed702b639f",
+"hash": "c222ad66fa4191cc216d2938e6412643",
 "lag": 28.5,
 "last": "2026-07-01",
-"src": "alfred",
-"t": "2026-11-04T22:55:15"
+"src": "api",
+"t": "2026-11-04T20:55:10"
 },
 "MICH": {
 "est": 294,
-"hash": "4d3292da78e5857fb1bf67032c06882b",
+"hash": "1b84c78d5bd555dc3ab890be5ec856d0",
 "lag": -4.0,
 "last": "2026-09-01",
-"src": "alfred",
-"t": "2026-11-04T22:52:51"
+"src": "api",
+"t": "2026-11-04T20:53:37"
 },
 "MORTGAGE30US": {
 "est": 2046,
-"hash": "3fda995e4fb6c8cbf531bdfb178cc8e2",
+"hash": "522a938f9fecea297c0f83923cb25283",
 "lag": 0.0,
 "last": "2026-10-29",
-"src": "alfred",
-"t": "2026-11-04T22:53:14"
+"src": "api",
+"t": "2026-11-04T20:53:49"
 },
 "MSPUS": {
 "est": 192,
-"hash": "78342dc810515beaf8872351b36935d9",
+"hash": "cb8cabaf2cdd279400fb9c2ca441b757",
 "lag": 26,
 "last": "2026-07-01",
-"src": "alfred",
-"t": "2026-11-04T22:54:17"
+"src": "api",
+"t": "2026-11-04T20:54:45"
 },
 "MTSDS133FMS": {
 "est": 418,
-"hash": "7b33ef72906c8276ca8f8a1e14563d67",
+"hash": "535e11549a54519abdc79e5548fcda78",
 "lag": 12.0,
 "last": "2026-09-01",
-"src": "alfred",
-"t": "2026-11-04T22:57:37"
+"src": "api",
+"t": "2026-11-04T20:56:36"
 },
 "NETEXP": {
 "est": 202,
-"hash": "6e3ca39c959652827426d5be4e11b179",
+"hash": "c6009f4059a537fb93d3e986294fdb51",
 "lag": 29.0,
 "last": "2026-07-01",
-"src": "alfred",
-"t": "2026-11-04T22:56:51"
+"src": "api",
+"t": "2026-11-04T20:56:13"
 },
 "NEWORDER": {
 "est": 347,
-"hash": "e48fb2389b31dcfbeb288cbf919f53b0",
+"hash": "c91080ea0e0bcbe6aa44dfe451ed64ab",
 "lag": 26.0,
 "last": "2026-09-01",
-"src": "alfred",
-"t": "2026-11-04T22:56:34"
+"src": "api",
+"t": "2026-11-04T20:56:03"
 },
 "PAYEMS": {
 "est": 195,
@@ -561,171 +561,171 @@
 },
 "PCE": {
 "est": 249,
-"hash": "b8cdee8b0488b1e7004b542bcbb5b185",
+"hash": "40039f593fae7144167a11e40fbbc538",
 "lag": 29.0,
 "last": "2026-09-01",
-"src": "alfred",
-"t": "2026-11-04T22:54:25"
+"src": "api",
+"t": "2026-11-04T20:54:48"
 },
 "PCEC96": {
 "est": 248,
-"hash": "c375d72aa428ca4f94e1864c0fc3d4d0",
+"hash": "58b8b61014b3d70f16d0f651745b521f",
 "lag": 29.0,
 "last": "2026-09-01",
-"src": "alfred",
-"t": "2026-11-04T22:54:22"
+"src": "api",
+"t": "2026-11-04T20:54:47"
 },
 "PCEDG": {
 "est": 249,
-"hash": "bfc95e7b08cf0ab349e55ba23147990c",
+"hash": "53f4ca8d66fe60c55c43ab6df0d14648",
 "lag": 29.0,
 "last": "2026-09-01",
-"src": "alfred",
-"t": "2026-11-04T22:54:27"
+"src": "api",
+"t": "2026-11-04T20:54:49"
 },
 "PCEND": {
 "est": 249,
-"hash": "135371ba07f829bf7a7f3df59d417005",
+"hash": "5f2cf208f8df651029eff5f7efff638e",
 "lag": 29.0,
 "last": "2026-09-01",
-"src": "alfred",
-"t": "2026-11-04T22:54:30"
+"src": "api",
+"t": "2026-11-04T20:54:50"
 },
 "PCEPI": {
 "est": 497,
-"hash": "503cc0ccafaa46787596660c397b40a7",
+"hash": "d5393df5088da5016fc369736674a543",
 "lag": 29.0,
 "last": "2026-09-01",
-"src": "alfred",
-"t": "2026-11-04T22:52:40"
+"src": "api",
+"t": "2026-11-04T20:53:32"
 },
 "PCEPILFE": {
 "est": 497,
-"hash": "6d36d073d4457ef00313fa2b1437a7fd",
+"hash": "e87d431339858aac66fdfaa057bc1d2b",
 "lag": 29.0,
 "last": "2026-09-01",
-"src": "alfred",
-"t": "2026-11-04T22:52:43"
+"src": "api",
+"t": "2026-11-04T20:53:33"
 },
 "PCESV": {
 "est": 32,
-"hash": "64ddf6ae37690b4f0e53d3abf322f86c",
+"hash": "e62673a4565a14a3b5036b1915c0f3ef",
 "lag": 29.0,
 "last": "2026-07-01",
-"src": "alfred",
-"t": "2026-11-04T22:54:33"
+"src": "api",
+"t": "2026-11-04T20:54:51"
 },
 "PCESVC96": {
 "est": 46,
-"hash": "deec670cb0556b59cb29bf11856a9518",
+"hash": "3990da67b75e7be3f7e8a58cb17d9f8e",
 "lag": 29.0,
 "last": "2026-07-01",
-"src": "alfred",
-"t": "2026-11-04T22:54:36"
+"src": "api",
+"t": "2026-11-04T20:54:53"
 },
 "PCETRIM12M159SFRBDAL": {
 "est": 329,
-"hash": "3aeee0879fd6df10ba49732042305d45",
+"hash": "45762ac535f2a45193cbced75b5f3bbc",
 "lag": 29.0,
 "last": "2026-09-01",
-"src": "alfred",
-"t": "2026-11-04T22:52:45"
+"src": "api",
+"t": "2026-11-04T20:53:34"
 },
 "PCTR": {
 "est": 599,
-"hash": "58ffc379d39f59f8ddb4ddcbbfcf7b71",
+"hash": "375cac60c3d787c8dbd3b954666d1fa1",
 "lag": 29.0,
 "last": "2026-09-01",
-"src": "alfred",
-"t": "2026-11-04T22:55:09"
+"src": "api",
+"t": "2026-11-04T20:55:09"
 },
 "PERMIT": {
 "est": 474,
-"hash": "7002d13bd94cae6949795d2b73585c03",
+"hash": "d83cc07697bcb39b9977564332554184",
 "lag": 18.0,
 "last": "2026-09-01",
-"src": "alfred",
-"t": "2026-11-04T22:53:17"
+"src": "api",
+"t": "2026-11-04T20:53:50"
 },
 "PI": {
 "est": 239,
-"hash": "777bc4c69658c93db57f950737d91bb1",
+"hash": "f8920f51b96122fd0f196c963f12bd62",
 "lag": 29.0,
 "last": "2026-09-01",
-"src": "alfred",
-"t": "2026-11-04T22:54:49"
+"src": "api",
+"t": "2026-11-04T20:54:59"
 },
 "PNFI": {
 "est": 77,
-"hash": "5cdf3125e39433367a8f293b7232c775",
+"hash": "dd95e528de0c7cefe03bcfcf70f72d6e",
 "lag": 29.0,
 "last": "2026-07-01",
-"src": "alfred",
-"t": "2026-11-04T22:55:47"
+"src": "api",
+"t": "2026-11-04T20:55:26"
 },
 "PNFIC1": {
 "est": 73,
-"hash": "1e1fa5e84eb5c63548c9f92cd8f799ef",
+"hash": "5f8811dbc52dbf8afec5a3f6d96a5870",
 "lag": 29.0,
 "last": "2026-07-01",
-"src": "alfred",
-"t": "2026-11-04T22:55:26"
+"src": "api",
+"t": "2026-11-04T20:55:16"
 },
 "PPIFIS": {
 "est": 50,
-"hash": "d9076d6260d15c0e35b341a0488ed777",
+"hash": "df31e4c0846c092bebd2b61ab0b19119",
 "lag": 13.0,
 "last": "2026-09-01",
-"src": "alfred",
-"t": "2026-11-04T22:52:47"
+"src": "api",
+"t": "2026-11-04T20:53:35"
 },
 "PRFI": {
 "est": 77,
-"hash": "f354cc80b1a904276d66334a035f7fab",
+"hash": "525b69a55234772190dd133c33132668",
 "lag": 29.0,
 "last": "2026-07-01",
-"src": "alfred",
-"t": "2026-11-04T22:55:50"
+"src": "api",
+"t": "2026-11-04T20:55:27"
 },
 "PRFIC1": {
 "est": 73,
-"hash": "f22c1d93280f60acc557303655952686",
+"hash": "1571fd644068d6d10f8d9df2b3586b00",
 "lag": 29.0,
 "last": "2026-07-01",
-"src": "alfred",
-"t": "2026-11-04T22:55:29"
+"src": "api",
+"t": "2026-11-04T20:55:18"
 },
 "PSAVERT": {
 "est": 455,
-"hash": "eb4962372ce9c253cdb3c877dafd2abf",
+"hash": "c4a30d83e7cc99fa25b9fd000a916178",
 "lag": 29.0,
 "last": "2026-09-01",
-"src": "alfred",
-"t": "2026-11-04T22:54:51"
+"src": "api",
+"t": "2026-11-04T20:55:01"
 },
 "REVOLSL": {
 "est": 345,
-"hash": "2e4778424735a1a69d0031948d451c7a",
+"hash": "35a59fd361da19afd782316bf8e1dade",
 "lag": 38.0,
 "last": "2026-08-01",
-"src": "alfred",
-"t": "2026-11-04T22:54:59"
+"src": "api",
+"t": "2026-11-04T20:55:04"
 },
 "RRSFS": {
 "est": 112,
-"hash": "30bc5a1e686986b35870b82cfce88c79",
+"hash": "b17d6b13f825721684a594e1b8e12e7a",
 "lag": 15.0,
 "last": "2026-09-01",
-"src": "alfred",
-"t": "2026-11-04T22:54:46"
+"src": "api",
+"t": "2026-11-04T20:54:58"
 },
 "RSAFS": {
 "est": 112,
-"hash": "c9e5f54cb8e99ab1751f7a3c2e3856ce",
+"hash": "0de504537789c5ccda3b17ec5625ec02",
 "lag": 15.0,
 "last": "2026-09-01",
-"src": "alfred",
-"t": "2026-11-04T22:54:44"
+"src": "api",
+"t": "2026-11-04T20:54:56"
 },
 "RSFSXMV": {
 "est": 112,
@@ -737,122 +737,122 @@
 },
 "SLCE": {
 "est": 77,
-"hash": "c7ecc6d148e9490d415b239e1604d730",
+"hash": "f490f546e5a6b17b6f88539a6681f035",
 "lag": 29.0,
 "last": "2026-07-01",
-"src": "alfred",
-"t": "2026-11-04T22:57:29"
+"src": "api",
+"t": "2026-11-04T20:56:32"
 },
 "TCU": {
 "est": 357,
-"hash": "2d8c5884bda6c5ecd526ad52eafca325",
+"hash": "d6728150e78c6b34a4936e26b8000239",
 "lag": 16.0,
 "last": "2026-09-01",
-"src": "alfred",
-"t": "2026-11-04T22:56:40"
+"src": "api",
+"t": "2026-11-04T20:56:07"
 },
 "TDSP": {
 "est": 77,
-"hash": "498bcb207e7ddb898f87cd912c877489",
+"hash": "459df3758bc248d4cb89ead4a179e29c",
 "lag": 83,
 "last": "2026-04-01",
-"src": "alfred",
-"t": "2026-11-04T22:54:54"
+"src": "api",
+"t": "2026-11-04T20:55:02"
 },
 "TNWBSHNO": {
 "est": 239,
-"hash": "27846eb852a9182a80aa85bee7039144",
+"hash": "0dec28031855210da2b075506b7b04b6",
 "lag": 70.0,
 "last": "2026-04-01",
-"src": "alfred",
-"t": "2026-11-04T22:55:02"
+"src": "api",
+"t": "2026-11-04T20:55:06"
 },
 "UMCSENT": {
 "est": 380,
-"hash": "eb2ff9f5dbf35f0f4b80ccc4cd5fb7a3",
+"hash": "1737ed876b1dad2b68c2197f7ac5835a",
 "lag": -4.0,
 "last": "2026-09-01",
-"src": "alfred",
-"t": "2026-11-04T22:55:07"
+"src": "api",
+"t": "2026-11-04T20:55:08"
 },
 "UNRATE": {
 "est": 145,
-"hash": "794012bb749781791e06d247ff3e7b18",
+"hash": "02e6e7946c7d84b8f8a563d1f8dee3c1",
 "lag": 5.0,
 "last": "2026-09-01",
-"src": "alfred",
-"t": "2026-11-04T22:52:53"
+"src": "api",
+"t": "2026-11-04T20:53:38"
 },
 "USALOLITOAASTSAM": {
 "est": 760,
-"hash": "36a99b624e3fee8518409203025719a4",
+"hash": "acdc491800e47ebc54922c7abf78d9c2",
 "lag": 15,
 "last": "2026-09-01",
-"src": "alfred",
-"t": "2026-11-04T22:55:21"
+"src": "api",
+"t": "2026-11-04T20:55:14"
 },
 "USGOVT": {
 "est": 273,
-"hash": "81a57d437ddc5f95ce8cb9ee92c34c72",
+"hash": "76e5231c71549504ecc2e7824553d6a3",
 "lag": 5.0,
 "last": "2026-09-01",
-"src": "alfred",
-"t": "2026-11-04T22:57:24"
+"src": "api",
+"t": "2026-11-04T20:56:29"
 },
 "W006RC1Q027SBEA": {
 "est": 262,
-"hash": "53500ecb55cd218804c0b5ee7d17e016",
+"hash": "a912b8d08c1a2f467c8454101bbdce2e",
 "lag": 60.0,
 "last": "2026-04-01",
-"src": "alfred",
-"t": "2026-11-04T22:57:35"
+"src": "api",
+"t": "2026-11-04T20:56:35"
 },
 "WPSFD4131": {
 "est": 493,
-"hash": "8967307de72164aa1076fdedd473f8e7",
+"hash": "21424eb9e1b2c4c713a596d4e811be8d",
 "lag": 13.0,
 "last": "2026-09-01",
-"src": "alfred",
-"t": "2026-11-04T22:52:49"
+"src": "api",
+"t": "2026-11-04T20:53:36"
 },
 "WTREGEN": {
 "est": 1197,
-"hash": "5f666e248c09ce6e5e301255fcbfb80b",
+"hash": "6941b6be1c4048d4183f40b7fcdcf286",
 "lag": 1.0,
 "last": "2026-10-28",
-"src": "alfred",
-"t": "2026-11-04T22:57:44"
+"src": "api",
+"t": "2026-11-04T20:56:40"
 },
 "Y001RC1Q027SBEA": {
 "est": 269,
-"hash": "7921e3c61761995288ea52d70a652fa8",
+"hash": "c679446510d1e7a19ee70aaab5767ab4",
 "lag": 28.5,
 "last": "2026-07-01",
-"src": "alfred",
-"t": "2026-11-04T22:55:59"
+"src": "api",
+"t": "2026-11-04T20:55:31"
 },
 "Y001RX1Q020SBEA": {
 "est": 61,
-"hash": "233d12a5cf36a1c8cd605dfbded67758",
+"hash": "2e52e03e9c9868b457ca02199b3a04d1",
 "lag": 28.5,
 "last": "2026-07-01",
-"src": "alfred",
-"t": "2026-11-04T22:55:38"
+"src": "api",
+"t": "2026-11-04T20:55:22"
 },
 "Y033RC1Q027SBEA": {
 "est": 269,
-"hash": "73b8301fc607fc34f67a11bc6f315c58",
+"hash": "d6e67d80a0831e55fd79bcd504810563",
 "lag": 28.5,
 "last": "2026-07-01",
-"src": "alfred",
-"t": "2026-11-04T22:55:54"
+"src": "api",
+"t": "2026-11-04T20:55:29"
 },
 "Y033RX1Q020SBEA": {
 "est": 61,
-"hash": "618f7edc24e258ac603475de98448b8c",
+"hash": "0ded7fb887989cc41ce2c74a98f4f088",
 "lag": 28.5,
 "last": "2026-07-01",
-"src": "alfred",
-"t": "2026-11-04T22:55:34"
+"src": "api",
+"t": "2026-11-04T20:55:20"
 }
 }
