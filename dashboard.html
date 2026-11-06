@@ -5684,6 +5684,21 @@ loadingEl.style.display = 'none';
 
 // 미러 체제(2026-08-21)부터 FRED 키 없이도 작동 — 모달은 ⚙로만 (e-Stat 키 입력용으로 유지)
 selectIndicator(INDICATORS[0]);
+
+// 텔레그램 할일봇 '보고서 완료' 알림 링크: dashboard.html?report=파일명 → 보고서 탭에서 그 보고서를 바로 연다 (2026-11-06)
+(function openReportFromLink() {
+  const f = new URLSearchParams(location.search).get('report');
+  const btn = document.querySelector('.country-btn[data-country="REPORT"]');
+  if (!f || !btn) return;
+  btn.click();
+  let n = 0;
+  const t = setInterval(() => {
+    if (rpIndex.length || ++n > 60) {
+      clearInterval(t);
+      if (rpIndex.some(r => r.file === f)) selectReport(f);
+    }
+  }, 150);
+})();
 </script>
 </body>
 </html>

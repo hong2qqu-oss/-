@@ -1,0 +1,446 @@
+{
+ "events": [
+  {
+   "id": "ADP|release|2026-11-04",
+   "tag": "ADP",
+   "kind": "release",
+   "name": "ADP 민간고용",
+   "at": "2026-11-04T13:15:00Z",
+   "kst": "2026-11-04 22:15",
+   "note": "",
+   "est": false
+  },
+  {
+   "id": "CLAIMS|release|2026-11-05",
+   "tag": "CLAIMS",
+   "kind": "release",
+   "name": "미국 실업수당 청구",
+   "at": "2026-11-05T13:30:00Z",
+   "kst": "2026-11-05 22:30",
+   "note": "",
+   "est": false
+  },
+  {
+   "id": "NFP|release|2026-11-06",
+   "tag": "NFP",
+   "kind": "release",
+   "name": "미국 고용보고서 (NFP·실업률)",
+   "at": "2026-11-06T13:30:00Z",
+   "kst": "2026-11-06 22:30",
+   "note": "",
+   "est": false
+  },
+  {
+   "id": "BOJ_OPINION|release|2026-11-10",
+   "tag": "BOJ_OPINION",
+   "kind": "release",
+   "name": "일본은행 주요 의견 (10/30 회의)",
+   "at": "2026-11-09T23:50:00Z",
+   "kst": "2026-11-10 08:50",
+   "note": "",
+   "est": false
+  },
+  {
+   "id": "BOK_MINUTES|release|2026-11-10",
+   "tag": "BOK_MINUTES",
+   "kind": "release",
+   "name": "금통위 의사록 (10/22 회의)",
+   "at": "2026-11-10T07:00:00Z",
+   "kst": "2026-11-10 16:00",
+   "note": "회의 2주 뒤 첫 화요일 규칙",
+   "est": true
+  },
+  {
+   "id": "CPI|release|2026-11-10",
+   "tag": "CPI",
+   "kind": "release",
+   "name": "미국 CPI",
+   "at": "2026-11-10T13:30:00Z",
+   "kst": "2026-11-10 22:30",
+   "note": "",
+   "est": false
+  },
+  {
+   "id": "CLAIMS|release|2026-11-12",
+   "tag": "CLAIMS",
+   "kind": "release",
+   "name": "미국 실업수당 청구",
+   "at": "2026-11-12T13:30:00Z",
+   "kst": "2026-11-12 22:30",
+   "note": "",
+   "est": false
+  },
+  {
+   "id": "PPI|release|2026-11-13",
+   "tag": "PPI",
+   "kind": "release",
+   "name": "미국 PPI",
+   "at": "2026-11-13T13:30:00Z",
+   "kst": "2026-11-13 22:30",
+   "note": "",
+   "est": false
+  },
+  {
+   "id": "RETAIL|release|2026-11-17",
+   "tag": "RETAIL",
+   "kind": "release",
+   "name": "미국 소매판매",
+   "at": "2026-11-17T13:30:00Z",
+   "kst": "2026-11-17 22:30",
+   "note": "",
+   "est": false
+  },
+  {
+   "id": "CAPUTIL|release|2026-11-17",
+   "tag": "CAPUTIL",
+   "kind": "release",
+   "name": "미국 산업생산·설비가동률",
+   "at": "2026-11-17T14:15:00Z",
+   "kst": "2026-11-17 23:15",
+   "note": "",
+   "est": false
+  },
+  {
+   "id": "FOMC_MINUTES|release|2026-11-18",
+   "tag": "FOMC_MINUTES",
+   "kind": "release",
+   "name": "FOMC 의사록 (10/28 회의)",
+   "at": "2026-11-18T19:00:00Z",
+   "kst": "2026-11-19 04:00",
+   "note": "회의 3주 뒤 규칙",
+   "est": true
+  },
+  {
+   "id": "CLAIMS|release|2026-11-19",
+   "tag": "CLAIMS",
+   "kind": "release",
+   "name": "미국 실업수당 청구",
+   "at": "2026-11-19T13:30:00Z",
+   "kst": "2026-11-19 22:30",
+   "note": "",
+   "est": false
+  },
+  {
+   "id": "CASESHILLER|release|2026-11-24",
+   "tag": "CASESHILLER",
+   "kind": "release",
+   "name": "케이스실러 주택가격",
+   "at": "2026-11-24T14:00:00Z",
+   "kst": "2026-11-24 23:00",
+   "note": "",
+   "est": false
+  },
+  {
+   "id": "CONF|release|2026-11-24",
+   "tag": "CONF",
+   "kind": "release",
+   "name": "컨퍼런스보드 소비자신뢰",
+   "at": "2026-11-24T15:00:00Z",
+   "kst": "2026-11-25 00:00",
+   "note": "발표 규칙으로 잡은 날짜",
+   "est": true
+  },
+  {
+   "id": "RICHMOND|release|2026-11-24",
+   "tag": "RICHMOND",
+   "kind": "release",
+   "name": "리치먼드 연은 제조업",
+   "at": "2026-11-24T15:00:00Z",
+   "kst": "2026-11-25 00:00",
+   "note": "발표 규칙으로 잡은 날짜",
+   "est": true
+  },
+  {
+   "id": "CLAIMS|release|2026-11-25",
+   "tag": "CLAIMS",
+   "kind": "release",
+   "name": "미국 실업수당 청구",
+   "at": "2026-11-25T13:30:00Z",
+   "kst": "2026-11-25 22:30",
+   "note": "",
+   "est": false
+  },
+  {
+   "id": "DURABLE|release|2026-11-25",
+   "tag": "DURABLE",
+   "kind": "release",
+   "name": "미국 내구재 수주 (속보)",
+   "at": "2026-11-25T13:30:00Z",
+   "kst": "2026-11-25 22:30",
+   "note": "",
+   "est": false
+  },
+  {
+   "id": "GDP|release|2026-11-25",
+   "tag": "GDP",
+   "kind": "release",
+   "name": "미국 GDP",
+   "at": "2026-11-25T13:30:00Z",
+   "kst": "2026-11-25 22:30",
+   "note": "",
+   "est": false
+  },
+  {
+   "id": "PCE|release|2026-11-25",
+   "tag": "PCE",
+   "kind": "release",
+   "name": "미국 PCE 물가·개인소득",
+   "at": "2026-11-25T13:30:00Z",
+   "kst": "2026-11-25 22:30",
+   "note": "",
+   "est": false
+  },
+  {
+   "id": "HOMESALES|release|2026-11-25",
+   "tag": "HOMESALES",
+   "kind": "release",
+   "name": "미국 신규주택판매",
+   "at": "2026-11-25T15:00:00Z",
+   "kst": "2026-11-26 00:00",
+   "note": "",
+   "est": false
+  },
+  {
+   "id": "BOK|release|2026-11-26",
+   "tag": "BOK",
+   "kind": "release",
+   "name": "한국은행 금통위 기준금리 결정",
+   "at": "2026-11-26T01:00:00Z",
+   "kst": "2026-11-26 10:00",
+   "note": "오전 10시 무렵",
+   "est": true
+  },
+  {
+   "id": "ISM|release|2026-12-01",
+   "tag": "ISM",
+   "kind": "release",
+   "name": "ISM 제조업 PMI",
+   "at": "2026-12-01T15:00:00Z",
+   "kst": "2026-12-02 00:00",
+   "note": "발표 규칙으로 잡은 날짜",
+   "est": true
+  },
+  {
+   "id": "ADP|release|2026-12-02",
+   "tag": "ADP",
+   "kind": "release",
+   "name": "ADP 민간고용",
+   "at": "2026-12-02T13:15:00Z",
+   "kst": "2026-12-02 22:15",
+   "note": "",
+   "est": false
+  },
+  {
+   "id": "CLAIMS|release|2026-12-03",
+   "tag": "CLAIMS",
+   "kind": "release",
+   "name": "미국 실업수당 청구",
+   "at": "2026-12-03T13:30:00Z",
+   "kst": "2026-12-03 22:30",
+   "note": "",
+   "est": false
+  },
+  {
+   "id": "NFP|release|2026-12-04",
+   "tag": "NFP",
+   "kind": "release",
+   "name": "미국 고용보고서 (NFP·실업률)",
+   "at": "2026-12-04T13:30:00Z",
+   "kst": "2026-12-04 22:30",
+   "note": "",
+   "est": false
+  },
+  {
+   "id": "FOMC|release|2026-12-09",
+   "tag": "FOMC",
+   "kind": "release",
+   "name": "FOMC 금리 결정 (경제전망 포함)",
+   "at": "2026-12-09T19:00:00Z",
+   "kst": "2026-12-10 04:00",
+   "note": "의장 기자회견 30분 뒤",
+   "est": false
+  },
+  {
+   "id": "CLAIMS|release|2026-12-10",
+   "tag": "CLAIMS",
+   "kind": "release",
+   "name": "미국 실업수당 청구",
+   "at": "2026-12-10T13:30:00Z",
+   "kst": "2026-12-10 22:30",
+   "note": "",
+   "est": false
+  },
+  {
+   "id": "CPI|release|2026-12-10",
+   "tag": "CPI",
+   "kind": "release",
+   "name": "미국 CPI",
+   "at": "2026-12-10T13:30:00Z",
+   "kst": "2026-12-10 22:30",
+   "note": "",
+   "est": false
+  },
+  {
+   "id": "BOK_MINUTES|release|2026-12-15",
+   "tag": "BOK_MINUTES",
+   "kind": "release",
+   "name": "금통위 의사록 (11/26 회의)",
+   "at": "2026-12-15T07:00:00Z",
+   "kst": "2026-12-15 16:00",
+   "note": "회의 2주 뒤 첫 화요일 규칙",
+   "est": true
+  },
+  {
+   "id": "PPI|release|2026-12-15",
+   "tag": "PPI",
+   "kind": "release",
+   "name": "미국 PPI",
+   "at": "2026-12-15T13:30:00Z",
+   "kst": "2026-12-15 22:30",
+   "note": "",
+   "est": false
+  },
+  {
+   "id": "RETAIL|release|2026-12-16",
+   "tag": "RETAIL",
+   "kind": "release",
+   "name": "미국 소매판매",
+   "at": "2026-12-16T13:30:00Z",
+   "kst": "2026-12-16 22:30",
+   "note": "",
+   "est": false
+  },
+  {
+   "id": "CAPUTIL|release|2026-12-16",
+   "tag": "CAPUTIL",
+   "kind": "release",
+   "name": "미국 산업생산·설비가동률",
+   "at": "2026-12-16T14:15:00Z",
+   "kst": "2026-12-16 23:15",
+   "note": "",
+   "est": false
+  },
+  {
+   "id": "CLAIMS|release|2026-12-17",
+   "tag": "CLAIMS",
+   "kind": "release",
+   "name": "미국 실업수당 청구",
+   "at": "2026-12-17T13:30:00Z",
+   "kst": "2026-12-17 22:30",
+   "note": "",
+   "est": false
+  },
+  {
+   "id": "BOJ|release|2026-12-18",
+   "tag": "BOJ",
+   "kind": "release",
+   "name": "일본은행 금리 결정",
+   "at": "2026-12-18T03:00:00Z",
+   "kst": "2026-12-18 12:00",
+   "note": "회의 끝나는 대로 — 보통 정오 전후",
+   "est": true
+  },
+  {
+   "id": "RICHMOND|release|2026-12-22",
+   "tag": "RICHMOND",
+   "kind": "release",
+   "name": "리치먼드 연은 제조업",
+   "at": "2026-12-22T15:00:00Z",
+   "kst": "2026-12-23 00:00",
+   "note": "발표 규칙으로 잡은 날짜",
+   "est": true
+  },
+  {
+   "id": "DURABLE|release|2026-12-23",
+   "tag": "DURABLE",
+   "kind": "release",
+   "name": "미국 내구재 수주 (속보)",
+   "at": "2026-12-23T13:30:00Z",
+   "kst": "2026-12-23 22:30",
+   "note": "",
+   "est": false
+  },
+  {
+   "id": "GDP|release|2026-12-23",
+   "tag": "GDP",
+   "kind": "release",
+   "name": "미국 GDP",
+   "at": "2026-12-23T13:30:00Z",
+   "kst": "2026-12-23 22:30",
+   "note": "",
+   "est": false
+  },
+  {
+   "id": "PCE|release|2026-12-23",
+   "tag": "PCE",
+   "kind": "release",
+   "name": "미국 PCE 물가·개인소득",
+   "at": "2026-12-23T13:30:00Z",
+   "kst": "2026-12-23 22:30",
+   "note": "",
+   "est": false
+  },
+  {
+   "id": "HOMESALES|release|2026-12-23",
+   "tag": "HOMESALES",
+   "kind": "release",
+   "name": "미국 신규주택판매",
+   "at": "2026-12-23T15:00:00Z",
+   "kst": "2026-12-24 00:00",
+   "note": "",
+   "est": false
+  },
+  {
+   "id": "BOJ_OPINION|release|2026-12-28",
+   "tag": "BOJ_OPINION",
+   "kind": "release",
+   "name": "일본은행 주요 의견 (12/18 회의)",
+   "at": "2026-12-27T23:50:00Z",
+   "kst": "2026-12-28 08:50",
+   "note": "",
+   "est": false
+  },
+  {
+   "id": "CASESHILLER|release|2026-12-29",
+   "tag": "CASESHILLER",
+   "kind": "release",
+   "name": "케이스실러 주택가격",
+   "at": "2026-12-29T14:00:00Z",
+   "kst": "2026-12-29 23:00",
+   "note": "",
+   "est": false
+  },
+  {
+   "id": "CONF|release|2026-12-29",
+   "tag": "CONF",
+   "kind": "release",
+   "name": "컨퍼런스보드 소비자신뢰",
+   "at": "2026-12-29T15:00:00Z",
+   "kst": "2026-12-30 00:00",
+   "note": "발표 규칙으로 잡은 날짜",
+   "est": true
+  },
+  {
+   "id": "FOMC_MINUTES|release|2026-12-30",
+   "tag": "FOMC_MINUTES",
+   "kind": "release",
+   "name": "FOMC 의사록 (12/9 회의)",
+   "at": "2026-12-30T19:00:00Z",
+   "kst": "2026-12-31 04:00",
+   "note": "회의 3주 뒤 규칙",
+   "est": true
+  },
+  {
+   "id": "ISM|release|2027-01-04",
+   "tag": "ISM",
+   "kind": "release",
+   "name": "ISM 제조업 PMI",
+   "at": "2027-01-04T15:00:00Z",
+   "kst": "2027-01-05 00:00",
+   "note": "발표 규칙으로 잡은 날짜",
+   "est": true
+  }
+ ],
+ "fail": [],
+ "updated": "2026-11-06T05:54:32Z"
+}
