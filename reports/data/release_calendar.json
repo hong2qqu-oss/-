@@ -1,16 +1,6 @@
 {
  "events": [
   {
-   "id": "ADP|release|2026-11-04",
-   "tag": "ADP",
-   "kind": "release",
-   "name": "ADP 민간고용",
-   "at": "2026-11-04T13:15:00Z",
-   "kst": "2026-11-04 22:15",
-   "note": "",
-   "est": false
-  },
-  {
    "id": "CLAIMS|release|2026-11-05",
    "tag": "CLAIMS",
    "kind": "release",
@@ -442,5 +432,5 @@
   }
  ],
  "fail": [],
- "updated": "2026-11-06T05:54:32Z"
+ "updated": "2026-11-07T06:07:04Z"
 }
