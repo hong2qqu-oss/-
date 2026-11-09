@@ -1,16 +1,6 @@
 {
  "events": [
   {
-   "id": "CLAIMS|release|2026-11-05",
-   "tag": "CLAIMS",
-   "kind": "release",
-   "name": "미국 실업수당 청구",
-   "at": "2026-11-05T13:30:00Z",
-   "kst": "2026-11-05 22:30",
-   "note": "",
-   "est": false
-  },
-  {
    "id": "NFP|release|2026-11-06",
    "tag": "NFP",
    "kind": "release",
@@ -429,8 +419,18 @@
    "kst": "2027-01-05 00:00",
    "note": "발표 규칙으로 잡은 날짜",
    "est": true
+  },
+  {
+   "id": "BOJ|release|2027-01-22",
+   "tag": "BOJ",
+   "kind": "release",
+   "name": "일본은행 금리 결정",
+   "at": "2027-01-22T03:00:00Z",
+   "kst": "2027-01-22 12:00",
+   "note": "회의 끝나는 대로 — 보통 정오 전후",
+   "est": true
   }
  ],
  "fail": [],
- "updated": "2026-11-07T06:07:04Z"
+ "updated": "2026-11-08T13:44:23Z"
 }
