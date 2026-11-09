@@ -1,16 +1,6 @@
 {
  "events": [
   {
-   "id": "NFP|release|2026-11-06",
-   "tag": "NFP",
-   "kind": "release",
-   "name": "미국 고용보고서 (NFP·실업률)",
-   "at": "2026-11-06T13:30:00Z",
-   "kst": "2026-11-06 22:30",
-   "note": "",
-   "est": false
-  },
-  {
    "id": "BOJ_OPINION|release|2026-11-10",
    "tag": "BOJ_OPINION",
    "kind": "release",
@@ -432,5 +422,5 @@
   }
  ],
  "fail": [],
- "updated": "2026-11-08T13:44:23Z"
+ "updated": "2026-11-09T23:44:30Z"
 }
