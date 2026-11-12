@@ -419,8 +419,38 @@
    "kst": "2027-01-22 12:00",
    "note": "회의 끝나는 대로 — 보통 정오 전후",
    "est": true
+  },
+  {
+   "id": "CONF|release|2027-01-26",
+   "tag": "CONF",
+   "kind": "release",
+   "name": "컨퍼런스보드 소비자신뢰",
+   "at": "2027-01-26T15:00:00Z",
+   "kst": "2027-01-27 00:00",
+   "note": "발표 규칙으로 잡은 날짜",
+   "est": true
+  },
+  {
+   "id": "RICHMOND|release|2027-01-26",
+   "tag": "RICHMOND",
+   "kind": "release",
+   "name": "리치먼드 연은 제조업",
+   "at": "2027-01-26T15:00:00Z",
+   "kst": "2027-01-27 00:00",
+   "note": "발표 규칙으로 잡은 날짜",
+   "est": true
+  },
+  {
+   "id": "FOMC|release|2027-01-26",
+   "tag": "FOMC",
+   "kind": "release",
+   "name": "FOMC 금리 결정",
+   "at": "2027-01-26T19:00:00Z",
+   "kst": "2027-01-27 04:00",
+   "note": "의장 기자회견 30분 뒤",
+   "est": false
   }
  ],
  "fail": [],
- "updated": "2026-11-09T23:44:30Z"
+ "updated": "2026-11-12T00:55:06Z"
 }
