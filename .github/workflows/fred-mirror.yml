@@ -34,7 +34,18 @@ jobs:
             url="https://api.stlouisfed.org/fred/series/observations?series_id=${id}&api_key=${FRED_API_KEY}&file_type=json&sort_order=asc"
             if curl -sf "$url" | jq -r '.observations[] | select(.value != ".") | .date + "," + .value' > "reports/data/${id}.csv.tmp"; then
               if [ -s "reports/data/${id}.csv.tmp" ]; then
-                mv "reports/data/${id}.csv.tmp" "reports/data/${id}.csv"
+                # 2026-11-14: never go backwards. BLS series (jobs, CPI, PPI) are fetched from BLS at release time by the
+                # local agent (reports/refresh_data.py); FRED posts them 45 min to 2+ hours later, so a mirror run in
+                # between would replace the new month with FRED's older file.
+                new_last=$(tail -n 1 "reports/data/${id}.csv.tmp" | cut -d, -f1)
+                old_last=""
+                if [ -f "reports/data/${id}.csv" ]; then old_last=$(tail -n 1 "reports/data/${id}.csv" | tr -d '\r' | cut -d, -f1); fi
+                if [ -n "$old_last" ] && [[ "$new_last" < "$old_last" ]]; then
+                  echo "::notice::${id}: FRED is behind the repo (${new_last} < ${old_last}) - keeping the repo file"
+                  rm -f "reports/data/${id}.csv.tmp"
+                else
+                  mv "reports/data/${id}.csv.tmp" "reports/data/${id}.csv"
+                fi
               else
                 echo "::warning::${id}: 빈 응답 — 기존 파일 유지"
                 rm -f "reports/data/${id}.csv.tmp"

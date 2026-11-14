@@ -1838,9 +1838,10 @@ async function fetchFRED(seriesId, freq) {
     `${seriesId}: 미러에 없는 시리즈입니다 (HTTP ${res.status}).\n` +
     `.github/workflows/fred-mirror.yml의 SERIES 목록에 추가하고 워크플로를 실행하세요.`);
   const text = await res.text();
+  // 값이 빈 줄("2025-10-01," — 셧다운으로 2025-10 CPI 가 없음)은 0 이 아니라 결측이다 (+'' = 0 이라 따로 거름, 2026-11-14)
   let points = text.trim().split('\n').filter(Boolean).map(l => {
-    const [x, y] = l.split(',');
-    return { x, y: +y };
+    const [x, y] = l.trim().split(',');
+    return { x, y: y === undefined || y === '' || y === '.' ? NaN : +y };
   }).filter(p => p.x && isFinite(p.y));
   if (freq) points = aggregateSeries(points, freq);   // FRED API의 frequency 파라미터 대체
   cache[cacheKey] = points;

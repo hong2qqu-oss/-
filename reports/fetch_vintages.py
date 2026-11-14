@@ -240,7 +240,13 @@ def main():
         src = os.path.join(DATA, sid + ".csv")
         hsh = hashlib.md5(open(src, "rb").read()).hexdigest() if os.path.exists(src) else ""
         need_v = sid in FULL and not os.path.exists(os.path.join(VDIR, sid + ".csv"))
-        if a.changed and man.get(sid, {}).get("hash") == hsh and os.path.exists(os.path.join(RDIR, sid + ".csv")) and not need_v:
+        # ALFRED 가 원본 CSV 보다 뒤처져 있었으면(고용·CPI·PPI 는 BLS 에서 먼저 받음 — FRED·ALFRED 는 몇 시간 뒤) 따라올 때까지 다시 받는다
+        try:
+            csv_last = [l for l in open(src, encoding="utf-8").read().split("\n") if l][-1].split(",")[0]
+        except Exception:
+            csv_last = ""
+        behind = man.get(sid, {}).get("last", "") < csv_last
+        if a.changed and man.get(sid, {}).get("hash") == hsh and os.path.exists(os.path.join(RDIR, sid + ".csv")) and not need_v and not behind:
             skip += 1
             continue
         try:
