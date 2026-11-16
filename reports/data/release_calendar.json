@@ -1,16 +1,6 @@
 {
  "events": [
   {
-   "id": "CLAIMS|release|2026-11-12",
-   "tag": "CLAIMS",
-   "kind": "release",
-   "name": "미국 실업수당 청구",
-   "at": "2026-11-12T13:30:00Z",
-   "kst": "2026-11-12 22:30",
-   "note": "",
-   "est": false
-  },
-  {
    "id": "PPI|release|2026-11-13",
    "tag": "PPI",
    "kind": "release",
@@ -442,5 +432,5 @@
   }
  ],
  "fail": [],
- "updated": "2026-11-13T23:34:50Z"
+ "updated": "2026-11-15T11:46:26Z"
 }
