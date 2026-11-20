@@ -1,23 +1,13 @@
 {
  "events": [
   {
-   "id": "RETAIL|release|2026-11-17",
-   "tag": "RETAIL",
+   "id": "FOMC|release|2026-11-18",
+   "tag": "FOMC",
    "kind": "release",
-   "name": "미국 소매판매",
-   "at": "2026-11-17T13:30:00Z",
-   "kst": "2026-11-17 22:30",
-   "note": "",
-   "est": false
-  },
-  {
-   "id": "CAPUTIL|release|2026-11-17",
-   "tag": "CAPUTIL",
-   "kind": "release",
-   "name": "미국 산업생산·설비가동률",
-   "at": "2026-11-17T14:15:00Z",
-   "kst": "2026-11-17 23:15",
-   "note": "",
+   "name": "FOMC 금리 결정",
+   "at": "2026-11-18T19:00:00Z",
+   "kst": "2026-11-19 04:00",
+   "note": "의장 기자회견 30분 뒤",
    "est": false
   },
   {
@@ -189,6 +179,16 @@
    "kst": "2026-12-10 04:00",
    "note": "의장 기자회견 30분 뒤",
    "est": false
+  },
+  {
+   "id": "FOMC_MINUTES|release|2026-12-09",
+   "tag": "FOMC_MINUTES",
+   "kind": "release",
+   "name": "FOMC 의사록 (11/18 회의)",
+   "at": "2026-12-09T19:00:00Z",
+   "kst": "2026-12-10 04:00",
+   "note": "회의 3주 뒤 규칙",
+   "est": true
   },
   {
    "id": "CLAIMS|release|2026-12-10",
@@ -442,5 +442,5 @@
   }
  ],
  "fail": [],
- "updated": "2026-11-18T00:33:21Z"
+ "updated": "2026-11-20T00:49:05Z"
 }
