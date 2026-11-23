@@ -1,36 +1,6 @@
 {
  "events": [
   {
-   "id": "FOMC|release|2026-11-18",
-   "tag": "FOMC",
-   "kind": "release",
-   "name": "FOMC 금리 결정",
-   "at": "2026-11-18T19:00:00Z",
-   "kst": "2026-11-19 04:00",
-   "note": "의장 기자회견 30분 뒤",
-   "est": false
-  },
-  {
-   "id": "FOMC_MINUTES|release|2026-11-18",
-   "tag": "FOMC_MINUTES",
-   "kind": "release",
-   "name": "FOMC 의사록 (10/28 회의)",
-   "at": "2026-11-18T19:00:00Z",
-   "kst": "2026-11-19 04:00",
-   "note": "회의 3주 뒤 규칙",
-   "est": true
-  },
-  {
-   "id": "CLAIMS|release|2026-11-19",
-   "tag": "CLAIMS",
-   "kind": "release",
-   "name": "미국 실업수당 청구",
-   "at": "2026-11-19T13:30:00Z",
-   "kst": "2026-11-19 22:30",
-   "note": "",
-   "est": false
-  },
-  {
    "id": "CASESHILLER|release|2026-11-24",
    "tag": "CASESHILLER",
    "kind": "release",
@@ -442,5 +412,5 @@
   }
  ],
  "fail": [],
- "updated": "2026-11-20T00:49:05Z"
+ "updated": "2026-11-22T01:24:47Z"
 }
