@@ -1,46 +1,6 @@
 {
  "events": [
   {
-   "id": "CASESHILLER|release|2026-11-24",
-   "tag": "CASESHILLER",
-   "kind": "release",
-   "name": "케이스실러 주택가격",
-   "at": "2026-11-24T14:00:00Z",
-   "kst": "2026-11-24 23:00",
-   "note": "",
-   "est": false
-  },
-  {
-   "id": "CAPUTIL|release|2026-11-24",
-   "tag": "CAPUTIL",
-   "kind": "release",
-   "name": "미국 산업생산·설비가동률",
-   "at": "2026-11-24T14:15:00Z",
-   "kst": "2026-11-24 23:15",
-   "note": "",
-   "est": false
-  },
-  {
-   "id": "CONF|release|2026-11-24",
-   "tag": "CONF",
-   "kind": "release",
-   "name": "컨퍼런스보드 소비자신뢰",
-   "at": "2026-11-24T15:00:00Z",
-   "kst": "2026-11-25 00:00",
-   "note": "발표 규칙으로 잡은 날짜",
-   "est": true
-  },
-  {
-   "id": "RICHMOND|release|2026-11-24",
-   "tag": "RICHMOND",
-   "kind": "release",
-   "name": "리치먼드 연은 제조업",
-   "at": "2026-11-24T15:00:00Z",
-   "kst": "2026-11-25 00:00",
-   "note": "발표 규칙으로 잡은 날짜",
-   "est": true
-  },
-  {
    "id": "CLAIMS|release|2026-11-25",
    "tag": "CLAIMS",
    "kind": "release",
@@ -412,5 +372,5 @@
   }
  ],
  "fail": [],
- "updated": "2026-11-22T01:24:47Z"
+ "updated": "2026-11-27T00:01:51Z"
 }
